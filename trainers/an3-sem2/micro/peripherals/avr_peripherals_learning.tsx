@@ -53,7 +53,7 @@ int main(void) {
       { regex: /(?:DDRC\s*=\s*(?:0xFF|0b11111111|255)\s*;)/, desc: "Configurează tot Portul C ca ieșire în DDRC." },
       { regex: /(?:DDRB\s*&=\s*~\s*\(?\s*1\s*<<\s*(?:PB)?0\s*\)?|clrbit\s*\(\s*DDRB\s*,\s*(?:PB)?0\s*\))/, desc: "Configurează pinul PB0 ca intrare (buton)." },
       { regex: /(?:PORTB\s*\|?=\s*\(?\s*1\s*<<\s*(?:PB)?0\s*\)?|setbit\s*\(\s*PORTB\s*,\s*(?:PB)?0\s*\))/, desc: "Activează rezistența de pull-up pe pinul PB0 în PORTB." },
-      { regex: /if\s*\(\s*push_detect\s*\(\s*\)\s*==\s*1\s*\)/, desc: "Apelează push_detect() în bucla while(1) pentru a detecta apăsările." },
+      { regex: /if\s*\(\s*push_detect\s*\(\s*\)(?:\s*==\s*1)?\s*\)/, desc: "Apelează push_detect() în bucla while(1) pentru a detecta apăsările." },
       { regex: /(?:contor\s*\+\+\s*;|\bcontor\s*=\s*contor\s*\+\s*1\s*;)/, desc: "Incrementează contorul la detectarea unei apăsări." },
       { regex: /(?:contor\s*>\s*9|\bcontor\s*>=\s*10)/, desc: "Verifică dacă s-a depășit cifra 9 pentru a realiza resetarea." },
       { regex: /PORTC\s*=\s*cifre\s*\[\s*contor\s*\]\s*;/, desc: "Trimite valoarea corespunzătoare cifrei din LUT pe PORTC (PORTC = cifre[contor])." }
@@ -87,9 +87,9 @@ int main(void) {
       { regex: /(?:DDRC\s*=\s*(?:0xFF|0b11111111|255)\s*;)/, desc: "Configurează tot Portul C ca ieșire în DDRC." },
       { regex: /(?:DDRB\s*&=\s*~\s*\(?\s*1\s*<<\s*(?:PB)?0\s*\)?|clrbit\s*\(\s*DDRB\s*,\s*(?:PB)?0\s*\))/, desc: "Configurează pinul PB0 ca intrare (buton)." },
       { regex: /(?:PORTB\s*\|?=\s*\(?\s*1\s*<<\s*(?:PB)?0\s*\)?|setbit\s*\(\s*PORTB\s*,\s*(?:PB)?0\s*\))/, desc: "Activează rezistența de pull-up pe pinul PB0 în PORTB." },
-      { regex: /(?:zar\s*\+\+\s*;|\bzar\s*=\s*zar\s*\+\s*1\s*;)/, desc: "Incrementează continuu variabila 'zar' în buclă." },
+      { regex: /(?:zar\s*\+\+\s*;|\bzar\s*=\s*zar\s*(?:\+\s*1|\+\+)\s*;)/, desc: "Incrementează continuu variabila 'zar' în buclă." },
       { regex: /(?:zar\s*>\s*6|\bzar\s*>=\s*7)/, desc: "Resetează valoarea zarului înapoi la 1 când depășește 6." },
-      { regex: /if\s*\(\s*push_detect\s*\(\s*\)\s*==\s*1\s*\)/, desc: "Apelează push_detect() pentru a prelua valoarea zarului." },
+      { regex: /if\s*\(\s*push_detect\s*\(\s*\)(?:\s*==\s*1)?\s*\)/, desc: "Apelează push_detect() pentru a prelua valoarea zarului." },
       { regex: /PORTC\s*=\s*cifre\s*\[\s*zar\s*\]\s*;/, desc: "Trimite valoarea corespunzătoare cifrei din LUT pe PORTC (PORTC = cifre[zar])." }
     ],
     guide: `Zarul electronic rulează continuu un contor între 1 și 6 în bucla while(1). La apăsarea butonului (push_detect() == 1), capturăm valoarea curentă a contorului și o afișăm pe Portul C: \`PORTC = cifre[zar];\`. Dacă zarul trece de 6, îl egalezi cu 1.`,
@@ -153,12 +153,12 @@ int main(void) {
     checks: [
       { regex: /switch\s*\(\s*stare_usa\s*\)/, desc: "Implementează mașina de stări printr-un switch-case pe variabila stare_usa." },
       { regex: /case\s+ST_INCHIS\s*:/, desc: "Implementează cazul pentru starea ST_INCHIS." },
-      { regex: /if\s*\(\s*senzor_om\s*==\s*1\s*\)/, desc: "Verifică activarea senzorului (senzor_om == 1) în starea ST_INCHIS." },
+      { regex: /if\s*\(\s*senzor_om(?:\s*==\s*1)?\s*\)/, desc: "Verifică activarea senzorului (senzor_om) în starea ST_INCHIS." },
       { regex: /porneste_motor\s*\(\s*\)\s*;/, desc: "Apelează funcția porneste_motor() la detecția persoanei." },
       { regex: /timp_start\s*=\s*milisecunde\s*;/, desc: "Salvează momentul începerii deschiderii ușii (timp_start = milisecunde)." },
       { regex: /stare_usa\s*=\s*ST_DESCHIS\s*;/, desc: "Efectuează tranziția de stare către ST_DESCHIS." },
       { regex: /case\s+ST_DESCHIS\s*:/, desc: "Implementează cazul pentru starea ST_DESCHIS." },
-      { regex: /milisecunde\s*-\s*timp_start\s*\)?\s*>=\s*5000/, desc: "Verifică scurgerea timpului de 5000 ms pentru debouncing sau temporizare." },
+      { regex: /(?:milisecunde\s*-\s*timp_start\s*\)?\s*>=\s*5000|milisecunde\s*>=\s*timp_start\s*\+\s*5000)/, desc: "Verifică scurgerea timpului de 5000 ms pentru debouncing sau temporizare." },
       { regex: /opreste_motor\s*\(\s*\)\s*;/, desc: "Apelează funcția opreste_motor() după scurgerea timpului." },
       { regex: /stare_usa\s*=\s*ST_INCHIS\s*;/, desc: "Revine în starea ST_INCHIS după închiderea ușii." }
     ],
@@ -204,7 +204,7 @@ int main(void) {
       { regex: /switch\s*\(\s*stare_cuptor\s*\)/, desc: "Implementează mașina de stări printr-un switch-case pe variabila stare_cuptor." },
       { regex: /case\s+ST_SET\s*:/, desc: "Implementează cazul pentru starea ST_SET." },
       { regex: /if\s*\(\s*btn_sec(?: == 1)?\s*\)/, desc: "Verifică apăsarea butonului SEC (btn_sec)." },
-      { regex: /if\s*\(\s*btn_start\s*==\s*1\s*&&\s*\(\s*minute\s*>\s*0\s*\|\|\s*secunde\s*>\s*0\s*\)\s*\)/, desc: "Verifică apăsarea butonului START cu timp valid setat." },
+      { regex: /if\s*\(\s*btn_start(?:\s*==\s*1)?\s*&&\s*\(?\s*(?:minute\s*>\s*0\s*\|\|\s*secunde\s*>\s*0|secunde\s*>\s*0\s*\|\|\s*minute\s*>\s*0)\s*\)?\s*\)/, desc: "Verifică apăsarea butonului START cu timp valid setat." },
       { regex: /aprinde_led_run\s*\(\s*\)\s*;/, desc: "Apelează aprinde_led_run() la începerea încălzirii." },
       { regex: /stare_cuptor\s*=\s*ST_HEAT\s*;/, desc: "Treci în starea ST_HEAT." },
       { regex: /case\s+ST_HEAT\s*:/, desc: "Implementează cazul pentru starea ST_HEAT." },
@@ -232,10 +232,10 @@ unsigned char kbscan(void) {
 }`,
     checks: [
       { regex: /for\s*\(\s*int\s+linie\s*=\s*0\s*;\s*linie\s*<\s*4\s*;\s*linie\s*\+\+\s*\)/, desc: "Implementează bucla exterioară pentru parcurgerea celor 4 linii." },
-      { regex: /PORTA\s*=\s*~\s*\(?\s*1\s*<<\s*\(\s*linie\s*\+\s*4\s*\)\s*\)?\s*\|\s*0x0F\s*;/, desc: "Setează corect linia activă pe 0 și liniile inactive pe 1, menținând pull-up-ul (0x0F)." },
+      { regex: /PORTA\s*=\s*(?:~\s*\(?\s*1\s*<<\s*\(\s*linie\s*\+\s*4\s*\)\s*\)?\s*\|\s*(?:0x0F|0x0f|15)|(?:0x0F|0x0f|15)\s*\|\s*~\s*\(?\s*1\s*<<\s*\(\s*linie\s*\+\s*4\s*\)\s*\)?)\s*;/, desc: "Setează corect linia activă pe 0 și liniile inactive pe 1, menținând pull-up-ul (0x0F)." },
       { regex: /asm\s+volatile\s*\(\s*"nop"\s*\)\s*;/, desc: "Adaugă instrucțiunea de nop pentru stabilizarea hardware." },
       { regex: /for\s*\(\s*int\s+coloana\s*=\s*0\s*;\s*coloana\s*<\s*4\s*;\s*coloana\s*\+\+\s*\)/, desc: "Implementează bucla interioară pentru parcurgerea celor 4 coloane." },
-      { regex: /(?:\(\s*PINA\s*&\s*\(?\s*1\s*<<\s*coloana\s*\)?\s*\)\s*==\s*0|testbit\s*\(\s*PINA\s*,\s*coloana\s*\)\s*==\s*0)/, desc: "Verifică dacă s-a citit 0 pe coloana curentă (PINA & (1 << coloana) == 0)." },
+      { regex: /(?:(?:\(\s*PINA\s*&\s*\(?\s*1\s*<<\s*coloana\s*\)?\s*\)\s*==\s*0)|(?:\!\s*\(\s*PINA\s*&\s*\(?\s*1\s*<<\s*coloana\s*\)?\s*\))|(?:testbit\s*\(\s*PINA\s*,\s*coloana\s*\)\s*==\s*0)|(?:\!\s*testbit\s*\(\s*PINA\s*,\s*coloana\s*\)))/, desc: "Verifică dacă s-a citit 0 pe coloana curentă (PINA & (1 << coloana) == 0)." },
       { regex: /return\s*\(?\s*linie\s*\*\s*4\s*\+\s*coloana\s*\)?\s*;/, desc: "Returnează indexul unic al tastei: linie * 4 + coloana." },
       { regex: /return\s*(?:0xFF|255)\s*;/, desc: "Returnează 0xFF la sfârșitul funcției dacă nicio tastă nu a fost apăsată." }
     ],

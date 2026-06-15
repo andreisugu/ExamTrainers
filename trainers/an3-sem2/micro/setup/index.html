@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setup și Terenul Minat - Exam Trainers</title>
+  <meta name="description" content="Ghidul definitiv pentru Memoriile (T1) și Logica pe Porturi (T2) împreună cu capcanele simulatorului SimulIDE.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-indigo': '0 0 25px -5px rgba(99, 102, 241, 0.4)',
+            'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.4)',
+            'glow-violet': '0 0 25px -5px rgba(139, 92, 246, 0.4)',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-out forwards',
+            'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'pulse-slow': 'pulseSlow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(12px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            pulseSlow: {
+              '0%, 100%': { opacity: '0.4' },
+              '50%': { opacity: '0.8' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React & ReactDOM UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <!-- Babel Standalone for inline TSX compilation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* Premium dark cybernetic background matching index.html */
+    body {
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 50%),
+        #0b0f19;
+    }
+
+    /* Grid layout background simulation */
+    .circuit-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.15);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(99, 102, 241, 0.35);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+
+  <div id="root" class="min-h-screen flex flex-col justify-between"></div>
+
+  <!-- TSX Code Block -->
+  <script type="text/babel">
+    const { useState, useMemo, useEffect } = React;
+
+    // --- ICONS ---
+    const CpuIcon = () => (
+      <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+      </svg>
+    );
+
+    const WarningIcon = () => (
+      <svg class="w-5 h-5 text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+    );
+
+    const BookIcon = () => (
+      <svg class="w-5 h-5 text-indigo-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+    );
+
+    const CalculatorIcon = () => (
+      <svg class="w-5 h-5 text-violet-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    );
+
+    const TerminalIcon = () => (
+      <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    );
+
+    const CheckIcon = () => (
+      <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+      </svg>
+    );
+
+    const CrossIcon = () => (
+      <svg class="w-4 h-4 text-rose-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    );
+
+    // --- APP COMPONENT ---
+    function App() {
+      const [activeTab, setActiveTab] = useState('bugs'); // 'bugs', 'memories', 'ports', 'bitwise'
+
+      // Memory decodifier calculator states
+      const [calcSize, setCalcSize] = useState(8); // in KB
+      const [calcAddress, setCalcAddress] = useState('0x6000');
+      const [calcError, setCalcError] = useState('');
+
+      // Memory decodifier practice states
+      const [practiceQuestion, setPracticeQuestion] = useState(null);
+      const [selectedAnswer, setSelectedAnswer] = useState(null);
+      const [showAnswerFeedback, setShowAnswerFeedback] = useState(false);
+      const [score, setScore] = useState(0);
+
+      // Ports quiz states
+      const [quizAnswers, setQuizAnswers] = useState({ q1: null, q2: null, q3: null });
+      const [showQuizResults, setShowQuizResults] = useState(false);
+
+      // Copy to clipboard helper
+      const [copiedText, setCopiedText] = useState('');
+      const handleCopy = (text, id) => {
+        navigator.clipboard.writeText(text);
+        setCopiedText(id);
+        setTimeout(() => setCopiedText(''), 2000);
+      };
+
+      // Memory calculator logic
+      const calculationResult = useMemo(() => {
+        setCalcError('');
+        const cleanHex = calcAddress.trim().replace(/^0x/i, '');
+        const baseAddr = parseInt(cleanHex, 16);
+        if (isNaN(baseAddr) || cleanHex.length === 0) {
+          setCalcError('Adresă hexazecimală invalidă (ex: 0x6000)');
+          return null;
+        }
+        if (baseAddr < 0 || baseAddr > 0xFFFF) {
+          setCalcError('Adresa trebuie să fie în intervalul 0x0000 - 0xFFFF (pe 16 biți)');
+          return null;
+        }
+
+        const bytes = calcSize * 1024;
+        const addressLines = Math.log2(bytes);
+        
+        // Base address must be aligned to memory size
+        if (baseAddr % bytes !== 0) {
+          setCalcError(`Atenție! Adresa de bază 0x${baseAddr.toString(16).toUpperCase()} nu este aliniată la dimensiunea de ${calcSize} KB (multiplu de ${bytes} bytes / 0x${bytes.toString(16).toUpperCase()})`);
+        }
+
+        const freeLines = [];
+        for (let i = 15; i >= addressLines; i--) {
+          freeLines.push(i);
+        }
+
+        const binaryString = baseAddr.toString(2).padStart(16, '0');
+        const freeLineValues = {};
+        freeLines.forEach(line => {
+          freeLineValues[line] = parseInt(binaryString[15 - line]);
+        });
+
+        // Generate equation representations
+        const eqTerms = freeLines.map(line => {
+          const val = freeLineValues[line];
+          return val === 0 ? `A${line}'` : `A${line}`;
+        });
+        const equationString = eqTerms.join(' · ');
+
+        // HTML Representation with styled overlines
+        const equationHtml = (
+          <span class="inline-flex items-center">
+            <span class="border-t border-slate-300 pt-0.5 mr-1 font-bold">CS</span>
+            <span class="mr-2 font-bold">=</span>
+            <span class="border-t border-slate-300 pt-0.5 inline-flex gap-1 font-bold">
+              {freeLines.map((line, idx) => {
+                const val = freeLineValues[line];
+                return (
+                  <span key={line} class="inline-flex">
+                    {val === 0 ? (
+                      <span class="border-t border-slate-400 pt-0.5">A<sub>{line}</sub></span>
+                    ) : (
+                      <span>A<sub>{line}</sub></span>
+                    )}
+                    {idx < freeLines.length - 1 && <span class="mx-1 text-slate-500">·</span>}
+                  </span>
+                );
+              })}
+            </span>
+          </span>
+        );
+
+        return {
+          bytes,
+          addressLines,
+          freeLines,
+          binaryString,
+          freeLineValues,
+          equationString,
+          equationHtml
+        };
+      }, [calcSize, calcAddress]);
+
+      // Memory decodifier practice generator
+      const generateNewPractice = () => {
+        const sizes = [2, 4, 8, 16];
+        const randomSize = sizes[Math.floor(Math.random() * sizes.length)];
+        const bytes = randomSize * 1024;
+        
+        // Get all valid base addresses that fit in 16-bit space
+        const maxMult = Math.floor(0xFFFF / bytes);
+        // Avoid 0x0000 to keep it interesting
+        const mult = Math.floor(Math.random() * maxMult) + 1;
+        const baseAddr = mult * bytes;
+        const hexAddress = `0x${baseAddr.toString(16).toUpperCase()}`;
+
+        // Calculate correct solution
+        const addressLines = Math.log2(bytes);
+        const freeLines = [];
+        for (let i = 15; i >= addressLines; i--) {
+          freeLines.push(i);
+        }
+        const binaryString = baseAddr.toString(2).padStart(16, '0');
+        const correctTerms = freeLines.map(line => {
+          const val = parseInt(binaryString[15 - line]);
+          return val === 0 ? `A${line}'` : `A${line}`;
+        });
+        const correctEq = `CS = /(${correctTerms.join(' . ')})`;
+
+        // Helper to generate a random option
+        const makeOptionText = (size, addr) => {
+          const lAddressLines = Math.log2(size * 1024);
+          const lFreeLines = [];
+          for (let i = 15; i >= lAddressLines; i--) {
+            lFreeLines.push(i);
+          }
+          const lBinaryString = addr.toString(2).padStart(16, '0');
+          const terms = lFreeLines.map(line => {
+            // Randomly flip negations sometimes
+            let val = parseInt(lBinaryString[15 - line]);
+            if (Math.random() > 0.6) {
+              val = 1 - val;
+            }
+            return val === 0 ? `A${line}'` : `A${line}`;
+          });
+          return `CS = /(${terms.join(' · ')})`;
+        };
+
+        const answers = new Set();
+        answers.add(`CS = /(${correctTerms.join(' · ')})`);
+
+        // Generate distractors
+        while (answers.size < 4) {
+          // Distractor 1: wrong negations
+          const badTerms = freeLines.map(line => {
+            const val = parseInt(binaryString[15 - line]);
+            // invert one specific bit or randomly
+            const inverted = Math.random() > 0.5 ? 1 - val : val;
+            return inverted === 0 ? `A${line}'` : `A${line}`;
+          });
+          answers.add(`CS = /(${badTerms.join(' · ')})`);
+
+          // Distractor 2: off-by-one address line count
+          const wrongSize = randomSize === 16 ? 8 : randomSize * 2;
+          const badSizeAddrLines = Math.log2(wrongSize * 1024);
+          const badFreeLines = [];
+          for (let i = 15; i >= badSizeAddrLines; i--) {
+            badFreeLines.push(i);
+          }
+          const badSizeTerms = badFreeLines.map(line => {
+            const val = parseInt(binaryString[15 - line] || '0');
+            return val === 0 ? `A${line}'` : `A${line}`;
+          });
+          answers.add(`CS = /(${badSizeTerms.join(' · ')})`);
+        }
+
+        const optionsArray = Array.from(answers);
+        // Shuffle
+        for (let i = optionsArray.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [optionsArray[i], optionsArray[j]] = [optionsArray[j], optionsArray[i]];
+        }
+
+        setPracticeQuestion({
+          size: randomSize,
+          addressHex: hexAddress,
+          correctAnswer: `CS = /(${correctTerms.join(' · ')})`,
+          options: optionsArray
+        });
+        setSelectedAnswer(null);
+        setShowAnswerFeedback(false);
+      };
+
+      // Generate initial practice question
+      useEffect(() => {
+        generateNewPractice();
+      }, []);
+
+      const handlePracticeSubmit = (option) => {
+        if (showAnswerFeedback) return;
+        setSelectedAnswer(option);
+        setShowAnswerFeedback(true);
+        if (option === practiceQuestion.correctAnswer) {
+          setScore(score + 10);
+        } else {
+          setScore(Math.max(0, score - 5));
+        }
+      };
+
+      // Quiz Questions (Ports Section)
+      const quizQuestions = [
+        {
+          id: 'q1',
+          question: 'Cum configurezi pinul PD2 ca intrare cu rezistență de pull-up internă activată în AVR?',
+          options: [
+            'DDRD &= ~(1 << PD2); PORTD |= (1 << PD2);',
+            'DDRD |= (1 << PD2); PORTD |= (1 << PD2);',
+            'DDRD &= ~(1 << PD2); PORTD &= ~(1 << PD2);',
+            'DDRD |= (1 << PD2); PORTD &= ~(1 << PD2);'
+          ],
+          correct: 0,
+          explanation: 'Direcția se pune pe 0 în DDRD pentru a fi intrare: DDRD &= ~(1<<PD2). Apoi activarea rezistenței de pull-up se face scriind 1 în PORTD pe pinul respectiv: PORTD |= (1<<PD2).'
+        },
+        {
+          id: 'q2',
+          question: 'Dacă un buton este conectat cu Pull-Up intern activ (activ pe 0), ce valoare citești în PINA când butonul este APĂSAT?',
+          options: [
+            '1 logic',
+            '0 logic',
+            'Stare de înaltă impedanță (Hi-Z)',
+            '255 (toți biții pe 1)'
+          ],
+          correct: 1,
+          explanation: 'La apăsarea unui buton activ pe 0 (conectat la GND), pinul este legat fizic la masă, deci citirea registerului PINA pe pinul respectiv va returna valoarea 0 logic.'
+        },
+        {
+          id: 'q3',
+          question: 'Care este diferența corectă între operatorii bitwise ~ și logic ! în C?',
+          options: [
+            '~ face negare logică (0 sau 1), iar ! inversează toți biții individuali ai unei variabile.',
+            '~ (tilda) inversează fiecare bit individual din variabilă (0 devine 1 și invers), în timp ce ! (semnul exclamării) transformă orice valoare non-zero în 0 logic (și 0 în 1 logic).',
+            'Sunt complet echivalenți și pot fi folosiți interschimbabil în orice situație.',
+            '~ se folosește doar în directivele preprocesor, iar ! doar în buclele while.'
+          ],
+          correct: 1,
+          explanation: '~ este operatorul bitwise (negare pe biți, util pentru măști: PORT &= ~(1<<5)). ! este operatorul logic utilizat pentru evaluarea condițiilor logice booleene.'
+        }
+      ];
+
+      const checkQuiz = () => {
+        setShowQuizResults(true);
+      };
+
+      const resetQuiz = () => {
+        setQuizAnswers({ q1: null, q2: null, q3: null });
+        setShowQuizResults(false);
+      };
+
+      return (
+        <div class="flex-1 flex flex-col justify-between">
+          <main class="relative mx-auto flex w-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8 justify-between animate-fade-in">
+            
+            {/* Top Header / Nav */}
+            <header class="flex items-center justify-between mb-8">
+              <nav class="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+                <a href="../index.html" class="flex items-center hover:text-white transition-colors duration-150 py-1 px-2 rounded-md hover:bg-white/5">
+                  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                  </svg>
+                  Microprocesoare Hub
+                </a>
+                <span class="text-slate-600 font-semibold">/</span>
+                <span class="text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">Setup & Ziua 0</span>
+              </nav>
+
+              <div class="hidden sm:flex items-center space-x-2 text-xs text-slate-400 bg-slate-900/60 border border-slate-800 rounded-full px-3 py-1.5 backdrop-blur-md">
+                <span class="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></span>
+                <span class="font-semibold uppercase tracking-wider">Capitolul 1: Fundamente</span>
+              </div>
+            </header>
+
+            {/* Hero Section */}
+            <section class="text-center sm:text-left mb-8 space-y-3">
+              <div class="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-violet-400">
+                🚀 MEGA-MATERIAL ZIUA 0
+              </div>
+              <h1 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
+                Setup-ul și Terenul Minat
+              </h1>
+              <p class="max-w-3xl text-sm text-slate-400 leading-relaxed font-medium">
+                Învață bazele hardware esențiale pentru examen: configurarea mediului, decodificarea memoriilor (RAM/ROM), emularea funcțiilor logice pe porturi și manipularea biților.
+              </p>
+            </section>
+
+            {/* Tab Navigation Menu */}
+            <nav class="flex overflow-x-auto border-b border-slate-800/80 mb-8 pb-px gap-2 scrollbar-none">
+              <button 
+                onClick={() => setActiveTab('bugs')}
+                class={`flex items-center space-x-2 px-4 py-3 border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${
+                  activeTab === 'bugs' 
+                    ? 'border-indigo-500 text-indigo-400 bg-indigo-500/5' 
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <WarningIcon />
+                <span>Terenul Minat (Bugs)</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab('memories')}
+                class={`flex items-center space-x-2 px-4 py-3 border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${
+                  activeTab === 'memories' 
+                    ? 'border-indigo-500 text-indigo-400 bg-indigo-500/5' 
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <CalculatorIcon />
+                <span>Decodificarea Memoriilor (T1)</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab('ports')}
+                class={`flex items-center space-x-2 px-4 py-3 border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${
+                  activeTab === 'ports' 
+                    ? 'border-indigo-500 text-indigo-400 bg-indigo-500/5' 
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <TerminalIcon />
+                <span>Logica pe Porturi (T2)</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab('bitwise')}
+                class={`flex items-center space-x-2 px-4 py-3 border-b-2 font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${
+                  activeTab === 'bitwise' 
+                    ? 'border-indigo-500 text-indigo-400 bg-indigo-500/5' 
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <BookIcon />
+                <span>Bitwise Cheat Sheet</span>
+              </button>
+            </nav>
+
+            {/* TAB CONTENTS */}
+            <div class="space-y-8 min-h-[500px]">
+              
+              {/* TAB 1: TERENUL MINAT (BUGS SIMULIDE) */}
+              {activeTab === 'bugs' && (
+                <section class="space-y-6 animate-slide-up">
+                  <div class="bg-amber-500/10 border border-amber-500/25 rounded-2xl p-5 flex items-start gap-4 shadow-sm backdrop-blur-md">
+                    <div class="p-3 bg-amber-500/15 rounded-xl text-amber-400">
+                      <WarningIcon />
+                    </div>
+                    <div>
+                      <h3 class="text-base font-bold text-amber-400 mb-1">Terenul Minat: Cele 3 Erori ale Simulatorului SimulIDE</h3>
+                      <p class="text-xs text-slate-350 leading-relaxed font-medium">
+                        La examen scrii codul corect pe foaie, dar dacă te antrenezi acasă în simulatorul SimulIDE și nu ții cont de aceste 3 bug-uri, vei pierde ore întregi crezând că ai greșit.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="grid gap-6 md:grid-cols-3">
+                    
+                    {/* Bug 1 */}
+                    <article class="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 hover:border-slate-700/80 transition-all backdrop-blur-sm space-y-3">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 uppercase">Bug 1</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                      </div>
+                      <h4 class="text-sm font-bold text-white">Timer 0 NU merge în CTC</h4>
+                      <p class="text-xs text-slate-400 leading-relaxed font-medium">
+                        În simulator, Timer 0 <strong>nu</strong> generează întreruperi în modul de comparare CTC. Pentru ceasuri exacte și temporizări corecte, utilizează întotdeauna <strong>Timer 1</strong> sau <strong>Timer 2</strong>.
+                      </p>
+                      <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800 text-[11px] font-mono text-indigo-300">
+                        // Timer 0 -> PWM doar<br/>
+                        // Timer 1 & 2 -> CTC
+                      </div>
+                    </article>
+
+                    {/* Bug 2 */}
+                    <article class="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 hover:border-slate-700/80 transition-all backdrop-blur-sm space-y-3">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 uppercase">Bug 2</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                      </div>
+                      <h4 class="text-sm font-bold text-white">Bug-ul Fast PWM 100%</h4>
+                      <p class="text-xs text-slate-400 leading-relaxed font-medium">
+                        Dacă scrii <code>OCR0 = 255;</code> (valoare maximă), LED-ul se va stinge complet (0%) în simulator. La examen poți scrie liniștit 255 pe foaie, dar acasă folosește <strong>254</strong> ca valoare maximă.
+                      </p>
+                      <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800 text-[11px] font-mono text-indigo-300">
+                        OCR0 = 254; // Maxim acasă<br/>
+                        OCR0 = 255; // Pe foaie
+                      </div>
+                    </article>
+
+                    {/* Bug 3 */}
+                    <article class="bg-slate-900/40 border border-slate-800 rounded-2xl p-5 hover:border-slate-700/80 transition-all backdrop-blur-sm space-y-3">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 uppercase">Bug 3</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                      </div>
+                      <h4 class="text-sm font-bold text-white">Ghost Inputs (Pini blocați)</h4>
+                      <p class="text-xs text-slate-400 leading-relaxed font-medium">
+                        La oprirea sau pornirea simulării, pinii de intrare din SimulIDE tind să își păstreze starea logică anterioară, blocând pinii. Deschide toate butoanele virtuale înainte de oprirea alimentării (Power Off).
+                      </p>
+                      <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800 text-[11px] font-mono text-indigo-300">
+                        1. Deschide butoanele<br/>
+                        2. Oprește Simularea
+                      </div>
+                    </article>
+
+                  </div>
+                </section>
+              )}
+
+              {/* TAB 2: DECODIFICAREA MEMORIILOR (T1) */}
+              {activeTab === 'memories' && (
+                <section class="space-y-8 animate-slide-up">
+                  
+                  {/* Theory block */}
+                  <div class="bg-slate-900/30 border border-slate-800/80 rounded-2xl p-6 backdrop-blur-md">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                      <span class="bg-indigo-500/10 border border-indigo-500/20 p-1.5 rounded text-indigo-400"><BookIcon /></span>
+                      Algoritmul de Nota 10 pentru Chip Select (CS)
+                    </h3>
+                    <p class="text-xs text-slate-400 leading-relaxed mb-6 font-medium">
+                      Scopul conectării memoriei este crearea ecuației logice pentru pinul active-low <span class="border-t border-slate-400 pt-0.5 font-semibold">CS</span>. Memoria pornește doar când semnalul ecuației este 0.
+                    </p>
+                    
+                    <div class="grid gap-6 md:grid-cols-3 text-xs">
+                      <div class="bg-slate-950/40 p-4 rounded-xl border border-slate-850 space-y-2">
+                        <h4 class="font-bold text-white">PASUL 1: Firele Directe</h4>
+                        <p class="text-slate-400 leading-relaxed font-medium">
+                          Transformi dimensiunea în bytes și puteri ale lui 2. Numărul exponentului îți arată liniile de adresă directe (A0 - Ax).
+                        </p>
+                        <p class="text-indigo-400 font-semibold font-mono">8 KB = 8192 bytes = 2¹³ => A0 - A12</p>
+                      </div>
+                      <div class="bg-slate-950/40 p-4 rounded-xl border border-slate-850 space-y-2">
+                        <h4 class="font-bold text-white">PASUL 2: Firele Libere</h4>
+                        <p class="text-slate-400 leading-relaxed font-medium">
+                          Magistrala de adrese a microcontrolerului are 16 fire (A0 - A15). Cele rămase neutilizate de memorie sunt liniile noastre de selecție.
+                        </p>
+                        <p class="text-indigo-400 font-semibold font-mono">Fire libere: A15, A14, A13</p>
+                      </div>
+                      <div class="bg-slate-950/40 p-4 rounded-xl border border-slate-850 space-y-2">
+                        <h4 class="font-bold text-white">PASUL 3: Ecuația Logică</h4>
+                        <p class="text-slate-400 leading-relaxed font-medium">
+                          Scrii adresa de pornire în binar. Extrage valorile pinilor liberi. Conectează-i cu logic AND sub o bară de negare. Biții egali cu 0 primesc negare internă.
+                        </p>
+                        <p class="text-indigo-400 font-semibold font-mono">0x6000 = 0110... => A15=0, A14=1, A13=1</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Calculator & Practice Dual Column */}
+                  <div class="grid gap-6 lg:grid-cols-2">
+                    
+                    {/* Calculator widget */}
+                    <div class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                      <h3 class="text-base font-bold text-white flex items-center gap-2">
+                        <CalculatorIcon />
+                        Calculator de Chip Select
+                      </h3>
+                      
+                      <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Dimensiune Memorie</label>
+                          <select 
+                            value={calcSize}
+                            onChange={(e) => setCalcSize(parseInt(e.target.value))}
+                            class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500/50"
+                          >
+                            <option value={1}>1 KB (2¹⁰ bytes)</option>
+                            <option value={2}>2 KB (2¹¹ bytes)</option>
+                            <option value={4}>4 KB (2¹² bytes)</option>
+                            <option value={8}>8 KB (2¹³ bytes)</option>
+                            <option value={16}>16 KB (2¹⁴ bytes)</option>
+                            <option value={32}>32 KB (2¹⁵ bytes)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Adresă de bază (Hex)</label>
+                          <input 
+                            type="text"
+                            value={calcAddress}
+                            onChange={(e) => setCalcAddress(e.target.value)}
+                            class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-indigo-500/50"
+                            placeholder="ex: 0x6000"
+                          />
+                        </div>
+                      </div>
+
+                      {calcError && (
+                        <div class="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-medium">
+                          {calcError}
+                        </div>
+                      )}
+
+                      {calculationResult && (
+                        <div class="bg-slate-950/40 border border-slate-850 rounded-2xl p-5 space-y-4 text-xs">
+                          <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-400 font-medium">
+                            <div>Linii Directe:</div>
+                            <div class="text-white font-mono">A0 - A{calculationResult.addressLines - 1} ({calculationResult.addressLines} fire)</div>
+                            <div>Linii Libere (CS):</div>
+                            <div class="text-white font-mono">{calculationResult.freeLines.map(line => `A${line}`).join(', ')}</div>
+                            <div>Adresă în Binar:</div>
+                            <div class="text-indigo-400 font-mono">
+                              {calculationResult.binaryString.substring(0, 4)} {calculationResult.binaryString.substring(4, 8)} {calculationResult.binaryString.substring(8, 12)} {calculationResult.binaryString.substring(12, 16)}
+                            </div>
+                          </div>
+
+                          <div class="border-t border-slate-850 pt-4 flex flex-col items-center">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Ecuația Chip Select</span>
+                            <div class="bg-slate-900 border border-slate-800 rounded-xl px-5 py-3 text-lg font-mono text-white shadow-inner flex items-center justify-center">
+                              {calculationResult.equationHtml}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Practice Area */}
+                    <div class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4 flex flex-col justify-between">
+                      <div>
+                        <div class="flex justify-between items-center mb-3">
+                          <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <BookIcon />
+                            Zonă Antrenament T1
+                          </h3>
+                          <div class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
+                            Score: {score}
+                          </div>
+                        </div>
+
+                        {practiceQuestion && (
+                          <div class="space-y-4">
+                            <p class="text-xs leading-relaxed text-slate-300 font-medium">
+                              Mapează o memorie de <strong class="text-white">{practiceQuestion.size} KB</strong> începând de la adresa de bază <strong class="text-white font-mono">{practiceQuestion.addressHex}</strong>. Care este ecuația corectă de Chip Select pe foaie?
+                            </p>
+
+                            <div class="space-y-2.5">
+                              {practiceQuestion.options.map((option, idx) => {
+                                const isSelected = selectedAnswer === option;
+                                const isCorrect = option === practiceQuestion.correctAnswer;
+                                let btnStyle = "bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white";
+                                
+                                if (showAnswerFeedback) {
+                                  if (isCorrect) {
+                                    btnStyle = "bg-emerald-500/10 border-emerald-500/40 text-emerald-400";
+                                  } else if (isSelected) {
+                                    btnStyle = "bg-rose-500/10 border-rose-500/40 text-rose-400";
+                                  } else {
+                                    btnStyle = "bg-slate-950/20 border-slate-900 text-slate-600 opacity-60";
+                                  }
+                                }
+
+                                return (
+                                  <button
+                                    key={idx}
+                                    onClick={() => handlePracticeSubmit(option)}
+                                    disabled={showAnswerFeedback}
+                                    class={`w-full text-left font-mono text-xs px-4 py-3 rounded-xl border transition-all duration-150 flex items-center justify-between ${btnStyle}`}
+                                  >
+                                    <span>{option}</span>
+                                    {showAnswerFeedback && isCorrect && <CheckIcon />}
+                                    {showAnswerFeedback && isSelected && !isCorrect && <CrossIcon />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {showAnswerFeedback && (
+                        <div class="pt-4 border-t border-slate-850 mt-4 flex items-center justify-between">
+                          <p class="text-[11px] text-slate-400 font-medium leading-relaxed max-w-[280px]">
+                            {selectedAnswer === practiceQuestion.correctAnswer 
+                              ? 'Corect! Ai primit 10 puncte.' 
+                              : 'Incorect. Răspunsul corect este marcat cu verde.'
+                            }
+                          </p>
+                          <button
+                            onClick={generateNewPractice}
+                            class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-4 py-2 rounded-lg transition-colors"
+                          >
+                            Următoarea
+                          </button>
+                        </div>
+                      )}
+
+                    </div>
+
+                  </div>
+                </section>
+              )}
+
+              {/* TAB 3: LOGICA PE PORTURI (T2) */}
+              {activeTab === 'ports' && (
+                <section class="space-y-6 animate-slide-up">
+                  
+                  {/* Emulation guidelines */}
+                  <div class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                      <TerminalIcon />
+                      Cele 3 Reguli de Aur la Porturi
+                    </h3>
+                    
+                    <div class="grid gap-6 md:grid-cols-3 text-xs leading-relaxed text-slate-400 font-medium">
+                      <div class="space-y-1.5">
+                        <h4 class="font-bold text-white">1. Direcția (DDRx)</h4>
+                        <p>Setează bitul pe <strong>0</strong> pentru intrări (senzori/butoane) și pe <strong>1</strong> pentru ieșiri (LED-uri/motoare).</p>
+                      </div>
+                      <div class="space-y-1.5">
+                        <h4 class="font-bold text-white">2. Pull-Up Intern</h4>
+                        <p>Dacă butonul e legat la GND direct pe schemă, ești <strong>obligat</strong> să activezi pull-up-ul punând bitul pe 1 în PORTx. Apăsat va citi 0 logic!</p>
+                      </div>
+                      <div class="space-y-1.5">
+                        <h4 class="font-bold text-white">3. Standardizare Logica Pozitivă</h4>
+                        <p>Pentru butoane cu pull-up, inversează masca obținută (folosind ~) pentru ca bitul să fie 1 logic când butonul e activ (apăsat).</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Code Template Display */}
+                  <div class="bg-[#1e1e1e] rounded-3xl border border-slate-800/80 overflow-hidden shadow-inner space-y-px">
+                    <div class="bg-[#181818] px-6 py-3 border-b border-slate-800/80 flex justify-between items-center text-xs font-mono select-none">
+                      <span class="text-slate-300">Port Emulation Code Template</span>
+                      <button 
+                        onClick={() => handleCopy(`#include <avr/io.h>\n\nint main(void) {\n    DDRA &= ~((1 << 0) | (1 << 1)); // intrari\n    PORTA |= ((1 << 0) | (1 << 1)); // pull-up\n    DDRB |= (1 << 2);              // iesire\n    \n    while (1) {\n        unsigned char inA = ~PINA;\n        unsigned char b0 = (inA & (1 << 0)) >> 0;\n        unsigned char b1 = (inA & (1 << 1)) >> 1;\n        \n        unsigned char iesire = (b0 || b1);\n        if (iesire) {\n            PORTB |= (1 << 2); // set 1\n        } else {\n            PORTB &= ~(1 << 2); // clear 0\n        }\n    }\n}`, 't2_code')}
+                        class="text-indigo-400 hover:text-indigo-300 text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      >
+                        {copiedText === 't2_code' ? 'Copiat!' : 'Copiază Codul'}
+                      </button>
+                    </div>
+                    <pre class="p-6 font-mono text-[12.5px] leading-relaxed text-[#D4D4D4] overflow-x-auto">
+                      <span class="text-[#C586C0]">#include</span> <span class="text-[#CE9178]">&lt;avr/io.h&gt;</span><br/>
+                      <br/>
+                      <span class="text-[#569CD6]">int</span> <span class="text-[#DCDCAA]">main</span>(<span class="text-[#569CD6]">void</span>) &#123;<br/>
+                      <span class="text-[#6A9955]">&nbsp;&nbsp;&nbsp;&nbsp;// 1. INITIALIZARE</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">DDRA</span> &amp;= ~(<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#B5CEA8]">0</span> | <span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#B5CEA8]">1</span>); <span class="text-[#6A9955]">// PA0, PA1 intrari</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">PORTA</span> |= (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#B5CEA8]">0</span> | <span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#B5CEA8]">1</span>); <span class="text-[#6A9955]">// activare pull-ups</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">DDRB</span> |= (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#B5CEA8]">2</span>); <span class="text-[#6A9955]">// PB2 ca iesire</span><br/>
+                      <br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">while</span> (<span class="text-[#B5CEA8]">1</span>) &#123;<br/>
+                      <span class="text-[#6A9955]">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 2. CITIRE &amp; INVERSARE (PULL-UP => LOGICA POZITIVA)</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#569CD6]">unsigned char</span> <span class="text-[#9CDCFE]">inA</span> = ~<span class="text-[#9CDCFE]">PINA</span>;<br/>
+                      <br/>
+                      <span class="text-[#6A9955]">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 3. EXTRAGERE BITI</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#569CD6]">unsigned char</span> <span class="text-[#9CDCFE]">b0</span> = (<span class="text-[#9CDCFE]">inA</span> &amp; (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#B5CEA8]">0</span>)) &gt;&gt; <span class="text-[#B5CEA8]">0</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#569CD6]">unsigned char</span> <span class="text-[#9CDCFE]">b1</span> = (<span class="text-[#9CDCFE]">inA</span> &amp; (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#B5CEA8]">1</span>)) &gt;&gt; <span class="text-[#B5CEA8]">1</span>;<br/>
+                      <br/>
+                      <span class="text-[#6A9955]">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 4. EVALUARE ECUATIE</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#569CD6]">unsigned char</span> <span class="text-[#9CDCFE]">iesire</span> = (<span class="text-[#9CDCFE]">b0</span> || <span class="text-[#9CDCFE]">b1</span>);<br/>
+                      <br/>
+                      <span class="text-[#6A9955]">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// 5. SCRIERE REZULTAT</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">if</span> (<span class="text-[#9CDCFE]">iesire</span> == <span class="text-[#B5CEA8]">1</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">PORTB</span> |= (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#B5CEA8]">2</span>); <span class="text-[#6A9955]">// Aprinde LED-ul</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125; <span class="text-[#C586C0]">else</span> &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">PORTB</span> &amp;= ~(<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#B5CEA8]">2</span>); <span class="text-[#6A9955]">// Stinge LED-ul</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">return</span> <span class="text-[#B5CEA8]">0</span>;<br/>
+                      &#125;
+                    </pre>
+                  </div>
+
+                  {/* Interactive Ports Quiz */}
+                  <div class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-6">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <BookIcon />
+                      Quiz rapid: Porturi & Configurație Biți
+                    </h3>
+
+                    <div class="space-y-6">
+                      {quizQuestions.map((q, qIndex) => (
+                        <div key={q.id} class="space-y-2.5">
+                          <h4 class="text-xs font-bold text-slate-350 leading-relaxed">
+                            {qIndex + 1}. {q.question}
+                          </h4>
+                          <div class="grid gap-2">
+                            {q.options.map((opt, optIndex) => {
+                              const isSelected = quizAnswers[q.id] === optIndex;
+                              const isCorrect = optIndex === q.correct;
+                              let style = "bg-slate-950/40 border-slate-800 text-slate-450 hover:border-slate-700 hover:text-white";
+
+                              if (showQuizResults) {
+                                if (isCorrect) {
+                                  style = "bg-emerald-500/10 border-emerald-500/35 text-emerald-400";
+                                } else if (isSelected) {
+                                  style = "bg-rose-500/10 border-rose-500/35 text-rose-400";
+                                } else {
+                                  style = "bg-slate-950/20 border-slate-900 text-slate-600 opacity-60";
+                                }
+                              } else if (isSelected) {
+                                style = "bg-indigo-500/10 border-indigo-500/40 text-indigo-400";
+                              }
+
+                              return (
+                                <button
+                                  key={optIndex}
+                                  onClick={() => {
+                                    if (showQuizResults) return;
+                                    setQuizAnswers({ ...quizAnswers, [q.id]: optIndex });
+                                  }}
+                                  disabled={showQuizResults}
+                                  class={`text-left font-mono text-[11px] px-4 py-3 rounded-xl border transition-all duration-150 ${style}`}
+                                >
+                                  {opt}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          
+                          {showQuizResults && (
+                            <p class="text-[11px] text-slate-500 italic mt-1 leading-relaxed pl-2 border-l border-indigo-500/25">
+                              Explicatie: {q.explanation}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div class="flex space-x-4 pt-4 border-t border-slate-800/80 justify-end">
+                      {showQuizResults ? (
+                        <button
+                          onClick={resetQuiz}
+                          class="bg-[#25252b] hover:bg-slate-800 text-slate-300 px-5 py-2.5 rounded-xl text-xs font-bold border border-slate-850"
+                        >
+                          Resetează Quiz-ul
+                        </button>
+                      ) : (
+                        <button
+                          onClick={checkQuiz}
+                          disabled={Object.values(quizAnswers).some(x => x === null)}
+                          class="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-xl text-xs font-bold transition-all"
+                        >
+                          Verifică Răspunsurile
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                </section>
+              )}
+
+              {/* TAB 4: BITWISE CHEAT SHEET */}
+              {activeTab === 'bitwise' && (
+                <section class="space-y-6 animate-slide-up">
+                  
+                  {/* General description */}
+                  <div class="bg-indigo-500/10 border border-indigo-500/20 rounded-3xl p-5 flex items-start gap-4 shadow-sm backdrop-blur-md">
+                    <div class="p-3 bg-indigo-500/15 rounded-xl text-indigo-400">
+                      <BookIcon />
+                    </div>
+                    <div>
+                      <h3 class="text-base font-bold text-indigo-400 mb-1">Cheat Sheet: Operații pe Biți (Bitwise) în C</h3>
+                      <p class="text-xs text-slate-350 leading-relaxed font-medium">
+                        Manipularea biților este inima programării microcontrolerelor AVR. Înțelege acțiunea fiecărui operator de bază pentru a evita confuziile fatale la examen.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Cheat sheet grid */}
+                  <div class="grid gap-6 md:grid-cols-2">
+                    
+                    {/* SET bit */}
+                    <article class="bg-slate-900/40 border border-slate-800 rounded-3xl p-5 space-y-3 hover:border-slate-700/80 transition-all">
+                      <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-white bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg font-mono">SET (1)</span>
+                        <span class="text-emerald-400 font-bold text-xs uppercase tracking-wider">Bit |= (1 &lt;&lt; Pin)</span>
+                      </div>
+                      <p class="text-xs text-slate-400 leading-relaxed font-medium">
+                        Pune un anumit bit pe valoarea <strong>1 logic</strong> folosind SAU pe biți (|=). Restul pinilor sunt păstrați neschimbați.
+                      </p>
+                      <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800 space-y-1">
+                        <div class="flex justify-between items-center text-[10px] text-slate-500 font-mono mb-1">
+                          <span>AVR-GCC Example</span>
+                          <button onClick={() => handleCopy('PORTC |= (1 << 5);', 'c_set')} class="hover:text-white transition-colors">{copiedText === 'c_set' ? 'Copiat!' : 'Copy'}</button>
+                        </div>
+                        <code class="text-indigo-300 font-mono text-[11px]">PORTC |= (1 &lt;&lt; 5); <span class="text-slate-600">// PC5 devine 1</span></code>
+                      </div>
+                    </article>
+
+                    {/* CLEAR bit */}
+                    <article class="bg-slate-900/40 border border-slate-800 rounded-3xl p-5 space-y-3 hover:border-slate-700/80 transition-all">
+                      <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-white bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg font-mono">CLEAR (0)</span>
+                        <span class="text-emerald-400 font-bold text-xs uppercase tracking-wider">Bit &amp;= ~(1 &lt;&lt; Pin)</span>
+                      </div>
+                      <p class="text-xs text-slate-400 leading-relaxed font-medium">
+                        Pune un bit pe valoarea <strong>0 logic</strong> folosind operatorul ȘI cu masca negat-inversată (&amp;= ~).
+                      </p>
+                      <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800 space-y-1">
+                        <div class="flex justify-between items-center text-[10px] text-slate-500 font-mono mb-1">
+                          <span>AVR-GCC Example</span>
+                          <button onClick={() => handleCopy('PORTC &= ~(1 << 5);', 'c_clear')} class="hover:text-white transition-colors">{copiedText === 'c_clear' ? 'Copiat!' : 'Copy'}</button>
+                        </div>
+                        <code class="text-indigo-300 font-mono text-[11px]">PORTC &amp;= ~(1 &lt;&lt; 5); <span class="text-slate-600">// PC5 devine 0</span></code>
+                      </div>
+                    </article>
+
+                    {/* TOGGLE bit */}
+                    <article class="bg-slate-900/40 border border-slate-800 rounded-3xl p-5 space-y-3 hover:border-slate-700/80 transition-all">
+                      <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-white bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg font-mono">TOGGLE</span>
+                        <span class="text-emerald-400 font-bold text-xs uppercase tracking-wider">Bit ^= (1 &lt;&lt; Pin)</span>
+                      </div>
+                      <p class="text-xs text-slate-400 leading-relaxed font-medium">
+                        Inversează starea actuală a unui bit (XOR pe biți: ^=). Dacă era aprins/1 se stinge, dacă era stins/0 se aprinde.
+                      </p>
+                      <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800 space-y-1">
+                        <div class="flex justify-between items-center text-[10px] text-slate-500 font-mono mb-1">
+                          <span>AVR-GCC Example</span>
+                          <button onClick={() => handleCopy('PORTC ^= (1 << 5);', 'c_toggle')} class="hover:text-white transition-colors">{copiedText === 'c_toggle' ? 'Copiat!' : 'Copy'}</button>
+                        </div>
+                        <code class="text-indigo-300 font-mono text-[11px]">PORTC ^= (1 &lt;&lt; 5); <span class="text-slate-600">// PC5 se inversează</span></code>
+                      </div>
+                    </article>
+
+                    {/* READ bit */}
+                    <article class="bg-slate-900/40 border border-slate-800 rounded-3xl p-5 space-y-3 hover:border-slate-700/80 transition-all">
+                      <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-white bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg font-mono">READ</span>
+                        <span class="text-emerald-400 font-bold text-xs uppercase tracking-wider">Bit = (PIN &amp; Mask) &gt;&gt; Pin</span>
+                      </div>
+                      <p class="text-xs text-slate-400 leading-relaxed font-medium">
+                        Citește starea unui bit (valoare 0 sau 1) extrăgându-l cu o mască bitwise (&amp;) și deplasându-l (&gt;&gt;) pe prima poziție.
+                      </p>
+                      <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800 space-y-1">
+                        <div class="flex justify-between items-center text-[10px] text-slate-500 font-mono mb-1">
+                          <span>AVR-GCC Example</span>
+                          <button onClick={() => handleCopy('unsigned char bit = (PINC & (1 << 5)) >> 5;', 'c_read')} class="hover:text-white transition-colors">{copiedText === 'c_read' ? 'Copiat!' : 'Copy'}</button>
+                        </div>
+                        <code class="text-indigo-300 font-mono text-[11px]">bit = (PINC &amp; (1 &lt;&lt; 5)) &gt;&gt; 5; <span class="text-slate-600">// returnează 0 sau 1</span></code>
+                      </div>
+                    </article>
+
+                  </div>
+
+                  {/* Warning Note */}
+                  <div class="bg-rose-500/10 border border-rose-500/20 rounded-3xl p-5 space-y-2 text-xs">
+                    <h4 class="font-bold text-rose-400 flex items-center gap-1.5 uppercase tracking-wide text-[10px]">
+                      ⚠️ EROAREA FATALĂ: Negare Bitwise (~) vs Negare Logică (!)
+                    </h4>
+                    <p class="text-slate-400 leading-relaxed font-medium">
+                      <strong>~ (Tilda)</strong> = Negare pe biți. Se aplică pe registre sau măști fizice (ex. <code>~0b00000100</code> devine <code>0b11111011</code>).
+                    </p>
+                    <p class="text-slate-400 leading-relaxed font-medium">
+                      <strong>! (Semnul Exclamării)</strong> = Negare logică (Adevărat/Fals). Transformă orice număr diferit de 0 în 0, iar 0 în 1. Se folosește în evaluări (ex. <code>if (!buton)</code>).
+                    </p>
+                  </div>
+
+                </section>
+              )}
+
+            </div>
+          </main>
+
+          {/* Footer */}
+          <footer class="mt-auto py-6 border-t border-slate-900 text-center text-xs text-slate-600 font-semibold tracking-wide uppercase">
+            &copy; 2026 ExamTrainers. Construit cu React, Tailwind CSS și dragoste pentru <a href="https://github.com/andreisugu" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-400 transition-colors duration-150 normal-case underline decoration-wavy decoration-indigo-500/30 underline-offset-4">sisteme încorporate</a> de <a href="https://github.com/andreisugu" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors duration-150 normal-case font-mono ml-0.5"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>@andreisugu</a>.
+          </footer>
+        </div>
+      );
+    }
+
+    // Mount App
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

@@ -114,44 +114,50 @@
     <!-- Subsections Grid -->
     <section class="grid gap-6 md:grid-cols-2 xl:grid-cols-4 mb-16 animate-slide-up">
       
-      <!-- Card 1: Setup-ul și Terenul Minat (COMING SOON) -->
-      <article class="group relative flex flex-col justify-between rounded-3xl border border-slate-800/80 bg-slate-950/40 p-6 backdrop-blur-xl transition-all duration-300">
-        <div class="space-y-4 opacity-60">
+      <!-- Card 1: Setup-ul și Terenul Minat (ACTIVE) -->
+      <article class="group relative flex flex-col justify-between rounded-3xl border border-indigo-500/25 bg-slate-900/65 p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-indigo-500/45 hover:bg-slate-900/80 hover:shadow-glow-indigo">
+        <!-- Card Glow Effect on Hover -->
+        <div class="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-indigo-500/5 to-purple-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+
+        <div class="space-y-4">
           <div class="flex items-center justify-between">
-            <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-800 border border-slate-700/50 px-2.5 py-0.5 text-xs font-bold text-slate-400 uppercase tracking-wide">
-              În plan
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 uppercase tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              Disponibil
             </span>
-            <span class="text-xs font-bold text-slate-650 uppercase tracking-wider">CAPITOLUL 1</span>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">CAPITOLUL 1</span>
           </div>
 
           <div class="space-y-2">
-            <div class="flex items-center space-x-3 text-slate-350">
-              <div class="p-2 rounded-xl bg-slate-800/60 border border-slate-700/40 text-slate-400">
-                <!-- Warning / Setup Icon -->
+            <div class="flex items-center space-x-3 text-white">
+              <div class="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
+                <!-- Cog / Setup Icon -->
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.43l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.991l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
-              <h3 class="text-lg font-bold tracking-tight">Setup-ul și Terenul Minat</h3>
+              <h3 class="text-lg font-bold tracking-tight">Setup & Terenul Minat</h3>
             </div>
-            <p class="text-xs leading-relaxed text-slate-500 font-medium">
-              Ghidul esențial de configurare a mediului, structura de bază a unui proiect AVR-GCC și capcanele comune (terenul minat) ale simulatorului SimulIDE în scrierea codului.
+            <p class="text-xs leading-relaxed text-slate-400 font-medium">
+              Ghidul esențial pentru configurarea mediului AVR-GCC și evitarea celor 3 bug-uri critice din simulatorul SimulIDE care îți pot sabota funcționarea unui cod altfel corect.
             </p>
           </div>
 
           <!-- Key Concepts -->
           <div class="flex flex-wrap gap-1.5 pt-2">
-            <span class="rounded-lg bg-slate-900/60 px-2.5 py-1 text-[10px] font-semibold text-slate-500 border border-slate-800/40">Toolchain</span>
-            <span class="rounded-lg bg-slate-900/60 px-2.5 py-1 text-[10px] font-semibold text-slate-500 border border-slate-800/40">SimulIDE Gotchas</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">AVR Toolchain</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Bugs SimulIDE</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Structură Proiect</span>
           </div>
         </div>
 
-        <div class="mt-8 flex items-center justify-center gap-2 rounded-2xl bg-slate-900/80 border border-slate-800/60 px-4 py-3 text-xs font-bold text-slate-500 cursor-not-allowed select-none">
-          <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+        <a href="./setup/index.html" class="mt-8 flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-indigo-600/10 hover:shadow-indigo-500/20 active:scale-[0.98]">
+          Deschide Modulul
+          <svg class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
           </svg>
-          Indisponibil temporar
-        </div>
+        </a>
       </article>
 
       <!-- Card 2: Fundamentele Obligatorii (ACTIVE) -->
@@ -171,33 +177,40 @@
           <div class="space-y-2">
             <div class="flex items-center space-x-3 text-white">
               <div class="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
-                <!-- Clock / Heart/Core Icon -->
+                <!-- Clock / Timers Icon -->
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.25 0h8.25" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75l3 3m0 0l6-6M12 15.75V9" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 class="text-lg font-bold tracking-tight">Fundamentele obligatorii (Inima microcontrolerului)</h3>
+              <h3 class="text-lg font-bold tracking-tight">Inima Microcontrolerului: Timere & PWM</h3>
             </div>
             <p class="text-xs leading-relaxed text-slate-400 font-medium">
-              Inima microcontrolerului: Configurarea regiştrilor pentru Timer 0, 1 și 2 în modurile CTC și Fast PWM. Calcule matematice de prescaler, scrierea rutinelor ISR și debouncing.
+              Măsurarea asincronă a timpului folosind cele 3 Timere interne ale ATmega16. Învață formula de aur a examenului, configurarea CTC, modul Fast PWM și debouncing-ul hardware cu FSM.
             </p>
           </div>
 
           <!-- Key Concepts -->
           <div class="flex flex-wrap gap-1.5 pt-2">
-            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">CTC / PWM</span>
-            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">ISR TIMSK</span>
-            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Debouncing</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Formulă Prescaler</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">CTC & Fast PWM</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Rutine ISR</span>
           </div>
         </div>
 
-        <a href="./timers/index.html" class="mt-8 flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-indigo-600/10 hover:shadow-indigo-500/20 active:scale-[0.98]">
-          Deschide Modulul
-          <svg class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-          </svg>
-        </a>
+        <div class="mt-8 flex flex-col gap-2">
+          <a href="./timers/theory.html" class="flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-indigo-600/10 hover:shadow-indigo-500/20 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Învață Teorie
+          </a>
+          <a href="./timers/index.html" class="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40 px-4 py-3 text-xs font-bold text-slate-300 hover:text-white transition-all duration-150 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+            </svg>
+            Exersează Cod
+          </a>
+        </div>
       </article>
 
       <!-- Card 3: Periferice Comune (ACTIVE) -->
@@ -217,32 +230,40 @@
           <div class="space-y-2">
             <div class="flex items-center space-x-3 text-white">
               <div class="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
-                <!-- Connectivity / Pins Icon -->
+                <!-- Microchip Icon -->
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M12 3v1.5m3.75-1.5V4.5m-12 15V21m4.5-1.5V21m3.75-1.5V21m-9-15h13.5A2.25 2.25 0 0121 6.75v10.5a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 17.25V6.75A2.25 2.25 0 015.25 4.5z" />
                 </svg>
               </div>
-              <h3 class="text-lg font-bold tracking-tight">Periferice Comune, Extensii și Mașini de Stare</h3>
+              <h3 class="text-lg font-bold tracking-tight">Periferice, Extensii & Stări</h3>
             </div>
             <p class="text-xs leading-relaxed text-slate-400 font-medium">
-              Periferice Comune, Extensii și Mașini de Stare: USART, SPI, protocoale TWI/I2C, întreruperi externe hardware și design-ul FSM-urilor complexe.
+              Interfațarea componentelor externe: afișoare 7-segmente prin Look-Up Table (LUT), extinderea porturilor prin Shift Registers, scanarea tastaturii 4x4 (kbscan) și controlul FSM.
             </p>
           </div>
 
           <!-- Key Concepts -->
           <div class="flex flex-wrap gap-1.5 pt-2">
-            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">USART / SPI</span>
-            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">TWI (I2C)</span>
-            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Ext FSM</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Look-Up Tables</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Shift Registers</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Scanare Grilă 4x4</span>
           </div>
         </div>
 
-        <a href="./peripherals/index.html" class="mt-8 flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-indigo-600/10 hover:shadow-indigo-500/20 active:scale-[0.98]">
-          Deschide Modulul
-          <svg class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-          </svg>
-        </a>
+        <div class="mt-8 flex flex-col gap-2">
+          <a href="./peripherals/theory.html" class="flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-indigo-600/10 hover:shadow-indigo-500/20 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Învață Teorie
+          </a>
+          <a href="./peripherals/index.html" class="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40 px-4 py-3 text-xs font-bold text-slate-300 hover:text-white transition-all duration-150 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+            </svg>
+            Exersează Cod
+          </a>
+        </div>
       </article>
 
       <!-- Card 4: Advanced Topics (COMING SOON) -->
@@ -258,24 +279,23 @@
           <div class="space-y-2">
             <div class="flex items-center space-x-3 text-slate-350">
               <div class="p-2 rounded-xl bg-slate-800/60 border border-slate-700/40 text-slate-400">
-                <!-- Analog / critical wave Icon -->
+                <!-- Lightning Bolt Icon -->
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 9l1.056 3.167A2.25 2.25 0 0012.188 13.5h2.624a2.25 2.25 0 002.132-1.5L18 9m-9 0L7.944 5.833A2.25 2.25 0 005.812 4.5H3.188a2.25 2.25 0 00-2.132 1.5L0 9m9 0h9" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
                 </svg>
               </div>
-              <h3 class="text-lg font-bold tracking-tight">Subiecte Avansate (Timp Critic și Lumea Analogică)</h3>
+              <h3 class="text-lg font-bold tracking-tight">Lumea Analogică & Timpul Critic</h3>
             </div>
             <p class="text-xs leading-relaxed text-slate-500 font-medium">
-              Subiecte Avansate (Timp Critic și Lumea Analogică): Achiziție de semnale prin ADC, Comparator Analogic, Watchdog Timer și gestionare consum / sleep modes.
+              Tehnici avansate de achiziție și siguranță: conversia semnalelor ADC, utilizarea watchdog-ului pentru prevenirea blocajelor și modurile sleep de economisire.
             </p>
           </div>
 
           <!-- Key Concepts -->
           <div class="flex flex-wrap gap-1.5 pt-2">
-            <span class="rounded-lg bg-slate-900/60 px-2.5 py-1 text-[10px] font-semibold text-slate-500 border border-slate-800/40">ADC & Analog</span>
-            <span class="rounded-lg bg-slate-900/60 px-2.5 py-1 text-[10px] font-semibold text-slate-500 border border-slate-800/40">Watchdog</span>
-            <span class="rounded-lg bg-slate-900/60 px-2.5 py-1 text-[10px] font-semibold text-slate-500 border border-slate-800/40">Sleep / LowPower</span>
+            <span class="rounded-lg bg-slate-900/60 px-2.5 py-1 text-[10px] font-semibold text-slate-500 border border-slate-800/40">Conversie ADC</span>
+            <span class="rounded-lg bg-slate-900/60 px-2.5 py-1 text-[10px] font-semibold text-slate-500 border border-slate-800/40">Watchdog Timer</span>
+            <span class="rounded-lg bg-slate-900/60 px-2.5 py-1 text-[10px] font-semibold text-slate-500 border border-slate-800/40">Power Management</span>
           </div>
         </div>
 

@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teorie Timere & PWM - Exam Trainers</title>
+  <meta name="description" content="Sinteză interactivă pentru examen: Timere, PWM, Mașina de stare pentru Debouncing pe ATmega16.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-indigo': '0 0 25px -5px rgba(99, 102, 241, 0.4)',
+            'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.4)',
+            'glow-violet': '0 0 25px -5px rgba(139, 92, 246, 0.4)',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-out forwards',
+            'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'pulse-slow': 'pulseSlow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(12px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            pulseSlow: {
+              '0%, 100%': { opacity: '0.4' },
+              '50%': { opacity: '0.8' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Premium dark cybernetic background */
+    body {
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 45%),
+        #0b0f19;
+    }
+
+    /* Grid layout background simulation */
+    .circuit-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+
+  <!-- React & ReactDOM CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <!-- Babel CDN for compiling JSX in-browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-y-auto overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+
+  <div id="root" class="min-h-screen flex flex-col justify-between"></div>
+
+  <!-- React Script -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Component Icons
+    const CalculatorIcon = () => (
+      <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75V18m-3-10.5h.008v.008H12.75V7.5zm0 3h.008v.008H12.75v-.008zm0 3h.008v.008H12.75v-.008zm0 3h.008v.008H12.75V16.5zm-3-9h.008v.008H9.75V7.5zm0 3h.008v.008H9.75v-.008zm0 3h.008v.008H9.75v-.008zm-3-6h.008v.008H6.75V4.5zm0 3h.008v.008H6.75V7.5zm0 3h.008v.008H6.75v-.008zm3 9h.008v.008H9.75V16.5zm-3 0h.008v.008H6.75V16.5zm12-9h.008v.008H18.75V7.5zm0 3h.008v.008H18.75v-.008zm0 3h.008v.008H18.75v-.008zm0 3h.008v.008H18.75V16.5zm-12-12h12a1.5 1.5 0 011.5 1.5v15a1.5 1.5 0 01-1.5 1.5h-12a1.5 1.5 0 01-1.5-1.5v-15a1.5 1.5 0 011.5-1.5z" />
+      </svg>
+    );
+
+    const BookIcon = () => (
+      <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+    );
+
+    const TerminalIcon = () => (
+      <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+      </svg>
+    );
+
+    const CpuIcon = () => (
+      <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M12 3v1.5m3.75-1.5V4.5m-12 15V21m4.5-1.5V21m3.75-1.5V21m-9-15h13.5A2.25 2.25 0 0121 6.75v10.5a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 17.25V6.75A2.25 2.25 0 015.25 4.5z" />
+      </svg>
+    );
+
+    const CheckIcon = () => (
+      <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+      </svg>
+    );
+
+    const CrossIcon = () => (
+      <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    );
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('intro'); // intro, math, ctc, pwm, debouncing, quiz
+      const [copiedText, setCopiedText] = useState(null);
+
+      // Math calculator states
+      const [calcTime, setCalcTime] = useState(1); // valoare numerica
+      const [calcUnit, setCalcUnit] = useState('ms'); // ms, us
+      const [calcFosc, setCalcFosc] = useState(1); // MHz
+
+      // PWM Simulator states
+      const [pwmVal, setPwmVal] = useState(127);
+
+      // Debouncing FSM simulation states
+      const [fsmState, setFsmState] = useState(0); // 0: Repaus, 1: Debouncing Apasare, 2: Stabil Apasat, 3: Debouncing Eliberare
+      const [fsmTimer, setFsmTimer] = useState(0); // 0 sau 20ms
+      const [fsmButton, setFsmButton] = useState(1); // 1: Neapasat, 0: Apasat (activ-low)
+      const [fsmConsole, setFsmConsole] = useState(['Masina de stări inițializată. Așteptăm apăsare buton.']);
+
+      // Quiz states
+      const [quizAnswers, setQuizAnswers] = useState({ q1: null, q2: null, q3: null, q4: null });
+      const [showQuizResults, setShowQuizResults] = useState(false);
+
+      const handleCopy = (text, key) => {
+        navigator.clipboard.writeText(text);
+        setCopiedText(key);
+        setTimeout(() => setCopiedText(null), 2000);
+      };
+
+      // Math calculations logic
+      const calculateMath = () => {
+        const timeUs = calcUnit === 'ms' ? calcTime * 1000 : calcTime;
+        const tCpu = 1 / calcFosc; // us
+        const targetStepsTotal = timeUs / tCpu;
+
+        const prescalers = [1, 8, 64, 256, 1024];
+        const results = prescalers.map(p => {
+          const N = targetStepsTotal / p;
+          const isInt = Number.isInteger(N) || Math.abs(N - Math.round(N)) < 1e-9;
+          const roundedN = Math.round(N);
+          const t02Ok = roundedN <= 256 && roundedN > 0;
+          const t1Ok = roundedN <= 65536 && roundedN > 0;
+          
+          let t02Text = '';
+          if (t02Ok && isInt) {
+            t02Text = `Alegere validă (OCR=${roundedN - 1})`;
+          } else {
+            t02Text = roundedN > 256 ? 'Depășire (>256)' : 'Imposibil';
+          }
+
+          let t1Text = '';
+          if (t1Ok && isInt) {
+            t1Text = `Alegere validă (OCR1A=${roundedN - 1})`;
+          } else {
+            t1Text = roundedN > 65536 ? 'Depășire (>65K)' : 'Imposibil';
+          }
+
+          return { p, N: N.toFixed(2), roundedN, isInt, t02Ok, t1Ok, t02Text, t1Text };
+        });
+
+        return { targetStepsTotal, results };
+      };
+
+      const mathData = calculateMath();
+
+      // Debouncing simulation step
+      const stepFsm = (pinVal) => {
+        setFsmButton(pinVal);
+        let nextState = fsmState;
+        let nextTimer = fsmTimer;
+        let logMsg = '';
+
+        switch(fsmState) {
+          case 0: // Așteptăm apăsare (buton = 0)
+            if (pinVal === 0) {
+              nextState = 1;
+              nextTimer = 0;
+              logMsg = 'Zgomot/Apăsare detectată pe pin (0 logic). Pornim timer debouncing: 0 ms.';
+            } else {
+              logMsg = 'Butonul este liber (1 logic). Stăm în starea 0.';
+            }
+            break;
+          case 1: // Debouncing Apăsare
+            if (pinVal !== 0) {
+              nextState = 0;
+              nextTimer = 0;
+              logMsg = 'Butonul s-a eliberat brusc! A fost doar o vibrație tranzitorie. Revenim în starea 0.';
+            } else {
+              nextTimer += 10;
+              if (nextTimer >= 20) {
+                nextState = 2;
+                logMsg = 'Stabilitate validată (20ms pe 0 logic)! ÎNREGISTRĂM O APĂSARE (Returnează 1). Trecem în starea 2.';
+              } else {
+                logMsg = `Timp scurs: ${nextTimer}ms. Continuăm verificarea...`;
+              }
+            }
+            break;
+          case 2: // Stabil Apăsat
+            if (pinVal !== 0) {
+              nextState = 3;
+              nextTimer = 0;
+              logMsg = 'Butonul pare eliberat (1 logic). Începem debouncing eliberare: 0 ms.';
+            } else {
+              logMsg = 'Butonul este menținut apăsat (0 logic). Stăm în starea 2.';
+            }
+            break;
+          case 3: // Debouncing Eliberare
+            if (pinVal === 0) {
+              nextState = 2;
+              nextTimer = 0;
+              logMsg = 'Butonul s-a apăsat iar brusc! Vibrație la eliberare. Revenim în starea 2.';
+            } else {
+              nextTimer += 10;
+              if (nextTimer >= 20) {
+                nextState = 0;
+                logMsg = 'Eliberare validată (20ms pe 1 logic)! Sistemul este complet resetat. Revenim în starea 0.';
+              } else {
+                logMsg = `Timp scurs: ${nextTimer}ms. Așteptăm stabilitate...`;
+              }
+            }
+            break;
+        }
+
+        setFsmState(nextState);
+        setFsmTimer(nextTimer);
+        setFsmConsole(prev => [logMsg, ...prev.slice(0, 4)]);
+      };
+
+      // Quiz data
+      const quizQuestions = [
+        {
+          id: 'q1',
+          question: 'De ce este interzisă utilizarea funcției _delay_ms() la examen sau în proiectele complexe?',
+          options: [
+            'Deoarece funcția are un consum extrem de mare de energie electrică.',
+            'Deoarece blochează complet procesorul în bucle de așteptare inactive, împiedicând citirea butoanelor și alte procesări hardware.',
+            'Deoarece funcționează doar pe microcontrolerele de 32 de biți, nu și pe ATmega16.',
+            'Deoarece are o precizie extrem de redusă comparativ cu timerele software.'
+          ],
+          correct: 1,
+          explanation: '_delay_ms() este o așteptare blocantă (software loop). În tot acest timp, procesorul nu poate executa nicio altă instrucțiune. Folosind timere, procesorul este liber în bucla principală, iar timpul se măsoară asincron prin întreruperi.'
+        },
+        {
+          id: 'q2',
+          question: 'Care este limita superioară pentru valoarea pașilor N la configurarea unui ceas pe Timer 1 și unde se scrie pragul?',
+          options: [
+            'N ≤ 256, se scrie în OCR0 sau OCR2.',
+            'N ≤ 65536, se scrie în registrul OCR1A.',
+            'N ≤ 1024, se scrie în TCCR1B.',
+            'N ≤ 65535, se scrie în TIMSK.'
+          ],
+          correct: 1,
+          explanation: 'Timer 1 este un timer de 16 biți, deci poate număra până la 65535 (65536 pași, de la 0). Valoarea limită se scrie în registrul de compare match OCR1A.'
+        },
+        {
+          id: 'q3',
+          question: 'Care este comportamentul semnalului Fast PWM în mod non-inverting (COM01 = 1) pe pinul OC0?',
+          options: [
+            'Semnalul rămâne pe 0 logic constant indiferent de valoarea registrului OCR0.',
+            'Pinul OC0 este setat pe 1 logic (High) la Compare Match (când timerul atinge OCR0) și pe 0 logic (Low) la Bottom.',
+            'Pinul OC0 este setat pe 1 logic la Bottom (0) și devine 0 logic la Compare Match (când timerul egalează OCR0). OCR0 mare oferă factor de umplere mare.',
+            'Semnalul are o frecvență variabilă dictată exclusiv de OCR0, factorul de umplere fiind constant la 50%.'
+          ],
+          correct: 2,
+          explanation: 'În mod Fast PWM Non-Inverting, la începutul ciclului (Bottom/0) pinul devine 1 logic, iar când timerul atinge OCR0, pinul cade în 0 logic. Astfel, o valoare mai mare în OCR0 înseamnă că pinul stă mai mult timp pe 1 logic (factor de umplere direct proporțional cu OCR0).'
+        },
+        {
+          id: 'q4',
+          question: 'La examen, dacă se dorește factor de umplere de 100% în Fast PWM, ce valoare scrii în OCR0 pe foaie și ce folosești în SimulIDE?',
+          options: [
+            '255 pe foaie, respectiv 254 în simulator (workaround pentru bug-ul simulatorului la valoarea 255).',
+            '127 pe foaie, respectiv 128 în simulator.',
+            '100 pe foaie, respectiv 99 în simulator.',
+            '256 pe foaie, respectiv 255 în simulator.'
+          ],
+          correct: 0,
+          explanation: 'La examen, corect este OCR0 = 255 (255/255 = 100%). Totuși, SimulIDE are un bug în modul Fast PWM în care valoarea 255 stinge complet semnalul (0%), astfel că în simulator se folosește valoarea 254 ca prag maxim.'
+        }
+      ];
+
+      return (
+        <div class="flex-1 flex flex-col justify-between">
+          <main class="relative mx-auto flex w-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8 justify-between animate-fade-in">
+            
+            {/* Header / Nav */}
+            <header class="flex items-center justify-between mb-8">
+              <nav class="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+                <a href="../index.html" class="flex items-center hover:text-white transition-colors duration-150 py-1 px-2 rounded-md hover:bg-white/5">
+                  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                  </svg>
+                  Microprocesoare Hub
+                </a>
+                <span class="text-slate-600 font-semibold">/</span>
+                <span class="text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">Teorie: Timere & PWM</span>
+              </nav>
+
+              <div class="hidden sm:flex items-center space-x-2 text-xs text-slate-400 bg-slate-900/60 border border-slate-800 rounded-full px-3 py-1.5 backdrop-blur-md">
+                <span class="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></span>
+                <span class="font-semibold uppercase tracking-wider">Capitolul 2: Teorie</span>
+              </div>
+            </header>
+
+            {/* Hero Section */}
+            <section class="text-center sm:text-left mb-8 space-y-3">
+              <div class="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-violet-400">
+                🚀 MEGA-MATERIAL ZIUA 1
+              </div>
+              <h1 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
+                Inima Microcontrolerului
+              </h1>
+              <p class="max-w-3xl text-sm leading-relaxed text-slate-400 font-medium">
+                Ghidul complet și interactiv de asimilare a teoriei despre Timere, PWM și Debouncing pe platforma ATmega16 / AVR. Învață formulele, vezi undele PWM în acțiune și testează mașina de stări înainte de a trece la scrierea codului.
+              </p>
+            </section>
+
+            {/* Navigation Tabs */}
+            <nav class="flex flex-wrap gap-2 mb-8 border-b border-slate-900 pb-4">
+              <button 
+                onClick={() => setActiveTab('intro')}
+                class={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'intro' ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                1. Regula & Arsenal
+              </button>
+              <button 
+                onClick={() => setActiveTab('math')}
+                class={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'math' ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                2. Formula de Aur
+              </button>
+              <button 
+                onClick={() => setActiveTab('ctc')}
+                class={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'ctc' ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                3. Mod CTC
+              </button>
+              <button 
+                onClick={() => setActiveTab('pwm')}
+                class={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'pwm' ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                4. Fast PWM
+              </button>
+              <button 
+                onClick={() => setActiveTab('debouncing')}
+                class={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'debouncing' ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                5. Debouncing FSM
+              </button>
+              <button 
+                onClick={() => setActiveTab('quiz')}
+                class={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'quiz' ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                6. Test Teorie
+              </button>
+            </nav>
+
+            {/* TAB 1: INTRODUCERE & ARSENAL */}
+            {activeTab === 'intro' && (
+              <section class="grid gap-6 lg:grid-cols-3 animate-slide-up">
+                
+                {/* Rules & Core constraint */}
+                <div class="lg:col-span-2 space-y-6">
+                  <article class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <BookIcon />
+                      Regula de Aur a Examenului
+                    </h3>
+                    <div class="space-y-3 text-xs leading-relaxed text-slate-400 font-medium">
+                      <p>
+                        Este <strong class="text-rose-400 font-bold">strict interzisă</strong> folosirea funcțiilor de întârziere software cum ar fi <code class="bg-slate-950 px-1.5 py-0.5 rounded text-indigo-400 font-mono">_delay_ms()</code> sau bucle de tip <code class="bg-slate-950 px-1.5 py-0.5 rounded text-indigo-400 font-mono">for(volatile int i=0; i&lt;1000; i++);</code>.
+                      </p>
+                      <p>
+                        Orice temporizare sau măsurare a timpului se realizează <strong>EXCLUSIV</strong> prin hardware-ul dedicat al microcontrolerului, adică prin intermediul <strong>Timerelor</strong>.
+                      </p>
+                      <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-850 flex gap-3.5 items-start mt-3">
+                        <span class="text-lg text-emerald-400 shrink-0">💡</span>
+                        <p class="text-[11px] leading-relaxed text-slate-400 font-medium">
+                          <strong class="text-white">De ce?</strong> În timp ce o întârziere software blochează tot procesorul timp de zeci sau sute de milisecunde împiedicând citirea altor senzori sau butoane, hardware-ul de timer numără autonom în fundal. Când atinge pragul, el ridică o cerere de întrerupere (ISR), lăsând procesorul liber să facă altceva în restul timpului.
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+
+                  {/* Program Skeleton */}
+                  <article class="bg-[#1e1e1e] rounded-3xl border border-slate-800/80 overflow-hidden shadow-inner space-y-px">
+                    <div class="bg-[#181818] px-6 py-3 border-b border-slate-800/80 flex justify-between items-center text-xs font-mono select-none">
+                      <span class="text-slate-350">Scheletul unui program de examen (C)</span>
+                      <button 
+                        onClick={() => handleCopy(`#include <avr/io.h>\n#include <avr/interrupt.h>\n\nvolatile unsigned int milisecunde = 0;\n\nISR(TIMER2_COMP_vect) {\n    milisecunde++;\n}\n\nint main(void) {\n    // 1. Initializare Porturi\n    // 2. Initializare Timere & sei()\n    \n    while (1) {\n        // Bucla principala (Non-blocanta)\n    }\n    return 0;\n}`, 'skel_code')}
+                        class="text-indigo-400 hover:text-indigo-300 text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      >
+                        {copiedText === 'skel_code' ? 'Copiat!' : 'Copiază Scheletul'}
+                      </button>
+                    </div>
+                    <pre class="p-5 font-mono text-[11.5px] leading-relaxed text-[#D4D4D4] overflow-x-auto">
+                      <span class="text-[#C586C0]">#include</span> <span class="text-[#CE9178]">&lt;avr/io.h&gt;</span><br/>
+                      <span class="text-[#C586C0]">#include</span> <span class="text-[#CE9178]">&lt;avr/interrupt.h&gt;</span> <span class="text-[#6A9955]">// Obligatoriu pentru ISR</span><br/>
+                      <br/>
+                      <span class="text-[#6A9955]">// Variabilă globală volatilă incrementată în ISR</span><br/>
+                      <span class="text-[#569CD6]">volatile unsigned int</span> <span class="text-[#9CDCFE]">milisecunde</span> = <span class="text-[#B5CEA8]">0</span>;<br/>
+                      <br/>
+                      <span class="text-[#DCDCAA]">ISR</span>(<span class="text-[#9CDCFE]">TIMER2_COMP_vect</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">milisecunde</span>++;<br/>
+                      &#125;<br/>
+                      <br/>
+                      <span class="text-[#569CD6]">int</span> <span class="text-[#DCDCAA]">main</span>(<span class="text-[#569CD6]">void</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]">// 1. Inițializare Porturi (DDRx, PORTx)</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]">// 2. Inițializare Timere (TCCRn, OCRn, TIMSK) &amp; sei()</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">while</span> (<span class="text-[#B5CEA8]">1</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]">// Buclă infinită, complet asincronă și non-blocantă</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">return</span> <span class="text-[#B5CEA8]">0</span>;<br/>
+                      &#125;
+                    </pre>
+                  </article>
+                </div>
+
+                {/* The 3 Timers Card info */}
+                <div class="space-y-6">
+                  <article class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <CpuIcon />
+                      Arsenalul tău: Cele 3 Timere
+                    </h3>
+                    
+                    <div class="space-y-4 text-xs">
+                      
+                      {/* Timer 0 */}
+                      <div class="p-3 bg-slate-950/60 border border-slate-850 rounded-2xl space-y-1 hover:border-slate-700/50 transition-all">
+                        <div class="flex items-center justify-between">
+                          <span class="font-bold text-indigo-400">Timer 0 (8-biți)</span>
+                          <span class="text-[10px] font-mono bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/20">Capacitate: 256</span>
+                        </div>
+                        <p class="text-slate-400 leading-relaxed font-medium">
+                          Ideal pentru <strong>Fast PWM</strong>. Semnalul iese pe pinul dedicat <strong class="text-white">PB3 (OC0)</strong>. 
+                        </p>
+                        <div class="text-[10px] text-rose-400 font-semibold bg-rose-500/5 px-2 py-1 rounded mt-1 border border-rose-500/10">
+                          ⚠️ BUG SimulIDE: Evită folosirea Timerului 0 în modul CTC în simulator (dă erori).
+                        </div>
+                      </div>
+
+                      {/* Timer 2 */}
+                      <div class="p-3 bg-slate-950/60 border border-slate-850 rounded-2xl space-y-1 hover:border-slate-700/50 transition-all">
+                        <div class="flex items-center justify-between">
+                          <span class="font-bold text-violet-400">Timer 2 (8-biți)</span>
+                          <span class="text-[10px] font-mono bg-violet-500/10 text-violet-400 px-2 py-0.5 rounded border border-violet-500/20">Capacitate: 256</span>
+                        </div>
+                        <p class="text-slate-400 leading-relaxed font-medium">
+                          Ideal pentru <strong>CTC</strong> la intervale mici (ex. bază de timp 1ms). Oferă prescalere foarte granulare (ex. 32, 128 pe lângă cele clasice).
+                        </p>
+                      </div>
+
+                      {/* Timer 1 */}
+                      <div class="p-3 bg-slate-950/60 border border-slate-850 rounded-2xl space-y-1 hover:border-slate-700/50 transition-all">
+                        <div class="flex items-center justify-between">
+                          <span class="font-bold text-emerald-400">Timer 1 (16-biți)</span>
+                          <span class="text-[10px] font-mono bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">Capacitate: 65.536</span>
+                        </div>
+                        <p class="text-slate-400 leading-relaxed font-medium">
+                          <strong>"Tancul"</strong>. Capacitate foarte mare, se folosește în CTC pentru intervale mari (ex. 1 secundă) sau măsurători hardware precise de timp.
+                        </p>
+                      </div>
+
+                    </div>
+                  </article>
+                </div>
+              </section>
+            )}
+
+            {/* TAB 2: MATEMATICA TIMERELOR */}
+            {activeTab === 'math' && (
+              <section class="grid gap-6 lg:grid-cols-12 animate-slide-up">
+                
+                {/* Explanation Card */}
+                <div class="lg:col-span-5 space-y-6">
+                  <article class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <CalculatorIcon />
+                      Formula de Aur a Examenului
+                    </h3>
+
+                    <div class="text-xs leading-relaxed text-slate-400 font-medium space-y-3">
+                      <p>
+                        Determinarea parametrilor pentru timer pornește de la ecuația:
+                      </p>
+                      
+                      <div class="my-4 p-4 bg-slate-950 rounded-2xl border border-slate-850 flex justify-center text-base font-mono text-white shadow-inner">
+                        T_cycle = p * N * T_CLK_CPU
+                      </div>
+
+                      <ul class="space-y-2 list-disc list-inside bg-slate-950/30 p-4 rounded-2xl border border-slate-850/65">
+                        <li><strong class="text-indigo-400">T_cycle</strong>: Intervalul dorit (ex. 1 ms = 1000 µs).</li>
+                        <li><strong class="text-violet-400">T_CLK_CPU</strong>: 1 / Frecvența procesorului. La examen, Fosc = 1 MHz, deci <code class="text-white">T_CLK_CPU = 1 us</code>.</li>
+                        <li><strong class="text-emerald-400">p (Prescaler)</strong>: Divizorul de ceas. Valorile valide sunt <code class="text-white">1, 8, 64, 256, 1024</code>.</li>
+                        <li><strong class="text-white">N (Pași)</strong>: Numărul de impulsuri pe care timerul le va număra. <strong class="text-rose-400">Trebuie să fie număr întreg!</strong></li>
+                      </ul>
+
+                      <p>
+                        <strong>Regulă de aur:</strong> Odată calculată valoarea lui N, valoarea setată în registrul <code class="text-white font-mono">OCR</code> va fi <code class="text-white">N - 1</code> deoarece timerul începe să numere de la 0.
+                      </p>
+                    </div>
+                  </article>
+
+                  <article class="bg-rose-500/10 border border-rose-500/20 rounded-3xl p-5 text-xs space-y-2">
+                    <h4 class="font-bold text-rose-400 flex items-center gap-1.5 uppercase tracking-wide text-[10px]">
+                      ⚠️ Limitele hardware de capacitate ale lui N
+                    </h4>
+                    <p class="text-slate-400 leading-relaxed font-medium">
+                      - <strong>Timer 0 și Timer 2 (8 biți)</strong>: N ≤ 256 (registrul OCRn poate fi scris maxim cu 255).
+                    </p>
+                    <p class="text-slate-400 leading-relaxed font-medium">
+                      - <strong>Timer 1 (16 biți)</strong>: N ≤ 65536 (registrul OCR1A poate fi scris maxim cu 65535).
+                    </p>
+                  </article>
+                </div>
+
+                {/* Interactive Math Sandbox / Calculator */}
+                <div class="lg:col-span-7 space-y-6">
+                  <div class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <CalculatorIcon />
+                      Calculator Interactiv de Formula de Aur
+                    </h3>
+
+                    <div class="grid gap-4 sm:grid-cols-3">
+                      <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">T_cycle (Valoare)</label>
+                        <input 
+                          type="number"
+                          value={calcTime}
+                          min="1"
+                          onChange={(e) => setCalcTime(Math.max(1, parseInt(e.target.value) || 1))}
+                          class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white font-mono focus:outline-none focus:border-indigo-500/50"
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Unitate de Timp</label>
+                        <select 
+                          value={calcUnit}
+                          onChange={(e) => setCalcUnit(e.target.value)}
+                          class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500/50"
+                        >
+                          <option value="ms">Milisecunde (ms)</option>
+                          <option value="us">Microsecunde (us)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Frecvență Procesor</label>
+                        <select 
+                          value={calcFosc}
+                          onChange={(e) => setCalcFosc(parseFloat(e.target.value))}
+                          class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500/50"
+                        >
+                          <option value={1}>1 MHz (Examen standard)</option>
+                          <option value={8}>8 MHz</option>
+                          <option value={16}>16 MHz</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="bg-slate-950/40 border border-slate-850 rounded-2xl p-5 space-y-4">
+                      <div class="text-[11px] text-slate-400 font-medium">
+                        Timp în microsecunde: <span class="text-white font-mono">{calcUnit === 'ms' ? calcTime * 1000 : calcTime} µs</span>. Perioadă procesor: <span class="text-white font-mono">{(1/calcFosc).toFixed(2)} µs</span>. Pași totali teoretici (N_total la p=1): <span class="text-indigo-400 font-mono font-bold">{mathData.targetStepsTotal}</span>.
+                      </div>
+
+                      <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-400">
+                          <thead class="text-[10px] font-bold text-slate-500 uppercase border-b border-slate-850">
+                            <tr>
+                              <th class="py-2.5">Prescaler (p)</th>
+                              <th class="py-2.5">N calculated</th>
+                              <th class="py-2.5">N (Întreg?)</th>
+                              <th class="py-2.5 text-center">Timer 0/2 (8-bit)</th>
+                              <th class="py-2.5 text-center">Timer 1 (16-bit)</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-slate-850/50">
+                            {mathData.results.map((res, idx) => (
+                              <tr key={idx} class="hover:bg-slate-950/20">
+                                <td class="py-3 font-mono font-bold text-white">{res.p}</td>
+                                <td class="py-3 font-mono text-indigo-300">{res.N}</td>
+                                <td class="py-3">
+                                  {res.isInt ? (
+                                    <span class="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 text-[10px]">DA</span>
+                                  ) : (
+                                    <span class="text-slate-500 font-medium text-[10px]">NU</span>
+                                  )}
+                                </td>
+                                <td class="py-3 text-center">
+                                  <span class={res.t02Ok && res.isInt ? "text-emerald-400 font-bold text-[10px] block" : "text-rose-500/50 text-[10px] block font-mono"}>
+                                    {res.t02Text}
+                                  </span>
+                                </td>
+                                <td class="py-3 text-center">
+                                  <span class={res.t1Ok && res.isInt ? "text-violet-400 font-bold text-[10px] block" : "text-rose-500/50 text-[10px] block font-mono"}>
+                                    {res.t1Text}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+              </section>
+            )}
+
+            {/* TAB 3: MODUL CTC */}
+            {activeTab === 'ctc' && (
+              <section class="grid gap-6 lg:grid-cols-2 animate-slide-up">
+                
+                {/* Registers Explanation */}
+                <div class="space-y-6">
+                  <article class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <CpuIcon />
+                      Modul CTC (Clear Timer on Compare Match)
+                    </h3>
+                    
+                    <div class="text-xs leading-relaxed text-slate-400 font-medium space-y-3">
+                      <p>
+                        Modul CTC acționează ca un ceas cu alarmă recurentă. Timerul pornește de la 0 și se încrementează la fiecare tact. Când valoarea sa atinge registrul <code class="text-white">OCRn</code>, el își resetează valoarea instantaneu înapoi la 0 și generează o întrerupere hardware.
+                      </p>
+                      
+                      <h4 class="font-bold text-white mt-4">Registrii Configurați:</h4>
+                      <ul class="space-y-3 text-[11px]">
+                        <li class="bg-slate-950/50 p-2.5 rounded-xl border border-slate-850">
+                          <strong class="text-indigo-400 font-mono text-xs">OCRn</strong> (ex. <code class="text-white">OCR2</code>): Pragul limită de numărare. Se scrie cu valoarea <code class="text-white font-mono">N - 1</code>.
+                        </li>
+                        <li class="bg-slate-950/50 p-2.5 rounded-xl border border-slate-850">
+                          <strong class="text-violet-400 font-mono text-xs">TCCRn</strong> (ex. <code class="text-white">TCCR2</code>): Registrul de control. Se bifează bitul de modul CTC (<code class="text-white">WGM21=1</code>) și biții de prescaler (ex. `CS21` pentru p=8).
+                        </li>
+                        <li class="bg-slate-950/50 p-2.5 rounded-xl border border-slate-850">
+                          <strong class="text-emerald-400 font-mono text-xs">TIMSK</strong>: Registrul măștii de întrerupere. Se activează Compare Match Interrupt prin bitul corespunzător (<code class="text-white">OCIE2=1</code>).
+                        </li>
+                        <li class="bg-slate-950/50 p-2.5 rounded-xl border border-slate-850">
+                          <strong class="text-white font-mono text-xs">sei()</strong>: Funcția macro din bibliotecă care activează întreruperile globale în registrul de stare al procesorului (SREG).
+                        </li>
+                      </ul>
+                    </div>
+                  </article>
+                </div>
+
+                {/* Code template and ISR usage */}
+                <div class="space-y-6">
+                  <article class="bg-[#1e1e1e] rounded-3xl border border-slate-800/80 overflow-hidden shadow-inner space-y-px">
+                    <div class="bg-[#181818] px-6 py-3 border-b border-slate-800/80 flex justify-between items-center text-xs font-mono select-none">
+                      <span class="text-slate-350">Inițializare Timer 2 (1ms, Fosc=1MHz, p=8)</span>
+                      <button 
+                        onClick={() => handleCopy(`void init_timer2_1ms() {\n    OCR2 = 124; // N = 125 pași\n    TCCR2 = (1 << WGM21) | (1 << CS21); // CTC, Prescaler 8\n    TIMSK |= (1 << OCIE2); // Activăm întreruperea\n    sei(); // Activare globală\n}`, 'ctc_code')}
+                        class="text-indigo-400 hover:text-indigo-300 text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      >
+                        {copiedText === 'ctc_code' ? 'Copiat!' : 'Copiază Codul'}
+                      </button>
+                    </div>
+                    <pre class="p-5 font-mono text-[11.5px] leading-relaxed text-[#D4D4D4] overflow-x-auto">
+                      <span class="text-[#569CD6]">void</span> <span class="text-[#DCDCAA]">init_timer2_1ms</span>(<span class="text-[#569CD6]">void</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">OCR2</span> = <span class="text-[#B5CEA8]">124</span>; <span class="text-[#6A9955]">// N = 125, pragul este N - 1</span><br/>
+                      <br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]">// Setează Modul CTC (WGM21 = 1) și Prescaler 8 (CS21 = 1)</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">TCCR2</span> = (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#9CDCFE]">WGM21</span>) | (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#9CDCFE]">CS21</span>);<br/>
+                      <br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]">// Activează întreruperea Compare Match pentru Timer 2</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">TIMSK</span> |= (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#9CDCFE]">OCIE2</span>);<br/>
+                      <br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#DCDCAA]">sei</span>(); <span class="text-[#6A9955]">// Activează global întreruperile</span><br/>
+                      &#125;
+                    </pre>
+                  </article>
+                </div>
+
+              </section>
+            )}
+
+            {/* TAB 4: MODUL FAST PWM */}
+            {activeTab === 'pwm' && (
+              <section class="grid gap-6 lg:grid-cols-12 animate-slide-up">
+                
+                {/* PWM Explanation */}
+                <div class="lg:col-span-5 space-y-6">
+                  <article class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <CpuIcon />
+                      Modul Fast PWM
+                    </h3>
+                    
+                    <div class="text-xs leading-relaxed text-slate-400 font-medium space-y-3">
+                      <p>
+                        Fast PWM (Pulse Width Modulation) este un mod pur hardware. <strong class="text-rose-400 font-bold">NU necesită rutine ISR sau funcția sei()!</strong> Microcontrolerul oscilează direct pinul de ieșire automat în hardware.
+                      </p>
+                      
+                      <p>
+                        Timerul numără continuu de la 0 la 255 (pe 8 biți).
+                      </p>
+                      
+                      <ul class="space-y-1.5 list-disc list-inside bg-slate-950/30 p-4 rounded-2xl border border-slate-850/65">
+                        <li>La începutul ciclului (Bottom / 0), pinul dedicat devine 1 logic.</li>
+                        <li>Când timerul atinge valoarea din `OCR0`, pinul devine 0 logic.</li>
+                        <li>Acest lucru se numește <strong>Modul Non-Inverting (COM01 = 1)</strong>.</li>
+                      </ul>
+
+                      <p>
+                        Valoarea scrisă în `OCR0` determină direct factorul de umplere (cât de mult timp stă pinul pe 1 logic în timpul unui ciclu de 256 tacte):
+                        - <code class="text-white">OCR0 = 0</code>: 0% factor de umplere (semnal oprit).
+                        - <code class="text-white">OCR0 = 127</code>: 50% factor de umplere.
+                        - <code class="text-white">OCR0 = 255</code>: 100% factor de umplere (semnal maxim pe foaia de examen).
+                      </p>
+
+                      <div class="text-[10px] text-rose-400 font-semibold bg-rose-500/5 p-3 rounded-xl border border-rose-500/10 leading-normal">
+                        ⚠️ BUG SimulIDE: În simulator, valoarea OCR = 255 stinge complet LED-ul din cauza unei erori interne a emulatorului. Pentru factor de umplere maxim în simulator se folosește valoarea <strong>254</strong> în loc de 255.
+                      </div>
+                    </div>
+                  </article>
+                </div>
+
+                {/* PWM Simulator & Code */}
+                <div class="lg:col-span-7 space-y-6">
+                  
+                  {/* PWM Code */}
+                  <article class="bg-[#1e1e1e] rounded-3xl border border-slate-800/80 overflow-hidden shadow-inner space-y-px">
+                    <div class="bg-[#181818] px-6 py-3 border-b border-slate-800/80 flex justify-between items-center text-xs font-mono select-none">
+                      <span class="text-slate-350">Inițializare PWM Timer 0 (Pinul PB3)</span>
+                      <button 
+                        onClick={() => handleCopy(`void init_pwm_timer0() {\n    DDRB |= (1 << 3); // PB3 (OC0) ca ieșire\n    TCCR0 = (1 << WGM00) | (1 << WGM01) | (1 << COM01) | (1 << CS01); // Fast PWM, Prescaler 8\n    OCR0 = 127; // 50% umplere\n}`, 'pwm_code')}
+                        class="text-indigo-400 hover:text-indigo-300 text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      >
+                        {copiedText === 'pwm_code' ? 'Copiat!' : 'Copiază Codul'}
+                      </button>
+                    </div>
+                    <pre class="p-5 font-mono text-[11.5px] leading-relaxed text-[#D4D4D4] overflow-x-auto">
+                      <span class="text-[#569CD6]">void</span> <span class="text-[#DCDCAA]">init_pwm_timer0</span>(<span class="text-[#569CD6]">void</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]">// 1. OBLIGATORIU: Setăm pinul PB3 (OC0) ca Ieșire!</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">DDRB</span> |= (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#B5CEA8]">3</span>);<br/>
+                      <br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]">// 2. Configurare Fast PWM (WGM00=1, WGM01=1), Non-Inverting (COM01=1), Prescaler 8 (CS01=1)</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">TCCR0</span> = (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#9CDCFE]">WGM00</span>) | (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#9CDCFE]">WGM01</span>) | (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#9CDCFE]">COM01</span>) | (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#9CDCFE]">CS01</span>);<br/>
+                      <br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]">// 3. Valoare de umplere (0 - 255). 127 = ~50%</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">OCR0</span> = <span class="text-[#B5CEA8]">127</span>;<br/>
+                      &#125;
+                    </pre>
+                  </article>
+
+                  {/* Visual Simulator widget */}
+                  <div class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <CalculatorIcon />
+                      Simulator PWM Vizual
+                    </h3>
+
+                    <div class="space-y-4 text-xs font-medium">
+                      <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Setează registrul OCR0:</span>
+                        <span class="text-indigo-400 font-mono font-bold text-sm bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">{pwmVal} ({(pwmVal / 255 * 100).toFixed(0)}% factor de umplere)</span>
+                      </div>
+
+                      <input 
+                        type="range"
+                        min="0"
+                        max="255"
+                        value={pwmVal}
+                        onChange={(e) => setPwmVal(parseInt(e.target.value))}
+                        class="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-indigo-600 focus:outline-none"
+                      />
+
+                      <div class="flex flex-col sm:flex-row gap-6 items-center p-4 bg-slate-950/60 border border-slate-850 rounded-2xl justify-between">
+                        
+                        {/* Waveform graphic */}
+                        <div class="flex-1 w-full space-y-1.5">
+                          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Forma semnalului pe Pinul PB3 (OC0)</span>
+                          <div class="h-12 bg-slate-900 rounded-lg relative overflow-hidden flex items-end border border-slate-800">
+                            
+                            {/* Visual square waves */}
+                            <div class="absolute inset-0 flex items-center justify-around px-2">
+                              {[1, 2, 3, 4].map(i => {
+                                const activeWidth = `${(pwmVal / 255) * 100}%`;
+                                const inactiveWidth = `${((255 - pwmVal) / 255) * 100}%`;
+                                return (
+                                  <div key={i} class="flex h-8 w-1/5 items-end">
+                                    <div class="bg-indigo-500 h-full transition-all duration-75" style={{ width: activeWidth }}></div>
+                                    <div class="bg-slate-800 h-0.5 w-full transition-all duration-75" style={{ width: inactiveWidth }}></div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                          </div>
+                        </div>
+
+                        {/* LED Glowing simulation */}
+                        <div class="flex flex-col items-center shrink-0 w-24">
+                          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">LED Fizic</span>
+                          <div 
+                            class="w-8 h-8 rounded-full border border-indigo-500/40 relative shadow-inner transition-all duration-75"
+                            style={{ 
+                              backgroundColor: `rgba(99, 102, 241, ${pwmVal / 255})`,
+                              boxShadow: pwmVal > 10 ? `0 0 ${pwmVal / 255 * 18}px rgba(99, 102, 241, 0.7)` : 'none'
+                            }}
+                          ></div>
+                          <span class="text-[9px] text-slate-500 font-bold mt-1 uppercase tracking-widest">{pwmVal === 0 ? 'Stins' : pwmVal === 255 ? 'Aprins Max' : 'Intensitate Med'}</span>
+                        </div>
+
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+              </section>
+            )}
+
+            {/* TAB 5: DEBOUNCING */}
+            {activeTab === 'debouncing' && (
+              <section class="grid gap-6 lg:grid-cols-12 animate-slide-up">
+                
+                {/* Debouncing Theory & Code */}
+                <div class="lg:col-span-6 space-y-6">
+                  <article class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <CpuIcon />
+                      De ce avem nevoie de Debouncing?
+                    </h3>
+                    
+                    <div class="text-xs leading-relaxed text-slate-400 font-medium space-y-3">
+                      <p>
+                        Când un buton fizic (mecanic) este apăsat, contactele metalice vibrează elastic timp de câteva milisecunde (bouncing), trimitând zeci de fronturi rapide de 0 și 1 procesorului. Fără debouncing, o singură apăsare ar fi citită ca 10 apăsări de către microcontroler.
+                      </p>
+                      <p>
+                        <strong>Soluția de nota 10 la examen:</strong> Mașina de stări software (FSM) asociată cu o bază de timp exactă (variabila `milisecunde` controlată de Timerul în modul CTC). Se verifică menținerea stării stabile a butonului timp de minimum 20 de milisecunde.
+                      </p>
+                    </div>
+                  </article>
+
+                  <article class="bg-[#1e1e1e] rounded-3xl border border-slate-800/80 overflow-hidden shadow-inner space-y-px">
+                    <div class="bg-[#181818] px-6 py-3 border-b border-slate-800/80 flex justify-between items-center text-xs font-mono select-none">
+                      <span class="text-slate-350">Funcția supremă push_detect()</span>
+                      <button 
+                        onClick={() => handleCopy(`unsigned char push_detect(void) {\n    static unsigned char stare = 0;\n    static unsigned int timp_start = 0;\n    \n    switch (stare) {\n        case 0: // Repaus\n            if ((PINB & (1 << 0)) == 0) {\n                timp_start = milisecunde;\n                stare = 1;\n            }\n            break;\n        case 1: // Debouncing apasare\n            if ((PINB & (1 << 0)) != 0) {\n                stare = 0;\n            } else if ((milisecunde - timp_start) >= 20) {\n                stare = 2;\n                return 1; // Apăsare validată\n            }\n            break;\n        case 2: // Stabil apasat\n            if ((PINB & (1 << 0)) != 0) {\n                timp_start = milisecunde;\n                stare = 3;\n            }\n            break;\n        case 3: // Debouncing eliberare\n            if ((PINB & (1 << 0)) == 0) {\n                stare = 2;\n            } else if ((milisecunde - timp_start) >= 20) {\n                stare = 0; // Resetat\n            }\n            break;\n    }\n    return 0;\n}`, 'debounce_code')}
+                        class="text-indigo-400 hover:text-indigo-300 text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      >
+                        {copiedText === 'debounce_code' ? 'Copiat!' : 'Copiază Funcția'}
+                      </button>
+                    </div>
+                    <pre class="p-5 font-mono text-[10.5px] leading-relaxed text-[#D4D4D4] overflow-y-auto max-h-[380px]">
+                      <span class="text-[#569CD6]">unsigned char</span> <span class="text-[#DCDCAA]">push_detect</span>(<span class="text-[#569CD6]">void</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#569CD6]">static unsigned char</span> <span class="text-[#9CDCFE]">stare</span> = <span class="text-[#B5CEA8]">0</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#569CD6]">static unsigned int</span> <span class="text-[#9CDCFE]">timp_start</span> = <span class="text-[#B5CEA8]">0</span>;<br/>
+                      <br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">switch</span> (<span class="text-[#9CDCFE]">stare</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">case</span> <span class="text-[#B5CEA8]">0</span>: <span class="text-[#6A9955]">// 1. Așteptare apăsare</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">if</span> ((<span class="text-[#9CDCFE]">PINB</span> &amp; (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#B5CEA8]">0</span>)) == <span class="text-[#B5CEA8]">0</span>) &#123; <span class="text-[#6A9955]">// activ pe 0</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">timp_start</span> = <span class="text-[#9CDCFE]">milisecunde</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">stare</span> = <span class="text-[#B5CEA8]">1</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">break</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">case</span> <span class="text-[#B5CEA8]">1</span>: <span class="text-[#6A9955]">// 2. Validare apăsare (anti-vibrație)</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">if</span> ((<span class="text-[#9CDCFE]">PINB</span> &amp; (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#B5CEA8]">0</span>)) != <span class="text-[#B5CEA8]">0</span>) &#123; <span class="text-[#6A9955]">// s-a eliberat prea repede</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">stare</span> = <span class="text-[#B5CEA8]">0</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125; <span class="text-[#C586C0]">else if</span> ((<span class="text-[#9CDCFE]">milisecunde</span> - <span class="text-[#9CDCFE]">timp_start</span>) &gt;= <span class="text-[#B5CEA8]">20</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">stare</span> = <span class="text-[#B5CEA8]">2</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">return</span> <span class="text-[#B5CEA8]">1</span>; <span class="text-[#6A9955]">// COMANDA APĂSARE DECLANȘATĂ</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">break</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">case</span> <span class="text-[#B5CEA8]">2</span>: <span class="text-[#6A9955]">// 3. Așteptare eliberare</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">if</span> ((<span class="text-[#9CDCFE]">PINB</span> &amp; (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#B5CEA8]">0</span>)) != <span class="text-[#B5CEA8]">0</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">timp_start</span> = <span class="text-[#9CDCFE]">milisecunde</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">stare</span> = <span class="text-[#B5CEA8]">3</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">break</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">case</span> <span class="text-[#B5CEA8]">3</span>: <span class="text-[#6A9955]">// 4. Validare eliberare</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">if</span> ((<span class="text-[#9CDCFE]">PINB</span> &amp; (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#B5CEA8]">0</span>)) == <span class="text-[#B5CEA8]">0</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">stare</span> = <span class="text-[#B5CEA8]">2</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125; <span class="text-[#C586C0]">else if</span> ((<span class="text-[#9CDCFE]">milisecunde</span> - <span class="text-[#9CDCFE]">timp_start</span>) &gt;= <span class="text-[#B5CEA8]">20</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">stare</span> = <span class="text-[#B5CEA8]">0</span>; <span class="text-[#6A9955]">// Resetare completă stări</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">break</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">return</span> <span class="text-[#B5CEA8]">0</span>;<br/>
+                      &#125;
+                    </pre>
+                  </article>
+                </div>
+
+                {/* FSM Live Sandbox */}
+                <div class="lg:col-span-6 space-y-6">
+                  <div class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <CalculatorIcon />
+                      Visualizator Interactiv FSM Debouncing
+                    </h3>
+
+                    <div class="space-y-4 text-xs">
+                      <p class="text-slate-400 font-medium">
+                        Simulează apăsarea fizică a butonului mecanic și vezi cum navighează mașina de stări a programului:
+                      </p>
+
+                      <div class="grid grid-cols-2 gap-3">
+                        <button 
+                          onClick={() => stepFsm(0)} 
+                          class="bg-indigo-650 hover:bg-indigo-600 border border-indigo-500/30 text-white rounded-xl py-3.5 font-bold transition-all"
+                        >
+                          Apasă Buton (Scrie 0 în PINB0)
+                        </button>
+                        <button 
+                          onClick={() => stepFsm(1)} 
+                          class="bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 rounded-xl py-3.5 font-bold transition-all"
+                        >
+                          Eliberează Buton (Scrie 1 în PINB0)
+                        </button>
+                      </div>
+
+                      {/* FSM Visual States Grid */}
+                      <div class="grid grid-cols-4 gap-2 pt-2">
+                        {[
+                          { id: 0, label: '0: REPAUS', desc: 'Așteaptă apăsare' },
+                          { id: 1, label: '1: DEB. APĂSARE', desc: 'Confirmare 20ms' },
+                          { id: 2, label: '2: STABIL APĂSAT', desc: 'Așteaptă ridicare' },
+                          { id: 3, label: '3: DEB. ELIBERARE', desc: 'Confirmare 20ms' }
+                        ].map(st => {
+                          const isActive = fsmState === st.id;
+                          return (
+                            <div 
+                              key={st.id} 
+                              class={`p-3 rounded-2xl border transition-all text-center flex flex-col justify-between h-20 ${isActive ? 'bg-indigo-500/15 border-indigo-500/50 text-white shadow-glow-indigo' : 'bg-slate-950/40 border-slate-900 text-slate-500'}`}
+                            >
+                              <span class="font-bold text-[9px] block uppercase tracking-wider">{st.label}</span>
+                              <span class="text-[8px] leading-snug font-medium text-slate-400 mt-1 block">{st.desc}</span>
+                              {isActive && (
+                                <div class="mt-1 flex justify-center">
+                                  <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-ping"></span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Debug console */}
+                      <div class="bg-slate-950 border border-slate-850 rounded-2xl p-4 space-y-1.5">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block border-b border-slate-850/50 pb-1 mb-2">Monitor Stări (Consolă)</span>
+                        <div class="font-mono text-[10px] space-y-1 leading-normal">
+                          {fsmConsole.map((log, idx) => (
+                            <div key={idx} class={`${idx === 0 ? 'text-indigo-400 font-bold' : 'text-slate-500'}`}>
+                              &gt; {log}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+              </section>
+            )}
+
+            {/* TAB 6: QUIZ DE TEORIE */}
+            {activeTab === 'quiz' && (
+              <section class="max-w-3xl mx-auto animate-slide-up space-y-6">
+                
+                <div class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-6">
+                  <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <BookIcon />
+                    Quiz rapid: Testează-ți Teoria
+                  </h3>
+
+                  <div class="space-y-6">
+                    {quizQuestions.map((q, qIndex) => (
+                      <div key={q.id} class="space-y-2.5">
+                        <h4 class="text-xs font-bold text-slate-350 leading-relaxed">
+                          {qIndex + 1}. {q.question}
+                        </h4>
+                        
+                        <div class="grid gap-2">
+                          {q.options.map((opt, optIndex) => {
+                            const isSelected = quizAnswers[q.id] === optIndex;
+                            const isCorrect = optIndex === q.correct;
+                            let style = "bg-slate-950/40 border-slate-800 text-slate-450 hover:border-slate-700 hover:text-white";
+
+                            if (showQuizResults) {
+                              if (isCorrect) {
+                                style = "bg-emerald-500/10 border-emerald-500/35 text-emerald-400";
+                              } else if (isSelected) {
+                                style = "bg-rose-500/10 border-rose-500/35 text-rose-400";
+                              } else {
+                                style = "bg-slate-950/20 border-slate-900 text-slate-600 opacity-60";
+                              }
+                            } else if (isSelected) {
+                              style = "bg-indigo-500/10 border-indigo-500/40 text-indigo-400";
+                            }
+
+                            return (
+                              <button
+                                key={optIndex}
+                                onClick={() => {
+                                  if (showQuizResults) return;
+                                  setQuizAnswers({ ...quizAnswers, [q.id]: optIndex });
+                                }}
+                                disabled={showQuizResults}
+                                class={`text-left text-xs px-4 py-3 rounded-xl border transition-all duration-150 leading-relaxed ${style}`}
+                              >
+                                {opt}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {showQuizResults && (
+                          <p class="text-[11px] text-slate-500 italic mt-1 leading-relaxed pl-2 border-l border-indigo-500/25">
+                            Explicație: {q.explanation}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div class="flex space-x-4 pt-4 border-t border-slate-800/80 justify-end">
+                    {showQuizResults ? (
+                      <button
+                        onClick={() => {
+                          setQuizAnswers({ q1: null, q2: null, q3: null, q4: null });
+                          setShowQuizResults(false);
+                        }}
+                        class="bg-[#25252b] hover:bg-slate-800 text-slate-300 px-5 py-2.5 rounded-xl text-xs font-bold border border-slate-850"
+                      >
+                        Resetează Quiz-ul
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setShowQuizResults(true)}
+                        disabled={Object.values(quizAnswers).some(x => x === null)}
+                        class="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-xl text-xs font-bold transition-all"
+                      >
+                        Verifică Răspunsurile
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+              </section>
+            )}
+
+          </main>
+
+          {/* Footer */}
+          <footer class="mt-auto py-6 border-t border-slate-900 text-center text-xs text-slate-600 font-semibold tracking-wide uppercase">
+            &copy; 2026 ExamTrainers. Construit cu React, Tailwind CSS și dragoste pentru <a href="https://github.com/andreisugu" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-400 transition-colors duration-150 normal-case underline decoration-wavy decoration-indigo-500/30 underline-offset-4">sisteme încorporate</a> de <a href="https://github.com/andreisugu" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors duration-150 normal-case font-mono ml-0.5"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>@andreisugu</a>.
+          </footer>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

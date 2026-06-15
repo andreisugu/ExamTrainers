@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teorie Periferice & Mașini de Stare - Exam Trainers</title>
+  <meta name="description" content="Sinteză interactivă: Look-Up Tables, Mașini de Stare, Shift Registers și Tastaturi Matriceale pe ATmega16.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-indigo': '0 0 25px -5px rgba(99, 102, 241, 0.4)',
+            'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.4)',
+            'glow-violet': '0 0 25px -5px rgba(139, 92, 246, 0.4)',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-out forwards',
+            'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'pulse-slow': 'pulseSlow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(12px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            pulseSlow: {
+              '0%, 100%': { opacity: '0.4' },
+              '50%': { opacity: '0.8' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Premium dark cybernetic background */
+    body {
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 45%),
+        #0b0f19;
+    }
+
+    /* Grid layout background simulation */
+    .circuit-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+
+  <!-- React & ReactDOM CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <!-- Babel CDN for compiling JSX in-browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-y-auto overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+
+  <div id="root" class="min-h-screen flex flex-col justify-between"></div>
+
+  <!-- React Script -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Icons
+    const CpuIcon = () => (
+      <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
+      </svg>
+    );
+
+    const BookIcon = () => (
+      <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+    );
+
+    const TerminalIcon = () => (
+      <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+      </svg>
+    );
+
+    const CalculatorIcon = () => (
+      <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75V18m-3-10.5h.008v.008H12.75V7.5zm0 3h.008v.008H12.75v-.008zm0 3h.008v.008H12.75v-.008zm0 3h.008v.008H12.75V16.5zm-3-9h.008v.008H9.75V7.5zm0 3h.008v.008H9.75v-.008zm0 3h.008v.008H9.75v-.008zm-3-6h.008v.008H6.75V4.5zm0 3h.008v.008H6.75V7.5zm0 3h.008v.008H6.75v-.008zm3 9h.008v.008H9.75V16.5zm-3 0h.008v.008H6.75V16.5zm12-9h.008v.008H18.75V7.5zm0 3h.008v.008H18.75v-.008zm0 3h.008v.008H18.75v-.008zm0 3h.008v.008H18.75V16.5zm-12-12h12a1.5 1.5 0 011.5 1.5v15a1.5 1.5 0 01-1.5 1.5h-12a1.5 1.5 0 01-1.5-1.5v-15a1.5 1.5 0 011.5-1.5z" />
+      </svg>
+    );
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('lut'); // lut, fsm, shift, keypad, quiz
+      const [copiedText, setCopiedText] = useState(null);
+
+      // 7-segment states
+      // Segments: A, B, C, D, E, F, G, DP (index 0 to 7)
+      // Represented by boolean (true = ON/lit, false = OFF/dark)
+      const [segments, setSegments] = useState([true, true, true, true, true, true, false, false]); // Default is "0" (A,B,C,D,E,F lit)
+
+      // FSM States
+      const [fsmState, setFsmState] = useState('ST_INCHIS'); // ST_INCHIS, ST_DESCHIS
+      const [fsmSenzor, setFsmSenzor] = useState(false);
+      const [fsmTimer, setFsmTimer] = useState(0); // Timpul scurs in ms
+      const [fsmConsole, setFsmConsole] = useState(['Sistem ușă inițializat în starea ST_INCHIS.']);
+
+      // Shift Register states
+      const [shiftValue, setShiftValue] = useState(0xAA); // 0b10101010
+      const [shiftBitIndex, setShiftBitIndex] = useState(-1); // -1 = idle
+      const [shiftOutputs, setShiftOutputs] = useState(Array(8).fill(0)); // Starea LED-urilor externe
+      const [shiftLogs, setShiftLogs] = useState(['Introdu o valoare și apasă "Rulează Pas-cu-Pas"']);
+
+      // Keypad scanner states
+      const [activeRow, setActiveRow] = useState(-1); // -1 = idle
+      const [pressedKey, setPressedKey] = useState(null); // { row, col }
+      const [detectedCode, setDetectedCode] = useState(null);
+      const [scanLogs, setScanLogs] = useState(['Așteptăm apăsarea unei taste pe grila 4x4.']);
+
+      // Quiz states
+      const [quizAnswers, setQuizAnswers] = useState({ q1: null, q2: null, q3: null, q4: null });
+      const [showQuizResults, setShowQuizResults] = useState(false);
+
+      const handleCopy = (text, key) => {
+        navigator.clipboard.writeText(text);
+        setCopiedText(key);
+        setTimeout(() => setCopiedText(null), 2000);
+      };
+
+      // 7 segment toggle helper
+      const toggleSegment = (idx) => {
+        const next = [...segments];
+        next[idx] = !next[idx];
+        setSegments(next);
+      };
+
+      // Compute HEX for 7-segment
+      const getHexValue = (commonCathode) => {
+        let val = 0;
+        // Map: DP G F E D C B A
+        // segments order: A (0), B (1), C (2), D (3), E (4), F (5), G (6), DP (7)
+        for (let i = 0; i < 8; i++) {
+          if (segments[i]) {
+            val |= (1 << i);
+          }
+        }
+        if (!commonCathode) {
+          val = ~val & 0xFF; // Invert for common anode
+        }
+        return '0x' + val.toString(16).toUpperCase().padStart(2, '0');
+      };
+
+      // FSM door step simulation
+      const stepFsm = () => {
+        let nextState = fsmState;
+        let logMsg = '';
+        let nextTimer = fsmTimer;
+
+        if (fsmState === 'ST_INCHIS') {
+          if (fsmSenzor) {
+            nextState = 'ST_DESCHIS';
+            nextTimer = 0;
+            logMsg = 'Senzor activ! Pornim motorul ușii, salvăm timp_start și trecem în starea ST_DESCHIS.';
+          } else {
+            logMsg = 'Senzorul este inactiv. Ușa rămâne închisă (ST_INCHIS), motor oprit.';
+          }
+        } else if (fsmState === 'ST_DESCHIS') {
+          nextTimer += 1000;
+          if (nextTimer >= 5000) {
+            nextState = 'ST_INCHIS';
+            nextTimer = 0;
+            logMsg = 'Au trecut 5 secunde! Oprim motorul și revenim în starea inițială (ST_INCHIS).';
+          } else {
+            logMsg = `Ușa este deschisă. Timp scurs: ${nextTimer}ms / 5000ms. Așteptăm cronometrul...`;
+          }
+        }
+
+        setFsmState(nextState);
+        setFsmTimer(nextTimer);
+        setFsmConsole(prev => [logMsg, ...prev.slice(0, 4)]);
+      };
+
+      // Shift register step simulation
+      const stepShift = () => {
+        let nextIndex = shiftBitIndex + 1;
+        let logMsg = '';
+        const currentOutputs = [...shiftOutputs];
+
+        if (nextIndex >= 8) {
+          nextIndex = -1;
+          logMsg = 'Gata! Toți cei 8 biți au fost shiftati în registrul de deplasare.';
+          setShiftBitIndex(-1);
+          setShiftLogs(prev => [logMsg, ...prev.slice(0, 4)]);
+          return;
+        }
+
+        // Get bit i
+        const bit = (shiftValue & (1 << nextIndex)) ? 1 : 0;
+        
+        // Push to output queue (Simulating shift register)
+        currentOutputs.unshift(bit);
+        currentOutputs.pop(); // keep 8 size
+
+        logMsg = `Pasul ${nextIndex}: SD (Date) = ${bit}. Puls Ceas CP (HIGH -> LOW). Bitul a fost împins în registrul extern.`;
+        
+        setShiftBitIndex(nextIndex);
+        setShiftOutputs(currentOutputs);
+        setShiftLogs(prev => [logMsg, ...prev.slice(0, 4)]);
+      };
+
+      // Keypad scan action
+      const handleKeyPress = (row, col) => {
+        setPressedKey({ row, col });
+        const code = row * 4 + col;
+        setDetectedCode(code);
+
+        // Generate logs showing the radar sweep
+        const logs = [
+          `Tasta de la intersecția Rând ${row} cu Coloana ${col} a fost apăsată fizic.`,
+          `Scanerul radar activează Rândul ${row} (scrie 0 logic pe pinul respectiv). Liniile rămase sunt pe 1.`,
+          `Se citește valoarea 0 logic pe Coloana ${col} (datorită pull-up-ului intern).`,
+          `Cod calculat: (${row} * 4) + ${col} = ${code} (0x${code.toString(16).toUpperCase()}).`
+        ];
+        setScanLogs(logs);
+      };
+
+      // Peripherals quiz questions
+      const quizQuestions = [
+        {
+          id: 'q1',
+          question: 'La metoda Look-Up Table (LUT) pentru afișoare pe 7 segmente, ce reprezintă indexul vectorului global?',
+          options: [
+            'Harta pinilor fizici (ex: 0x3F).',
+            'Cifra sau valoarea numerică pe care dorim să o afișăm (ex: pentru a afișa 5, accesăm vectorul cu indexul 5).',
+            'Starea activă a pinului de selecție Chip Select.',
+            'Adresa de bază a memoriei SRAM în modul CTC.'
+          ],
+          correct: 1,
+          explanation: 'La metoda LUT, indexul tabloului global corespunde exact cu cifra pe care dorim să o reprezentăm vizual. Astfel, pentru cifra X, trimitem pe port valoarea precalculată de la poziția X: PORT = cifre[X].'
+        },
+        {
+          id: 'q2',
+          question: 'De ce este obligatoriu ca variabila ce reține starea curentă a unei Mașini de Stări să-și păstreze valoarea între apelurile succesive din bucla infinită?',
+          options: [
+            'Deoarece altfel starea s-ar reseta la valoarea inițială la fiecare iterație a buclei while(1), blocând funcționarea.',
+            'Deoarece compilează mai rapid în mediul AVR-GCC.',
+            'Deoarece toți regiștrii din ATmega16 se șterg singuri când intră în modul de Compare Match.',
+            'Pentru a preveni degradarea hardware a microcontrolerului.'
+          ],
+          correct: 0,
+          explanation: 'Pentru ca mașina de stări să progreseze, ea trebuie să-și „amintească” în ce stare era. Variabila de stare se definește fie global, fie ca variabilă `static` locală în interiorul funcției.'
+        },
+        {
+          id: 'q3',
+          question: 'Care sunt cele două semnale fundamentale utilizate în controlul unui Shift Register (Registru de deplasare) pentru extinderea porturilor și rolul lor?',
+          options: [
+            'MOSI și MISO, utilizate în conexiunea SPI.',
+            'SDA și SCL, utilizate în conexiunea I2C.',
+            'SD (Serial Data) - pe care se plasează valoarea bitului curent, și CP (Clock Pulse) - care generează un impuls pentru a împinge bitul în interior.',
+            'sei() și cli(), folosite la pornirea și oprirea întreruperilor globale.'
+          ],
+          correct: 2,
+          explanation: 'Tehnica de serializare folosește pinul SD (Date) pentru a trimite bitul (0 sau 1) și pinul CP (Ceas) pentru a genera impulsul de preluare/împingere a bitului în registru.'
+        },
+        {
+          id: 'q4',
+          question: 'Cum sunt conectați pinii unei tastaturi matriceale 4x4 la microcontroler în algoritmul kbscan și de ce?',
+          options: [
+            'Toți cei 8 pini sunt intrări cu pull-up externe conectate spre pinii de masă.',
+            'Liniile sunt configurate ca Ieșiri (active pe 0), iar Coloanele sunt configurate ca Intrări cu Pull-up active (pentru a citi 0 când se apasă o tastă).',
+            'Liniile sunt Intrări de ceas, iar Coloanele sunt Ieșiri PWM non-inverting.',
+            'Pinii sunt conectați la ADC pentru a măsura rezistența contactelor butoanelor.'
+          ],
+          correct: 1,
+          explanation: 'kbscan scanează pe rând liniile (care sunt ieșiri puse pe 0 logic). Coloanele fiind intrări cu pull-up intern citesc implicit 1 logic. Apăsarea tastei conectează linia (0) cu coloana respectivă, făcând citirea de pe acea coloană să devină 0 logic.'
+        }
+      ];
+
+      return (
+        <div class="flex-1 flex flex-col justify-between">
+          <main class="relative mx-auto flex w-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8 justify-between animate-fade-in">
+            
+            {/* Header / Nav */}
+            <header class="flex items-center justify-between mb-8">
+              <nav class="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+                <a href="../index.html" class="flex items-center hover:text-white transition-colors duration-150 py-1 px-2 rounded-md hover:bg-white/5">
+                  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                  </svg>
+                  Microprocesoare Hub
+                </a>
+                <span class="text-slate-600 font-semibold">/</span>
+                <span class="text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">Teorie: Periferice & FSM</span>
+              </nav>
+
+              <div class="hidden sm:flex items-center space-x-2 text-xs text-slate-400 bg-slate-900/60 border border-slate-800 rounded-full px-3 py-1.5 backdrop-blur-md">
+                <span class="w-2 h-2 rounded-full bg-violet-500 animate-pulse"></span>
+                <span class="font-semibold uppercase tracking-wider">Capitolul 3: Teorie</span>
+              </div>
+            </header>
+
+            {/* Hero Section */}
+            <section class="text-center sm:text-left mb-8 space-y-3">
+              <div class="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-violet-400">
+                🚀 MEGA-MATERIAL ZIUA 2
+              </div>
+              <h1 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
+                Periferice, Extensii & Stări
+              </h1>
+              <p class="max-w-3xl text-sm leading-relaxed text-slate-400 font-medium">
+                Ghidul vizual și interactiv de pregătire pentru examen pe partea de Afișoare 7 Segmente, Mașini de Stare logice, Shift Registers (extensie porturi) și scanarea Tastaturii Matriceale.
+              </p>
+            </section>
+
+            {/* Navigation Tabs */}
+            <nav class="flex flex-wrap gap-2 mb-8 border-b border-slate-900 pb-4">
+              <button 
+                onClick={() => setActiveTab('lut')}
+                class={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'lut' ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                1. LUT & 7-Segmente
+              </button>
+              <button 
+                onClick={() => setActiveTab('fsm')}
+                class={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'fsm' ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                2. Mașini de Stare
+              </button>
+              <button 
+                onClick={() => setActiveTab('shift')}
+                class={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'shift' ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                3. Extensie (Shift Reg)
+              </button>
+              <button 
+                onClick={() => setActiveTab('keypad')}
+                class={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'keypad' ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                4. Tastatură (`kbscan`)
+              </button>
+              <button 
+                onClick={() => setActiveTab('quiz')}
+                class={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'quiz' ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                5. Test Teorie
+              </button>
+            </nav>
+
+            {/* TAB 1: LUT & 7 SEGMENTE */}
+            {activeTab === 'lut' && (
+              <section class="grid gap-6 lg:grid-cols-12 animate-slide-up">
+                
+                {/* Theory & Code */}
+                <div class="lg:col-span-5 space-y-6">
+                  <article class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <BookIcon />
+                      Look-Up Table (Tabel de căutare)
+                    </h3>
+                    <div class="space-y-3 text-xs leading-relaxed text-slate-400 font-medium">
+                      <p>
+                        Dacă folosești structuri stufoase de tip `if-else` pentru a desena cifre pe un afișor 7-segmente, profesorii te vor depuncta masiv la examen. Soluția corectă și elegantă este utilizarea metodei **LUT (Look-Up Table)**.
+                      </p>
+                      <p>
+                        <strong>Ce este?</strong> Un vector precalculat (de obicei stocat global), unde indexul elementului corespunde cifrei zecimale pe care vrei să o afișezi. Extragerea se face instantaneu, fără evaluări de condiții logice, în timp constant: `PORT = cifre[contor]`.
+                      </p>
+                    </div>
+                  </article>
+
+                  <article class="bg-[#1e1e1e] rounded-3xl border border-slate-800/80 overflow-hidden shadow-inner space-y-px">
+                    <div class="bg-[#181818] px-6 py-3 border-b border-slate-800/80 flex justify-between items-center text-xs font-mono select-none">
+                      <span class="text-slate-350">Șablon Vector LUT global (C)</span>
+                      <button 
+                        onClick={() => handleCopy(`const unsigned char cifre[10] = { 0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F };\n\n// Afișare instantanee în main():\nunsigned char contor = 5;\nPORTC = cifre[contor]; // Scrie direct 0x6D pe port`, 'lut_code')}
+                        class="text-indigo-400 hover:text-indigo-300 text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      >
+                        {copiedText === 'lut_code' ? 'Copiat!' : 'Copiază vectorul'}
+                      </button>
+                    </div>
+                    <pre class="p-5 font-mono text-[11px] leading-relaxed text-[#D4D4D4] overflow-x-auto">
+                      <span class="text-[#6A9955]">// Vector LUT definit global</span><br/>
+                      <span class="text-[#569CD6]">const unsigned char</span> <span class="text-[#9CDCFE]">cifre</span>[<span class="text-[#B5CEA8]">10</span>] = &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#B5CEA8]">0x3F</span>, <span class="text-[#6A9955]">// 0</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#B5CEA8]">0x06</span>, <span class="text-[#6A9955]">// 1</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#B5CEA8]">0x5B</span>, <span class="text-[#6A9955]">// 2</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#B5CEA8]">0x4F</span>, <span class="text-[#6A9955]">// 3</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#B5CEA8]">0x66</span>, <span class="text-[#6A9955]">// 4</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#B5CEA8]">0x6D</span>, <span class="text-[#6A9955]">// 5</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#B5CEA8]">0x7D</span>, <span class="text-[#6A9955]">// 6</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#B5CEA8]">0x07</span>, <span class="text-[#6A9955]">// 7</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#B5CEA8]">0x7F</span>, <span class="text-[#6A9955]">// 8</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#B5CEA8]">0x6F</span>  <span class="text-[#6A9955]">// 9</span><br/>
+                      &#125;;
+                    </pre>
+                  </article>
+                </div>
+
+                {/* Interactive Segment Toggler */}
+                <div class="lg:col-span-7 space-y-6">
+                  <div class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <CalculatorIcon />
+                      Afișor 7 Segmente Interactiv (Segment-to-HEX mapping)
+                    </h3>
+
+                    <div class="text-xs leading-relaxed text-slate-400 font-medium">
+                      Apasă pe segmentele afișorului de mai jos pentru a le aprinde sau stinge. Observă cum se calculează automat byte-ul corespunzător în format binar și hexazecimal:
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-8 items-center justify-around p-5 bg-slate-950/40 border border-slate-850 rounded-2xl">
+                      
+                      {/* SVG 7 segment display */}
+                      <div class="relative w-36 h-48 bg-slate-900 rounded-xl flex items-center justify-center p-4 border border-slate-850 shadow-inner">
+                        <svg viewBox="0 0 100 150" class="w-full h-full select-none cursor-pointer">
+                          {/* Segment A */}
+                          <path 
+                            d="M 22 16 L 78 16 L 70 24 L 30 24 Z" 
+                            fill={segments[0] ? '#6366F1' : '#1e293b'} 
+                            onClick={() => toggleSegment(0)}
+                            class="transition-colors duration-150"
+                          />
+                          {/* Segment B */}
+                          <path 
+                            d="M 80 18 L 80 72 L 72 65 L 72 26 Z" 
+                            fill={segments[1] ? '#6366F1' : '#1e293b'} 
+                            onClick={() => toggleSegment(1)}
+                            class="transition-colors duration-150"
+                          />
+                          {/* Segment C */}
+                          <path 
+                            d="M 80 78 L 80 132 L 72 124 L 72 85 Z" 
+                            fill={segments[2] ? '#6366F1' : '#1e293b'} 
+                            onClick={() => toggleSegment(2)}
+                            class="transition-colors duration-150"
+                          />
+                          {/* Segment D */}
+                          <path 
+                            d="M 22 134 L 78 134 L 70 126 L 30 126 Z" 
+                            fill={segments[3] ? '#6366F1' : '#1e293b'} 
+                            onClick={() => toggleSegment(3)}
+                            class="transition-colors duration-150"
+                          />
+                          {/* Segment E */}
+                          <path 
+                            d="M 20 78 L 20 132 L 28 124 L 28 85 Z" 
+                            fill={segments[4] ? '#6366F1' : '#1e293b'} 
+                            onClick={() => toggleSegment(4)}
+                            class="transition-colors duration-150"
+                          />
+                          {/* Segment F */}
+                          <path 
+                            d="M 20 18 L 20 72 L 28 65 L 28 26 Z" 
+                            fill={segments[5] ? '#6366F1' : '#1e293b'} 
+                            onClick={() => toggleSegment(5)}
+                            class="transition-colors duration-150"
+                          />
+                          {/* Segment G */}
+                          <path 
+                            d="M 24 75 L 76 75 L 68 81 L 32 81 Q 24 75 24 75 Z" 
+                            fill={segments[6] ? '#6366F1' : '#1e293b'} 
+                            onClick={() => toggleSegment(6)}
+                            class="transition-colors duration-150"
+                          />
+                          {/* Segment DP (Decimal Point) */}
+                          <circle 
+                            cx="85" cy="134" r="6" 
+                            fill={segments[7] ? '#6366F1' : '#1e293b'} 
+                            onClick={() => toggleSegment(7)}
+                            class="transition-colors duration-150"
+                          />
+                        </svg>
+                      </div>
+
+                      {/* Display Data */}
+                      <div class="space-y-4 text-xs">
+                        <div class="space-y-1">
+                          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Cod binar (DP G F E D C B A)</span>
+                          <span class="font-mono text-indigo-400 text-sm font-bold bg-indigo-500/10 px-3 py-1.5 rounded border border-indigo-500/20 block">
+                            {segments.slice(0).reverse().map(s => s ? '1' : '0').join(' ')}
+                          </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                          <div class="bg-slate-950 p-3 rounded-xl border border-slate-850">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">Catod Comun</span>
+                            <span class="font-mono text-white text-sm font-bold block mt-1">{getHexValue(true)}</span>
+                          </div>
+                          <div class="bg-slate-950 p-3 rounded-xl border border-slate-850">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">Anod Comun</span>
+                            <span class="font-mono text-white text-sm font-bold block mt-1">{getHexValue(false)}</span>
+                          </div>
+                        </div>
+
+                        <button 
+                          onClick={() => setSegments([true, true, true, true, true, true, false, false])}
+                          class="w-full bg-slate-950 border border-slate-800 hover:border-slate-700 hover:text-white rounded-xl py-2 text-[10px] font-bold transition-all text-slate-400"
+                        >
+                          Resetează la cifra "0"
+                        </button>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+              </section>
+            )}
+
+            {/* TAB 2: MAȘINI DE STARE */}
+            {activeTab === 'fsm' && (
+              <section class="grid gap-6 lg:grid-cols-12 animate-slide-up">
+                
+                {/* FSM Theory & Code */}
+                <div class="lg:col-span-5 space-y-6">
+                  <article class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <BookIcon />
+                      Mașinile de Stare (FSM)
+                    </h3>
+                    <div class="space-y-3 text-xs leading-relaxed text-slate-400 font-medium">
+                      <p>
+                        Când un sistem are comportamente dependente de timp sau de stări secvențiale (ex: uși automate, cuptoare, semafoare), **ești obligat** să folosești o Mașină de Stare. Acest lucru elimină codul încâlcit ("spaghetti block") de tip `if` imbricat.
+                      </p>
+                      <p>
+                        <strong>Regula Supremă:</strong> Sistemul se poate afla într-o **singură stare** la un moment dat. Fiecare stare rulează exclusiv instrucțiunile ei și verifică dacă este îndeplinită o condiție (apăsare buton sau trecere timp) pentru a face tranziția spre starea următoare.
+                      </p>
+                    </div>
+                  </article>
+
+                  <article class="bg-[#1e1e1e] rounded-3xl border border-slate-800/80 overflow-hidden shadow-inner space-y-px">
+                    <div class="bg-[#181818] px-6 py-3 border-b border-slate-800/80 flex justify-between items-center text-xs font-mono select-none">
+                      <span class="text-slate-350">Șablon FSM switch-case (C)</span>
+                      <button 
+                        onClick={() => handleCopy(`#define ST_INCHIS 0\n#define ST_DESCHIS 1\n\nunsigned char stare_usa = ST_INCHIS;\n\nwhile (1) {\n    switch(stare_usa) {\n        case ST_INCHIS:\n            if (senzor_om == 1) {\n                porneste_motor();\n                timp_start = milisecunde;\n                stare_usa = ST_DESCHIS;\n            }\n            break;\n        case ST_DESCHIS:\n            if ((milisecunde - timp_start) >= 5000) {\n                opreste_motor();\n                stare_usa = ST_INCHIS;\n            }\n            break;\n    }\n}`, 'fsm_code')}
+                        class="text-indigo-400 hover:text-indigo-300 text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      >
+                        {copiedText === 'fsm_code' ? 'Copiat!' : 'Copiază Codul'}
+                      </button>
+                    </div>
+                    <pre class="p-4 font-mono text-[10.5px] leading-relaxed text-[#D4D4D4] overflow-x-auto max-h-[300px]">
+                      <span class="text-[#C586C0]">#define</span> <span class="text-[#9CDCFE]">ST_INCHIS</span> <span class="text-[#B5CEA8]">0</span><br/>
+                      <span class="text-[#C586C0]">#define</span> <span class="text-[#9CDCFE]">ST_DESCHIS</span> <span class="text-[#B5CEA8]">1</span><br/>
+                      <br/>
+                      <span class="text-[#569CD6]">unsigned char</span> <span class="text-[#9CDCFE]">stare_usa</span> = <span class="text-[#9CDCFE]">ST_INCHIS</span>;<br/>
+                      <span class="text-[#569CD6]">unsigned int</span> <span class="text-[#9CDCFE]">timp_start</span> = <span class="text-[#B5CEA8]">0</span>;<br/>
+                      <br/>
+                      <span class="text-[#C586C0]">while</span>(<span class="text-[#B5CEA8]">1</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">switch</span>(<span class="text-[#9CDCFE]">stare_usa</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">case</span> <span class="text-[#9CDCFE]">ST_INCHIS</span>:<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">if</span> (<span class="text-[#9CDCFE]">senzor_om</span> == <span class="text-[#B5CEA8]">1</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#DCDCAA]">porneste_motor</span>();<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">timp_start</span> = <span class="text-[#9CDCFE]">milisecunde</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">stare_usa</span> = <span class="text-[#9CDCFE]">ST_DESCHIS</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">break</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">case</span> <span class="text-[#9CDCFE]">ST_DESCHIS</span>:<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">if</span> ((<span class="text-[#9CDCFE]">milisecunde</span> - <span class="text-[#9CDCFE]">timp_start</span>) &gt;= <span class="text-[#B5CEA8]">5000</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#DCDCAA]">opreste_motor</span>();<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">stare_usa</span> = <span class="text-[#9CDCFE]">ST_INCHIS</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">break</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &#125;
+                    </pre>
+                  </article>
+                </div>
+
+                {/* Interactive FSM Simulator */}
+                <div class="lg:col-span-7 space-y-6">
+                  <div class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <CalculatorIcon />
+                      Simulator Ușă Automată (Tranziții Logice)
+                    </h3>
+
+                    <div class="space-y-4 text-xs font-medium">
+                      
+                      {/* Toggles */}
+                      <div class="flex items-center gap-6 p-4 bg-slate-950/60 border border-slate-850 rounded-2xl justify-between">
+                        <div class="flex items-center gap-2">
+                          <span class="text-slate-400">Senzor de prezență (senzor_om):</span>
+                          <button 
+                            onClick={() => setFsmSenzor(!fsmSenzor)}
+                            class={`px-3 py-1 rounded-lg border font-bold transition-all text-[10px] ${fsmSenzor ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400' : 'bg-slate-900 border-slate-800 text-slate-500'}`}
+                          >
+                            {fsmSenzor ? 'DETECTAT' : 'INACTIV'}
+                          </button>
+                        </div>
+
+                        <button 
+                          onClick={stepFsm}
+                          class="bg-indigo-650 hover:bg-indigo-600 border border-indigo-500/30 text-white rounded-xl px-4 py-2 font-bold transition-all"
+                        >
+                          Pasul Următor (Secundă++)
+                        </button>
+                      </div>
+
+                      {/* Visual Flow diagram */}
+                      <div class="grid grid-cols-2 gap-4 py-3">
+                        <div class={`p-4 rounded-2xl border text-center relative flex flex-col justify-center h-24 transition-all ${fsmState === 'ST_INCHIS' ? 'bg-indigo-500/10 border-indigo-500/50 text-white shadow-glow-indigo' : 'bg-slate-950/40 border-slate-900 text-slate-600'}`}>
+                          <span class="font-bold text-[11px] block">ST_INCHIS</span>
+                          <span class="text-[9px] text-slate-500 block mt-1">Motor Oprit. Așteaptă detecție.</span>
+                          {fsmState === 'ST_INCHIS' && <span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>}
+                        </div>
+
+                        <div class={`p-4 rounded-2xl border text-center relative flex flex-col justify-center h-24 transition-all ${fsmState === 'ST_DESCHIS' ? 'bg-indigo-500/10 border-indigo-500/50 text-white shadow-glow-indigo' : 'bg-slate-950/40 border-slate-900 text-slate-600'}`}>
+                          <span class="font-bold text-[11px] block">ST_DESCHIS</span>
+                          <span class="text-[9px] text-slate-500 block mt-1">Motor Pornit. Timp scurs: {fsmTimer / 1000}s / 5s</span>
+                          {fsmState === 'ST_DESCHIS' && <span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>}
+                        </div>
+                      </div>
+
+                      {/* Console output */}
+                      <div class="bg-slate-950 border border-slate-850 rounded-2xl p-4 space-y-1">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block border-b border-slate-850/50 pb-1 mb-2">Monitor Tranziții FSM</span>
+                        <div class="font-mono text-[10px] space-y-1 leading-normal">
+                          {fsmConsole.map((log, idx) => (
+                            <div key={idx} class={`${idx === 0 ? 'text-indigo-400 font-bold' : 'text-slate-500'}`}>
+                              &gt; {log}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+              </section>
+            )}
+
+            {/* TAB 3: EXTENSIA DE PORTURI */}
+            {activeTab === 'shift' && (
+              <section class="grid gap-6 lg:grid-cols-12 animate-slide-up">
+                
+                {/* Shift Register Explanation */}
+                <div class="lg:col-span-5 space-y-6">
+                  <article class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <BookIcon />
+                      Extensia de Porturi (Shift Registers)
+                    </h3>
+                    <div class="space-y-3 text-xs leading-relaxed text-slate-400 font-medium">
+                      <p>
+                        Când numărul de pini de ieșire depășește numărul de pini fizici ai procesorului (ex: comanda unei ghirlande cu 16 LED-uri), se recurge la tehnica **Serializării** folosind un registru de deplasare extern.
+                      </p>
+                      <p>
+                        Informația paralelă (băiat cu băiat, 8 sau 16 biți deodată) este împărțită pe un singur fir bit-cu-bit și "împinsă" în cipul extern utilizând semnalele:
+                      </p>
+                      <ul class="space-y-1.5 list-disc list-inside bg-slate-950/40 p-3.5 rounded-2xl border border-slate-850/60 text-[11px]">
+                        <li><strong>SD (Serial Data)</strong>: Sârma de date. Punem bitul curent (0 sau 1) pe acest pin.</li>
+                        <li><strong>CP (Clock Pulse)</strong>: Ciocanul de ceas. Un puls scurt (HIGH $\rightarrow$ LOW) îi semnalează cipului să citească bitul de pe SD și să-l împingă cu o poziție mai încolo.</li>
+                      </ul>
+                    </div>
+                  </article>
+                </div>
+
+                {/* Shift Register Simulator */}
+                <div class="lg:col-span-7 space-y-6">
+                  
+                  {/* Shift code */}
+                  <article class="bg-[#1e1e1e] rounded-3xl border border-slate-800/80 overflow-hidden shadow-inner space-y-px">
+                    <div class="bg-[#181818] px-6 py-3 border-b border-slate-800/80 flex justify-between items-center text-xs font-mono select-none">
+                      <span class="text-slate-350">Funcția de trimitere serială de 8 biți (C)</span>
+                      <button 
+                        onClick={() => handleCopy(`void trimite_serial_8biti(unsigned char date) {\n    for (int i = 0; i < 8; i++) {\n        if (date & (1 << i)) {\n            PORTC |= (1 << SD_PIN); // date = 1\n        } else {\n            PORTC &= ~(1 << SD_PIN); // date = 0\n        }\n        PORTC |= (1 << CP_PIN); // Ceas HIGH\n        PORTC &= ~(1 << CP_PIN); // Ceas LOW\n    }\n}`, 'shift_code')}
+                        class="text-indigo-400 hover:text-indigo-300 text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      >
+                        {copiedText === 'shift_code' ? 'Copiat!' : 'Copiază Codul'}
+                      </button>
+                    </div>
+                    <pre class="p-4 font-mono text-[10.5px] leading-relaxed text-[#D4D4D4] overflow-x-auto">
+                      <span class="text-[#569CD6]">void</span> <span class="text-[#DCDCAA]">trimite_serial_8biti</span>(<span class="text-[#569CD6]">unsigned char</span> <span class="text-[#9CDCFE]">date</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">for</span> (<span class="text-[#569CD6]">int</span> <span class="text-[#9CDCFE]">i</span> = <span class="text-[#B5CEA8]">0</span>; <span class="text-[#9CDCFE]">i</span> &lt; <span class="text-[#B5CEA8]">8</span>; <span class="text-[#9CDCFE]">i</span>++) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]">// 1. Setăm pinul de Date (SD)</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">if</span> (<span class="text-[#9CDCFE]">date</span> &amp; (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#9CDCFE]">i</span>)) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">PORTC</span> |= (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#9CDCFE]">SD_PIN</span>);<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125; <span class="text-[#C586C0]">else</span> &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">PORTC</span> &amp;= ~(<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#9CDCFE]">SD_PIN</span>);<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]">// 2. Puls de Ceas (CP)</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">PORTC</span> |= (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#9CDCFE]">CP_PIN</span>);<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">PORTC</span> &amp;= ~(<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#9CDCFE]">CP_PIN</span>);<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &#125;
+                    </pre>
+                  </article>
+
+                  {/* Shift Widget */}
+                  <div class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <CalculatorIcon />
+                      Vizualizator Pas-cu-Pas Shift Register
+                    </h3>
+
+                    <div class="space-y-4 text-xs">
+                      
+                      <div class="flex items-center gap-4 justify-between bg-slate-950/60 p-4 border border-slate-850 rounded-2xl">
+                        <div>
+                          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Valoare trimisă (Hex)</label>
+                          <input 
+                            type="text" 
+                            value={'0x' + shiftValue.toString(16).toUpperCase()} 
+                            onChange={(e) => {
+                              const v = parseInt(e.target.value) || 0;
+                              setShiftValue(v & 0xFF);
+                              setShiftBitIndex(-1);
+                            }}
+                            class="bg-slate-900 border border-slate-800 rounded-lg px-3 py-1 font-mono text-white text-xs w-20 focus:outline-none"
+                          />
+                        </div>
+
+                        <div class="flex gap-2">
+                          <button 
+                            onClick={stepShift}
+                            class="bg-indigo-650 hover:bg-indigo-600 border border-indigo-500/30 text-white rounded-xl px-4 py-2 font-bold transition-all text-[11px]"
+                          >
+                            Rulează Pas-cu-Pas (Bit {shiftBitIndex + 1 === 8 ? 'Final' : shiftBitIndex + 1})
+                          </button>
+                          <button 
+                            onClick={() => {
+                              setShiftOutputs(Array(8).fill(0));
+                              setShiftBitIndex(-1);
+                              setShiftLogs(['Simulator resetat.']);
+                            }}
+                            class="bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 rounded-xl px-3 py-2 font-bold transition-all text-[11px]"
+                          >
+                            Reset
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* External Register Visuals */}
+                      <div class="space-y-1.5">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Starea LED-urilor externe (Shift Register outputs Q0-Q7)</span>
+                        <div class="grid grid-cols-8 gap-2 bg-slate-950 p-4 border border-slate-850 rounded-2xl text-center">
+                          {shiftOutputs.map((val, idx) => (
+                            <div key={idx} class="space-y-2">
+                              <div 
+                                class={`w-7 h-7 rounded-full mx-auto border transition-all ${val === 1 ? 'bg-indigo-500 border-indigo-400 shadow-glow-indigo' : 'bg-slate-900 border-slate-800'}`}
+                              ></div>
+                              <span class="font-mono font-bold text-[10px] text-slate-400">Q{7 - idx}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Console */}
+                      <div class="bg-slate-950 border border-slate-850 rounded-2xl p-4 space-y-1">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block border-b border-slate-850/50 pb-1 mb-2">Monitor Shiftare serială</span>
+                        <div class="font-mono text-[10px] space-y-1 leading-normal">
+                          {shiftLogs.map((log, idx) => (
+                            <div key={idx} class={`${idx === 0 ? 'text-indigo-400 font-bold' : 'text-slate-500'}`}>
+                              &gt; {log}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+              </section>
+            )}
+
+            {/* TAB 4: TASTATURA MATRICEALA */}
+            {activeTab === 'keypad' && (
+              <section class="grid gap-6 lg:grid-cols-12 animate-slide-up">
+                
+                {/* Keyboard scans Theory & Code */}
+                <div class="lg:col-span-5 space-y-6">
+                  <article class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <BookIcon />
+                      Tastaturi Matriceale & kbscan
+                    </h3>
+                    
+                    <div class="text-xs leading-relaxed text-slate-400 font-medium space-y-3">
+                      <p>
+                        Pentru a reduce numărul de pini (ex: 16 butoane pe o grilă 4x4), butoanele se conectează la intersecția unor **Linii** și **Coloane**.
+                      </p>
+                      <p>
+                        <strong>Logica radarului:</strong> Liniile sunt configurate ca **Ieșiri** și Coloanele ca **Intrări** cu pull-up intern activ (citesc implicit 1 logic).
+                      </p>
+                      <p>
+                        Procesorul pune succesiv fiecare linie pe **0 logic** (o activează) și citește coloanele. Dacă o coloană raportează **0 logic**, înseamnă că butonul situat la intersecția liniei active cu acea coloană a fost apăsat.
+                      </p>
+                      
+                      <div class="my-4 p-4 bg-slate-950 rounded-2xl border border-slate-850 flex justify-center text-sm font-mono text-white shadow-inner">
+                        Cod taste = (Index_Linie · Nr_Coloane) + Index_Coloana
+                      </div>
+                    </div>
+                  </article>
+
+                  <article class="bg-[#1e1e1e] rounded-3xl border border-slate-800/80 overflow-hidden shadow-inner space-y-px">
+                    <div class="bg-[#181818] px-6 py-3 border-b border-slate-800/80 flex justify-between items-center text-xs font-mono select-none">
+                      <span class="text-slate-350">Funcția supremă kbscan() (C)</span>
+                      <button 
+                        onClick={() => handleCopy(`unsigned char kbscan(void) {\n    for (int linie = 0; linie < 4; linie++) {\n        PORTA = ~(1 << (linie + 4)) | 0x0F; // activeaza linia, pull-up coloane\n        asm volatile("nop");\n        for (int coloana = 0; coloana < 4; coloana++) {\n            if ((PINA & (1 << coloana)) == 0) {\n                return (linie * 4) + coloana;\n            }\n        }\n    }\n    return 0xFF;\n}`, 'kbscan_code')}
+                        class="text-indigo-400 hover:text-indigo-300 text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      >
+                        {copiedText === 'kbscan_code' ? 'Copiat!' : 'Copiază Codul'}
+                      </button>
+                    </div>
+                    <pre class="p-4 font-mono text-[10px] leading-relaxed text-[#D4D4D4] overflow-x-auto max-h-[300px]">
+                      <span class="text-[#569CD6]">unsigned char</span> <span class="text-[#DCDCAA]">kbscan</span>(<span class="text-[#569CD6]">void</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">for</span> (<span class="text-[#569CD6]">int</span> <span class="text-[#9CDCFE]">linie</span> = <span class="text-[#B5CEA8]">0</span>; <span class="text-[#9CDCFE]">linie</span> &lt; <span class="text-[#B5CEA8]">4</span>; <span class="text-[#9CDCFE]">linie</span>++) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#6A9955]">// Linii pe PA4-PA7 (iesiri), Coloane pe PA0-PA3 (intrari cu pullup)</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">PORTA</span> = ~(<span class="text-[#B5CEA8]">1</span> &lt;&lt; (<span class="text-[#9CDCFE]">linie</span> + <span class="text-[#B5CEA8]">4</span>)) | <span class="text-[#B5CEA8]">0x0F</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#569CD6]">asm volatile</span>(<span class="text-[#CE9178]">"nop"</span>); <span class="text-[#6A9955]">// stabilizare hardware</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">for</span> (<span class="text-[#569CD6]">int</span> <span class="text-[#9CDCFE]">coloana</span> = <span class="text-[#B5CEA8]">0</span>; <span class="text-[#9CDCFE]">coloana</span> &lt; <span class="text-[#B5CEA8]">4</span>; <span class="text-[#9CDCFE]">coloana</span>++) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">if</span> ((<span class="text-[#9CDCFE]">PINA</span> &amp; (<span class="text-[#B5CEA8]">1</span> &lt;&lt; <span class="text-[#9CDCFE]">coloana</span>)) == <span class="text-[#B5CEA8]">0</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">return</span> (<span class="text-[#9CDCFE]">linie</span> * <span class="text-[#B5CEA8]/">4</span>) + <span class="text-[#9CDCFE]/">coloana</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#C586C0]">return</span> <span class="text-[#B5CEA8]">0xFF</span>;<br/>
+                      &#125;
+                    </pre>
+                  </article>
+                </div>
+
+                {/* Keypad Scanner Widget */}
+                <div class="lg:col-span-7 space-y-6">
+                  <div class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                      <CalculatorIcon />
+                      Scaner Interactiv de Tastatură 4x4
+                    </h3>
+
+                    <div class="space-y-4 text-xs font-medium">
+                      
+                      <div class="flex flex-col sm:flex-row gap-6 items-center justify-around">
+                        
+                        {/* 4x4 Keypad Grid */}
+                        <div class="grid grid-cols-4 gap-2 bg-slate-950 p-4 border border-slate-850 rounded-2xl shrink-0">
+                          {[0, 1, 2, 3].map(row => (
+                            [0, 1, 2, 3].map(col => {
+                              const code = row * 4 + col;
+                              const isSelected = pressedKey && pressedKey.row === row && pressedKey.col === col;
+                              return (
+                                <button
+                                  key={code}
+                                  onClick={() => handleKeyPress(row, col)}
+                                  class={`w-10 h-10 rounded-lg border font-mono font-bold transition-all ${isSelected ? 'bg-indigo-650 border-indigo-400 text-white shadow-glow-indigo' : 'bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-400'}`}
+                                >
+                                  {code}
+                                </button>
+                              );
+                            })
+                          ))}
+                        </div>
+
+                        {/* Scan Results info */}
+                        <div class="space-y-3 text-xs w-full max-w-[240px]">
+                          <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-850 space-y-2">
+                            <div>
+                              <span class="text-[9px] font-bold text-slate-500 uppercase block">Tastă Apăsată</span>
+                              <span class="font-mono text-white text-sm font-bold block mt-0.5">{pressedKey ? `Index (L:${pressedKey.row}, C:${pressedKey.col})` : 'Nicio tastă'}</span>
+                            </div>
+                            <div>
+                              <span class="text-[9px] font-bold text-slate-500 uppercase block">Cod calculat</span>
+                              <span class="font-mono text-indigo-400 text-base font-bold block mt-0.5">{detectedCode !== null ? `${detectedCode} (0x${detectedCode.toString(16).toUpperCase()})` : 'N/A'}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+
+                      {/* Console logs */}
+                      <div class="bg-slate-950 border border-slate-850 rounded-2xl p-4 space-y-1">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block border-b border-slate-850/50 pb-1 mb-2">Monitor scanare radar (kbscan)</span>
+                        <div class="font-mono text-[10px] space-y-1 leading-normal">
+                          {scanLogs.map((log, idx) => (
+                            <div key={idx} class={`${idx === scanLogs.length - 1 ? 'text-indigo-400 font-bold' : 'text-slate-500'}`}>
+                              &gt; {log}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+              </section>
+            )}
+
+            {/* TAB 5: QUIZ DE TEORIE */}
+            {activeTab === 'quiz' && (
+              <section class="max-w-3xl mx-auto animate-slide-up space-y-6">
+                
+                <div class="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-6">
+                  <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <BookIcon />
+                    Quiz rapid: Testează-ți Perifericele & Mașinile de Stare
+                  </h3>
+
+                  <div class="space-y-6">
+                    {quizQuestions.map((q, qIndex) => (
+                      <div key={q.id} class="space-y-2.5">
+                        <h4 class="text-xs font-bold text-slate-350 leading-relaxed">
+                          {qIndex + 1}. {q.question}
+                        </h4>
+                        
+                        <div class="grid gap-2">
+                          {q.options.map((opt, optIndex) => {
+                            const isSelected = quizAnswers[q.id] === optIndex;
+                            const isCorrect = optIndex === q.correct;
+                            let style = "bg-slate-950/40 border-slate-800 text-slate-450 hover:border-slate-700 hover:text-white";
+
+                            if (showQuizResults) {
+                              if (isCorrect) {
+                                style = "bg-emerald-500/10 border-emerald-500/35 text-emerald-400";
+                              } else if (isSelected) {
+                                style = "bg-rose-500/10 border-rose-500/35 text-rose-400";
+                              } else {
+                                style = "bg-slate-950/20 border-slate-900 text-slate-600 opacity-60";
+                              }
+                            } else if (isSelected) {
+                              style = "bg-indigo-500/10 border-indigo-500/40 text-indigo-400";
+                            }
+
+                            return (
+                              <button
+                                key={optIndex}
+                                onClick={() => {
+                                  if (showQuizResults) return;
+                                  setQuizAnswers({ ...quizAnswers, [q.id]: optIndex });
+                                }}
+                                disabled={showQuizResults}
+                                class={`text-left text-xs px-4 py-3 rounded-xl border transition-all duration-150 leading-relaxed ${style}`}
+                              >
+                                {opt}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {showQuizResults && (
+                          <p class="text-[11px] text-slate-500 italic mt-1 leading-relaxed pl-2 border-l border-indigo-500/25">
+                            Explicație: {q.explanation}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div class="flex space-x-4 pt-4 border-t border-slate-800/80 justify-end">
+                    {showQuizResults ? (
+                      <button
+                        onClick={() => {
+                          setQuizAnswers({ q1: null, q2: null, q3: null, q4: null });
+                          setShowQuizResults(false);
+                        }}
+                        class="bg-[#25252b] hover:bg-slate-800 text-slate-300 px-5 py-2.5 rounded-xl text-xs font-bold border border-slate-850"
+                      >
+                        Resetează Quiz-ul
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setShowQuizResults(true)}
+                        disabled={Object.values(quizAnswers).some(x => x === null)}
+                        class="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-xl text-xs font-bold transition-all"
+                      >
+                        Verifică Răspunsurile
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+              </section>
+            )}
+
+          </main>
+
+          {/* Footer */}
+          <footer class="mt-auto py-6 border-t border-slate-900 text-center text-xs text-slate-600 font-semibold tracking-wide uppercase">
+            &copy; 2026 ExamTrainers. Construit cu React, Tailwind CSS și dragoste pentru <a href="https://github.com/andreisugu" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-400 transition-colors duration-150 normal-case underline decoration-wavy decoration-indigo-500/30 underline-offset-4">sisteme încorporate</a> de <a href="https://github.com/andreisugu" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors duration-150 normal-case font-mono ml-0.5"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>@andreisugu</a>.
+          </footer>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
