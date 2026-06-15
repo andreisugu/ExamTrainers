@@ -249,7 +249,7 @@ int main(void) {
       const n = chosen.n;
       const ocr = n - 1;
       const csBits = getTimer2CSBits(p);
-      const solutionCSSets = csBits.map(bit => `setbit(TCCR2, ${bit});`).join('\n    ');
+      const solutionCSSets = csBits.map(bit => `setbit(TCCR2, ${bit}); // Setează bitul de prescaler ${bit}`).join('\n    ');
 
       return {
         type: 'Timer 2 CTC',
@@ -258,7 +258,7 @@ int main(void) {
         skeleton: helloWorldSkeleton,
         checks: checks,
         guide: guide,
-        solution: `// Exemplu de rezolvare (folosind p = ${p} cu OCR2 = ${ocr}):\nvoid init_timer2() {\n    OCR2 = ${ocr};\n    setbit(TCCR2, WGM21);\n    ${solutionCSSets}\n    setbit(TIMSK, OCIE2);\n    sei();\n}\n\nint main(void) {\n    init_timer2();\n    while(1) {}\n    return 0;\n}`
+        solution: `// Exemplu de rezolvare (folosind p = ${p} cu OCR2 = ${ocr}):\nvoid init_timer2() {\n    OCR2 = ${ocr}; // Setează valoarea de comparare N-1 pentru pragul de întrerupere\n    setbit(TCCR2, WGM21); // Activează modul CTC (Clear Timer on Compare Match)\n    ${solutionCSSets}\n    setbit(TIMSK, OCIE2); // Activează întreruperea pentru Timer 2 Compare Match\n    sei(); // Activează întreruperile globale\n}\n\nint main(void) {\n    init_timer2(); // Apelează funcția de inițializare a timer-ului\n    while(1) { // Buclă infinită în care procesorul așteaptă întreruperile\n    }\n    return 0;\n}`
       };
     };
 
@@ -282,7 +282,7 @@ int main(void) {
           { regex: new RegExp(`OCR0\\s*=\\s*${ocr}\\s*;`), desc: `Calculează factorul de umplere (${percent}% din 255 = ${ocr}) și pune-l în OCR0.` }
         ],
         guide: `Pinul de ieșire hardware pentru Timer 0 este PB3 (OC0). Trebuie făcut Ieșire în DDRB.\nMod Fast PWM: WGM00=1, WGM01=1.\nMod Non-Inverting: COM01=1.\nPrescaler 8: CS01=1.\nValoare OCR0 = (${percent}/100) * 255 = ${ocr} ${percent === 100 ? '(Atenție: SimulIDE dă eroare la 255, folosim 254)' : ''}.\n*Notă Examen: Timer 0 este folosit doar pentru Fast PWM (nu în CTC, conform erorilor de simulator).`,
-        solution: `void init_pwm_timer0() {\n    setbit(DDRB, 3);\n    setbit(TCCR0, WGM00);\n    setbit(TCCR0, WGM01);\n    setbit(TCCR0, COM01);\n    setbit(TCCR0, CS01);\n    OCR0 = ${ocr};\n}\n\nint main(void) {\n    init_pwm_timer0();\n    while(1) {}\n    return 0;\n}`
+        solution: `void init_pwm_timer0() {\n    setbit(DDRB, 3); // Configurează pinul PB3 (OC0) ca ieșire pentru semnalul PWM\n    setbit(TCCR0, WGM00); // Setează modul Fast PWM (bit WGM00)\n    setbit(TCCR0, WGM01); // Setează modul Fast PWM (bit WGM01)\n    setbit(TCCR0, COM01); // Configurează ieșirea în mod Non-Inverting (comportament OC0)\n    setbit(TCCR0, CS01); // Setează prescalerul la 8 (pornește timerul)\n    OCR0 = ${ocr}; // Setează valoarea pragului pentru factorul de umplere de ${percent}%\n}\n\nint main(void) {\n    init_pwm_timer0(); // Inițializează configurările pentru modul PWM\n    while(1) { // Bucla principală a programului\n    }\n    return 0;\n}`
       };
     };
 
@@ -303,7 +303,7 @@ int main(void) {
           { regex: /case\s*3\s*:/, desc: "Implementează starea 3: validează eliberarea timp de 20ms." }
         ],
         guide: `Ai nevoie de un \`switch(stare)\` cu stările 0, 1, 2, 3.\nStarea 0: Buton neapăsat. Verifici dacă se apasă: (PIN & (1<<x)) == 0.\nStarea 1: Aștepți 20ms: (milisecunde - timp_start) >= 20. Returnezi 1 dacă e valid.\nStarea 2: Buton apăsat. Aștepți să se elibereze: (PIN & (1<<x)) != 0.\nStarea 3: Aștepți 20ms ca eliberarea să fie stabilă.\n*Notă Examen: Orice întârziere (20ms) se bazează exclusiv pe variabila globală 'milisecunde' actualizată de timer, delay-urile software fiind strict interzise.`,
-        solution: `volatile unsigned int milisecunde = 0;\n\nunsigned char push_detect(void) {\n    static unsigned char stare = 0;\n    static unsigned int timp_start = 0;\n\n    switch(stare) {\n        case 0:\n            if (testbit(${port}, ${pinNum}) == 0) {\n                timp_start = milisecunde;\n                stare = 1;\n            }\n            break;\n        case 1:\n            if (testbit(${port}, ${pinNum}) != 0) {\n                stare = 0;\n            }\n            else if ((milisecunde - timp_start) >= 20) {\n                stare = 2;\n                return 1;\n            }\n            break;\n        case 2:\n            if (testbit(${port}, ${pinNum}) != 0) {\n                timp_start = milisecunde;\n                stare = 3;\n            }\n            break;\n        case 3:\n            if (testbit(${port}, ${pinNum}) == 0) {\n                stare = 2;\n            }\n            else if ((milisecunde - timp_start) >= 20) {\n                stare = 0;\n            }\n            break;\n    }\n    return 0;\n}\n\nint main(void) {\n    while(1) {}\n    return 0;\n}`
+        solution: `volatile unsigned int milisecunde = 0; // Contor global de milisecunde incrementat în ISR\n\nunsigned char push_detect(void) {\n    static unsigned char stare = 0; // Variabilă statică pentru starea curentă a FSM-ului\n    static unsigned int timp_start = 0; // Reține momentul de timp când a început tranziția\n\n    switch(stare) {\n        case 0: // Starea 0: Buton neapăsat (în repaus)\n            if (testbit(${port}, ${pinNum}) == 0) { // Butonul a fost apăsat (intrare pe 0 logic)\n                timp_start = milisecunde; // Salvăm timpul curent ca punct de referință\n                stare = 1; // Trecem în starea de debouncing la apăsare\n            }\n            break;\n        case 1: // Starea 1: Debouncing la apăsare\n            if (testbit(${port}, ${pinNum}) != 0) { // Zgomot de contact: butonul s-a eliberat prea repede\n                stare = 0; // Resetăm starea înapoi în repaus\n            }\n            else if ((milisecunde - timp_start) >= 20) { // Au trecut 20ms fără fluctuații\n                stare = 2; // Trecem în starea stabil apăsat\n                return 1; // Returnăm 1 pentru a semnala o apăsare validă detectată\n            }\n            break;\n        case 2: // Starea 2: Buton stabil apăsat (așteptăm eliberarea)\n            if (testbit(${port}, ${pinNum}) != 0) { // Butonul pare să se fi eliberat (intrare pe 1 logic)\n                timp_start = milisecunde; // Salvăm timpul curent ca referință pentru eliberare\n                stare = 3; // Trecem în starea de debouncing la eliberare\n            }\n            break;\n        case 3: // Starea 3: Debouncing la eliberare\n            if (testbit(${port}, ${pinNum}) == 0) { // Zgomot: butonul este din nou detectat ca apăsat\n                stare = 2; // Revenim în starea stabil apăsat\n            }\n            else if ((milisecunde - timp_start) >= 20) { // S-a eliberat stabil timp de 20ms\n                stare = 0; // Revenim la starea inițială de repaus\n            }\n            break;\n    }\n    return 0; // Returnează 0 dacă nu s-a finalizat o tranziție completă\n}\n\nint main(void) {\n    while(1) { // Buclă infinită în programul principal\n    }\n    return 0;\n}`
       };
     };
 
@@ -322,7 +322,7 @@ int main(void) {
           { regex: /(?:PORTC\s*\^=\s*\(?\s*1\s*<<\s*7\s*\)?|PORTC\s*=\s*PORTC\s*\^\s*\(?\s*1\s*<<\s*7\s*\)?|setbit\s*\(\s*PORTC\s*,\s*7\s*\)|clrbit\s*\(\s*PORTC\s*,\s*7\s*\))/, desc: "Comută (Toggle / XOR) pinul PC7 la detectarea apăsării cu XOR (^=)." }
         ],
         guide: `1. Variabilele modificate în ISR și citite în main() trebuie declarate cu 'volatile' (ex: volatile unsigned int milisecunde).\n2. Vectorul pentru Timer 2 la Compare Match este TIMER2_COMP_vect.\n3. Toggle-ul unui pin se face rapid cu operația bitwise XOR (^=). Exemplu: PORTC ^= (1 << 7);`,
-        solution: `volatile unsigned int milisecunde = 0;\n\nISR(TIMER2_COMP_vect) {\n    milisecunde++;\n}\n\n// Funcție de formă, ca să compileze mental\nunsigned char push_detect(void) { return 0; }\n\nint main(void) {\n    setbit(DDRC, 7);\n    \n    while(1) {\n        if (push_detect() == 1) {\n            PORTC ^= (1 << 7);\n        }\n    }\n    return 0;\n}`
+        solution: `volatile unsigned int milisecunde = 0; // Contor global în memorie SRAM (volatile previne optimizările nedorite)\n\nISR(TIMER2_COMP_vect) { // Rutina de întrerupere pentru Timer 2 Compare Match\n    milisecunde++; // Incrementează timpul la fiecare declanșare a întreruperii\n}\n\n// Funcție de formă, ca să compileze mental\nunsigned char push_detect(void) { return 0; }\n\nint main(void) {\n    setbit(DDRC, 7); // Configurează pinul PC7 ca ieșire pentru LED\n    \n    while(1) { // Bucla principală care rulează continuu\n        if (push_detect() == 1) { // Verifică dacă a fost detectată o apăsare validă a butonului\n            PORTC ^= (1 << 7); // Inversează starea logică a pinului PC7 (Toggle LED)\n        }\n    }\n    return 0;\n}`
       };
     };
 
@@ -406,14 +406,40 @@ int main(void) {
         const bits = getTimer1CSBits(opt.p).join(', ');
         return `  * Prescaler p = ${opt.p} (${bits}) => N = ${ms * 1000} / ${opt.p} = ${opt.n} pași => OCR1A = ${opt.n - 1}`;
       }).join('\n');
-      const guide = `Regula de Aur a Examenului (Matematica Timerelor):\nFormula: T_cycle = p * N * T_CLK_CPU\n- T_CLK_CPU = 1us (la F_osc = 1 MHz)\n- Pentru T_cycle = ${ms}ms (${ms * 1000}us), ecuația devine: ${ms * 1000} = p * N\n\nPrescalerele matematice valide pentru acest interval (N <= 65536, întreg) sunt:\n${guideOptionsText}\n\nConfigurare CTC: WGM12=1 (în TCCR1B). Prescalerul se alege din cele de mai sus. Activare întrerupere Compare Match A: OCIE1A=1 în TIMSK. Activează întreruperile globale cu sei();`;
+      const guide = `Regula de Aur a Examenului (Matematica Timerelor):
+Formula: T_cycle = p * N * T_CLK_CPU
+- T_CLK_CPU = 1us (la F_osc = 1 MHz)
+- Pentru T_cycle = ${ms}ms (${ms * 1000}us), ecuația devine: ${ms * 1000} = p * N
+
+Prescalerele matematice valide pentru acest interval (N <= 65536, întreg) sunt:
+${guideOptionsText}
+
+--------------------------------------------------
+GHID DETALIAT TIMER 1 (16-biți):
+1. De ce există "A" și "B" la Timer 1, dar la Timer 2 nu?
+   - Timer 0 și 2 sunt de 8 biți (numără până la 255) și au un singur canal de comparație (TCCR2, OCR2).
+   - Timer 1 („Tancul”) este pe 16 biți (numără până la 65535) și are două canale complet independente: Canalul A și Canalul B.
+   - De aceea avem: OCR1A (pragul de comparare pentru canalul A) și OCR1B (pragul pentru canalul B). La examen se folosește în 90% din cazuri OCR1A.
+
+2. De ce avem TCCR1A și TCCR1B?
+   - La Timer 1 setările sunt complexe și nu au încăput într-un singur registru de 8 biți, așa că sunt împărțite în TCCR1A și TCCR1B.
+   - În TCCR1B se pun prescalerele (biții CS10, CS11, CS12) și bitul principal pentru CTC (WGM12).
+   - În TCCR1A se pun setările pentru PWM fizic (COM1A1, COM1B1) și biții mai mici de mod (WGM10, WGM11).
+   - De aceea, în CTC simplu, configurăm doar TCCR1B: setbit(TCCR1B, WGM12); setbit(TCCR1B, CSxx);
+
+3. Întreruperile și TIMSK:
+   - TIMSK este panoul comun pentru toate timerele. Pentru Timer 1, trebuie să activăm canalul dorit:
+     * OCIE1A (întrerupere la pragul OCR1A)
+     * OCIE1B (întrerupere la pragul OCR1B)
+   - Activați întreruperea prin: setbit(TIMSK, OCIE1A); urmat de sei();
+   - Rutina de întrerupere corespunzătoare va fi ISR(TIMER1_COMPA_vect).`;
 
       const chosen = validOptions[0];
       const p = chosen.p;
       const n = chosen.n;
       const ocr = n - 1;
       const csBits = getTimer1CSBits(p);
-      const solutionCSSets = csBits.map(bit => `setbit(TCCR1B, ${bit});`).join('\n    ');
+      const solutionCSSets = csBits.map(bit => `setbit(TCCR1B, ${bit}); // Setează bitul de prescaler ${bit}`).join('\n    ');
 
       return {
         type: 'Timer 1 CTC',
@@ -422,7 +448,7 @@ int main(void) {
         skeleton: helloWorldSkeleton,
         checks: checksList,
         guide: guide,
-        solution: `// Exemplu de rezolvare (folosind p = ${p} cu OCR1A = ${ocr}):\nvoid init_timer1() {\n    OCR1A = ${ocr};\n    setbit(TCCR1B, WGM12);\n    ${solutionCSSets}\n    setbit(TIMSK, OCIE1A);\n    sei();\n}\n\nint main(void) {\n    init_timer1();\n    while(1) {}\n    return 0;\n}`
+        solution: `// Exemplu de rezolvare (folosind p = ${p} cu OCR1A = ${ocr}):\nvoid init_timer1() {\n    OCR1A = ${ocr}; // Setează registrul de comparare A la valoarea N-1\n    setbit(TCCR1B, WGM12); // Configurează modul CTC pe 16-biți (WGM12 în TCCR1B)\n    ${solutionCSSets}\n    setbit(TIMSK, OCIE1A); // Activează întreruperea Compare Match A pentru Timer 1\n    sei(); // Permite funcționarea întreruperilor globale\n}\n\nint main(void) {\n    init_timer1(); // Apelează inițializarea Timerului 1\n    while(1) { // Buclă infinită în care se așteaptă întreruperile\n    }\n    return 0;\n}`
       };
     };
 
@@ -445,8 +471,30 @@ int main(void) {
           { regex: /(?:TCCR1B\s*\|?=\s*.*CS10|setbit\s*\(\s*TCCR1B\s*,\s*CS10\s*\))/, desc: "Setează CS10 în TCCR1B pentru prescaler de 64." },
           { regex: new RegExp(`OCR1A\\s*=\\s*${ocr}\\s*;`), desc: `Calculează valoarea pentru ${percent}% (${ocr}) și o pune în OCR1A.` }
         ],
-        guide: `Timer 1, deși are 16-biți, poate opera în mod Fast PWM 8-bit. Aceasta necesită WGM10=1 (TCCR1A) și WGM12=1 (TCCR1B).\nModul Non-Inverting pe canalul A cere COM1A1=1 (TCCR1A).\nPrescaler 64 necesită CS11=1 și CS10=1 (TCCR1B).\nPinul de ieșire hardware pentru canalul A (OC1A) este PD5, deci DDRD trebuie setat corespunzător.\nOCR1A va dicta Duty Cycle-ul: ${percent}% din 255 este ${ocr}.`,
-        solution: `void init_pwm_timer1() {\n    setbit(DDRD, 5);\n    // Fast PWM 8-bit (WGM10 + WGM12), Non-Inverting (COM1A1)\n    setbit(TCCR1A, WGM10);\n    setbit(TCCR1A, COM1A1);\n    // Prescaler 64 (CS11 + CS10)\n    setbit(TCCR1B, WGM12);\n    setbit(TCCR1B, CS11);\n    setbit(TCCR1B, CS10);\n    \n    OCR1A = ${ocr};\n}\n\nint main(void) {\n    init_pwm_timer1();\n    while(1) {}\n    return 0;\n}`
+        guide: `Timer 1, deși are 16-biți, poate opera în mod Fast PWM 8-bit. Aceasta necesită WGM10=1 (TCCR1A) și WGM12=1 (TCCR1B).
+Modul Non-Inverting pe canalul A cere COM1A1=1 (TCCR1A).
+Prescaler 64 necesită CS11=1 și CS10=1 (TCCR1B).
+Pinul de ieșire hardware pentru canalul A (OC1A) este PD5, deci DDRD trebuie setat corespunzător.
+OCR1A va dicta Duty Cycle-ul: ${percent}% din 255 este ${ocr}.
+
+--------------------------------------------------
+CAZURI TIPICE TIMER 1 LA EXAMEN:
+- Cazul 1: "Amână o acțiune / Execută ceva rar" (Modul CTC)
+  * Calculezi N (N <= 65536) și setezi limita OCR1A = N - 1.
+  * Configurezi TCCR1B cu WGM12 și biții CS1x de prescaler.
+  * Activezi întreruperea cu OCIE1A în TIMSK și sei(), iar funcția va fi ISR(TIMER1_COMPA_vect).
+
+- Cazul 2: "Controlează viteza / Luminozitatea" (Fast PWM - Un singur canal)
+  * Pinul pe Ieșire (CRITIC): Canalul A iese pe PD5 (OC1A). Deci: DDRD |= (1 << 5);
+  * TCCR1A |= (1 << WGM10) | (1 << COM1A1); (Fast PWM 8-bit + Non-Inverting)
+  * TCCR1B |= (1 << WGM12) | (1 << CS11) | (1 << CS10); (Prescaler 64)
+  * Setezi factorul de umplere: OCR1A = ${ocr}; (în main, nu folosim ISR sau sei).
+
+- Cazul 3: "Cazul Avansat - Două motoare / Două LED-uri" (Folosirea ambelor canale)
+  * Pinii pe ieșire: DDRD |= (1 << 5) | (1 << 4); (PD5 pentru OC1A, PD4 pentru OC1B)
+  * TCCR1A |= (1 << WGM10) | (1 << COM1A1) | (1 << COM1B1);
+  * Control individual: OCR1A controlează primul motor (pin PD5), iar OCR1B controlează al doilea motor (pin PD4).`,
+        solution: `void init_pwm_timer1() {\n    setbit(DDRD, 5); // Setează pinul PD5 (OC1A) ca ieșire pentru semnalul PWM\n    // Fast PWM 8-bit (WGM10 + WGM12), Non-Inverting (COM1A1)\n    setbit(TCCR1A, WGM10); // Setează bitul WGM10 în registrul de control A\n    setbit(TCCR1A, COM1A1); // Activează modul Non-Inverting pe canalul A\n    // Prescaler 64 (CS11 + CS10)\n    setbit(TCCR1B, WGM12); // Setează bitul WGM12 pentru modul Fast PWM 8-bit\n    setbit(TCCR1B, CS11); // Configurează bitul de prescaler CS11\n    setbit(TCCR1B, CS10); // Configurează bitul de prescaler CS10\n    \n    OCR1A = ${ocr}; // Setează factorul de umplere pentru canalul A\n}\n\nint main(void) {\n    init_pwm_timer1(); // Apelează funcția de configurare a modului PWM\n    while(1) { // Buclă infinită a programului principal\n    }\n    return 0;\n}`
       };
     };
 
@@ -690,6 +738,22 @@ int main(void) {
       return alternatives;
     }
 
+    const formatSolutionCode = (solutionText, showComments) => {
+      if (showComments) {
+        return solutionText;
+      }
+      return solutionText.split('\n').map(line => {
+        if (line.trim().startsWith('//')) {
+          return line;
+        }
+        const idx = line.indexOf('//');
+        if (idx !== -1) {
+          return line.substring(0, idx).trimEnd();
+        }
+        return line;
+      }).join('\n');
+    };
+
     // --- SOLUTION LINE COMPONENT WITH PREMIUM PORTAL TOOLTIP ---
     function SolutionLine({ line }) {
       const [isHovered, setIsHovered] = React.useState(false);
@@ -767,6 +831,7 @@ int main(void) {
       const [code, setCode] = useState(problem.skeleton);
       const [feedback, setFeedback] = useState([]);
       const [showSolution, setShowSolution] = useState(false);
+      const [showComments, setShowComments] = useState(false);
       const [leftWidth, setLeftWidth] = useState(450);
       const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
       const [isResizing, setIsResizing] = useState(false);
@@ -1072,9 +1137,24 @@ int main(void) {
                       <p className="text-indigo-800/95 whitespace-pre-wrap leading-relaxed">{problem.guide}</p>
                     </div>
                     <div>
-                      <h4 className="font-bold text-indigo-900 mb-1.5 uppercase tracking-wider text-[10px]">Soluție Corectă</h4>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <h4 className="font-bold text-indigo-900 mb-0 uppercase tracking-wider text-[10px]">Soluție Corectă</h4>
+                        <button
+                          onClick={() => setShowComments(!showComments)}
+                          className={`flex items-center space-x-1.5 px-2 py-1 rounded transition-all text-[9.5px] font-bold uppercase tracking-wider ${
+                            showComments
+                              ? 'bg-indigo-600 border border-indigo-650 text-white shadow-sm'
+                              : 'bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 text-indigo-700'
+                          }`}
+                        >
+                          <svg className="w-3 h-3 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                          <span>{showComments ? 'Cu comentarii' : 'Fără comentarii'}</span>
+                        </button>
+                      </div>
                       <div className="bg-[#1e1e1e] text-[#D4D4D4] p-3.5 rounded-lg overflow-x-auto font-mono text-[11px] leading-relaxed shadow-inner flex flex-col">
-                        {problem.solution.split('\n').map((line, idx) => (
+                        {formatSolutionCode(problem.solution, showComments).split('\n').map((line, idx) => (
                           <SolutionLine key={idx} line={line} />
                         ))}
                       </div>
