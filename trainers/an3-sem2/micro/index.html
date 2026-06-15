@@ -266,44 +266,57 @@
         </div>
       </article>
 
-      <!-- Card 4: Advanced Topics (COMING SOON) -->
-      <article class="group relative flex flex-col justify-between rounded-3xl border border-slate-800/80 bg-slate-950/40 p-6 backdrop-blur-xl transition-all duration-300">
-        <div class="space-y-4 opacity-60">
+      <!-- Card 4: Lumea Analogică & Timpul Critic (ACTIVE) -->
+      <article class="group relative flex flex-col justify-between rounded-3xl border border-indigo-500/25 bg-slate-900/65 p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-indigo-500/45 hover:bg-slate-900/80 hover:shadow-glow-indigo">
+        <!-- Card Glow Effect on Hover -->
+        <div class="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-indigo-500/5 to-purple-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+
+        <div class="space-y-4">
           <div class="flex items-center justify-between">
-            <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-800 border border-slate-700/50 px-2.5 py-0.5 text-xs font-bold text-slate-400 uppercase tracking-wide">
-              În plan
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 uppercase tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              Disponibil
             </span>
-            <span class="text-xs font-bold text-slate-650 uppercase tracking-wider">CAPITOLUL 4</span>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">CAPITOLUL 4</span>
           </div>
 
           <div class="space-y-2">
-            <div class="flex items-center space-x-3 text-slate-350">
-              <div class="p-2 rounded-xl bg-slate-800/60 border border-slate-700/40 text-slate-400">
+            <div class="flex items-center space-x-3 text-white">
+              <div class="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
                 <!-- Lightning Bolt Icon -->
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
                 </svg>
               </div>
-              <h3 class="text-lg font-bold tracking-tight">Lumea Analogică & Timpul Critic</h3>
+              <h3 class="text-lg font-bold tracking-tight">Analog & Timp Critic</h3>
             </div>
-            <p class="text-xs leading-relaxed text-slate-500 font-medium">
-              Tehnici avansate de achiziție și siguranță: conversia semnalelor ADC, utilizarea watchdog-ului pentru prevenirea blocajelor și modurile sleep de economisire.
+            <p class="text-xs leading-relaxed text-slate-400 font-medium">
+              Interacțiunea cu lumea reală și viteze mari: configurarea întreruperilor externe INTx, măsurarea precisă a timpului prin Input Capture, conversia semnalelor analogice ADC și serializarea software.
             </p>
           </div>
 
           <!-- Key Concepts -->
           <div class="flex flex-wrap gap-1.5 pt-2">
-            <span class="rounded-lg bg-slate-900/60 px-2.5 py-1 text-[10px] font-semibold text-slate-500 border border-slate-800/40">Conversie ADC</span>
-            <span class="rounded-lg bg-slate-900/60 px-2.5 py-1 text-[10px] font-semibold text-slate-500 border border-slate-800/40">Watchdog Timer</span>
-            <span class="rounded-lg bg-slate-900/60 px-2.5 py-1 text-[10px] font-semibold text-slate-500 border border-slate-800/40">Power Management</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Întreruperi INTx</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Input Capture</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Conversie ADC</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Protocol Serial</span>
           </div>
         </div>
 
-        <div class="mt-8 flex items-center justify-center gap-2 rounded-2xl bg-slate-900/80 border border-slate-800/60 px-4 py-3 text-xs font-bold text-slate-500 cursor-not-allowed select-none">
-          <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-          </svg>
-          Indisponibil temporar
+        <div class="mt-8 flex flex-col gap-2">
+          <a href="./advanced/theory.html" class="flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-indigo-600/10 hover:shadow-indigo-500/20 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Învață Teorie
+          </a>
+          <a href="#" class="flex items-center justify-center gap-2 rounded-2xl border border-slate-850/60 bg-slate-950/20 px-4 py-3 text-xs font-bold text-slate-600 cursor-not-allowed select-none">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+            Exersează Cod (În plan)
+          </a>
         </div>
       </article>
 

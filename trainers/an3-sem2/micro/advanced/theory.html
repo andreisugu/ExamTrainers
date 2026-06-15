@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teorie Lumea Analogică & Timp Critic - Exam Trainers</title>
+  <meta name="description" content="Sinteză interactivă pentru examen: Întreruperi Externe, Input Capture (Turometru), Convertor ADC și Comunicație Serială emulată.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-indigo': '0 0 25px -5px rgba(99, 102, 241, 0.4)',
+            'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.4)',
+            'glow-violet': '0 0 25px -5px rgba(139, 92, 246, 0.4)',
+            'glow-rose': '0 0 25px -5px rgba(244, 63, 94, 0.4)',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-out forwards',
+            'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'pulse-slow': 'pulseSlow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'spin-slow': 'spin 8s linear infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(12px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            pulseSlow: {
+              '0%, 100%': { opacity: '0.4' },
+              '50%': { opacity: '0.8' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Premium dark cybernetic background */
+    body {
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 45%),
+        #0b0f19;
+    }
+
+    /* Grid layout background simulation */
+    .circuit-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+
+  <!-- React & ReactDOM CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <!-- Babel CDN for compiling JSX in-browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-y-auto overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+
+  <div id="root" class="min-h-screen flex flex-col justify-between"></div>
+
+  <!-- React Script -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // Component Icons
+    const CpuIcon = () => (
+      <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 3v1.5M12 3v1.5m3.75-1.5V4.5m-12 15V21m4.5-1.5V21m3.75-1.5V21m-9-15h13.5A2.25 2.25 0 0121 6.75v10.5a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 17.25V6.75A2.25 2.25 0 015.25 4.5z" />
+      </svg>
+    );
+
+    const BookIcon = () => (
+      <svg className="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+    );
+
+    const CalculatorIcon = () => (
+      <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-3-10.5h.008v.008H12.75V7.5zm0 3h.008v.008H12.75v-.008zm0 3h.008v.008H12.75v-.008zm0 3h.008v.008H12.75V16.5zm-3-9h.008v.008H9.75V7.5zm0 3h.008v.008H9.75v-.008zm0 3h.008v.008H9.75v-.008zm-3-6h.008v.008H6.75V4.5zm0 3h.008v.008H6.75V7.5zm0 3h.008v.008H6.75v-.008zm3 9h.008v.008H9.75V16.5zm-3 0h.008v.008H6.75V16.5zm12-9h.008v.008H18.75V7.5zm0 3h.008v.008H18.75v-.008zm0 3h.008v.008H18.75v-.008zm0 3h.008v.008H18.75V16.5zm-12-12h12a1.5 1.5 0 011.5 1.5v15a1.5 1.5 0 01-1.5 1.5h-12a1.5 1.5 0 01-1.5-1.5v-15a1.5 1.5 0 011.5-1.5z" />
+      </svg>
+    );
+
+    const SignalIcon = () => (
+      <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 00-6-6H3M12 18.75a6 6 0 016-6h3M12 18.75V3M3 12.75a9 9 0 019-9M21 12.75a9 9 0 00-9-9" />
+      </svg>
+    );
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('int'); // int, capture, adc, serial, quiz
+      const [copiedText, setCopiedText] = useState(null);
+
+      // --- SECTION 1: INTx States ---
+      const [intAlarma, setIntAlarma] = useState(false);
+      const [intMode, setIntMode] = useState('falling'); // falling, low_level, rising, change
+      const [intLogs, setIntLogs] = useState(['CPU rulează în bucla while(1). Pinii INTx monitorizați.']);
+      const [cpuState, setCpuState] = useState('IDLE'); // IDLE, ISR_RUNNING
+
+      const triggerInterrupt = () => {
+        if (cpuState === 'ISR_RUNNING') return;
+        
+        setCpuState('ISR_RUNNING');
+        const nextLogs = [
+          '⚡ Schimbare de semnal detectată pe PD2 (INT0)!',
+          `📌 Configurare detectată: declanșare pe [${intMode.toUpperCase()}].`,
+          '📥 CPU întrerupe imediat bucla while(1) și salvează contorul de program (PC).',
+          '🚀 Se execută rutina ISR(INT0_vect)...',
+          '✅ ISR complet. variabila "alarma" a fost setată pe 1.'
+        ];
+        
+        // Log steps one by one
+        let i = 0;
+        const interval = setInterval(() => {
+          if (i < nextLogs.length) {
+            setIntLogs(prev => [nextLogs[i], ...prev.slice(0, 4)]);
+            if (i === 4) {
+              setIntAlarma(true);
+              setCpuState('IDLE');
+              setIntLogs(prev => ['↩️ Revenire în main() la instrucțiunea întreruptă.', ...prev.slice(0, 4)]);
+            }
+            i++;
+          } else {
+            clearInterval(interval);
+          }
+        }, 600);
+      };
+
+      // --- SECTION 2: Input Capture States ---
+      const [wheelSpeed, setWheelSpeed] = useState(15); // in km/h
+      const [simTicks, setSimTicks] = useState(0);
+      const [s1, setS1] = useState(12000);
+      const [s2, setS2] = useState(14000);
+      const [icLogs, setIcLogs] = useState(['Senzor pregătit. Așteptăm rotație.']);
+      const wheelAngle = useRef(0);
+
+      // Calculate delta and speed based on mathematical inputs
+      // Fosc = 1.024 MHz, Prescaler = 256, Roata = 2m
+      // Formula: delta = 28800UL / viteza_kmh
+      const getDeltaFromSpeed = () => {
+        if (wheelSpeed === 0) return 99999;
+        return Math.round(28800 / wheelSpeed);
+      };
+
+      const delta = getDeltaFromSpeed();
+
+      const simulateRotation = () => {
+        const d = getDeltaFromSpeed();
+        const nextS1 = s2;
+        const nextS2 = (s2 + d) % 65536;
+        setS1(nextS1);
+        setS2(nextS2);
+        
+        let calculatedSpeed = 0;
+        let isStopped = false;
+        if (d <= 8000) {
+          calculatedSpeed = Math.round(28800 / d);
+        } else {
+          isStopped = true;
+        }
+
+        const logMsg = isStopped 
+          ? `Magnet detectat! delta = ${d} (> 8000). Viteza este forțată la 0 km/h (roata stă pe loc).`
+          : `Magnet detectat! s1 = ${nextS1}, s2 = ${nextS2} => delta = ${d} pași. Viteza calculată = ${calculatedSpeed} km/h.`;
+
+        setIcLogs(prev => [logMsg, ...prev.slice(0, 4)]);
+      };
+
+      // --- SECTION 3: ADC States ---
+      const [adcVolts, setAdcVolts] = useState(2.5); // 0V to 5V
+      const adcSteps = Math.round((adcVolts * 1023) / 5);
+
+      // Simulating resistor division key detection
+      // Switch 1: 1.0V (ADC ~205), Switch 2: 2.5V (ADC ~512), Switch 3: 4.0V (ADC ~818)
+      const getDetectedKey = () => {
+        if (adcSteps >= 180 && adcSteps <= 230) return 'Tasta 1 (Meniu)';
+        if (adcSteps >= 490 && adcSteps <= 540) return 'Tasta 2 (Select)';
+        if (adcSteps >= 795 && adcSteps <= 845) return 'Tasta 3 (Urgență)';
+        return 'Nicio tastă apăsată (Zgomot/Tranzitoriu)';
+      };
+
+      // --- SECTION 4: Serial Bit-banging States ---
+      const [selectedNumber, setSelectedNumber] = useState(12); // binary 01100 (5-bit)
+      const [txActive, setTxActive] = useState(false);
+      const [txBitIndex, setTxBitIndex] = useState(-1);
+      const [txTick, setTxTick] = useState(0);
+      const [txSignal, setTxSignal] = useState(0); // 0 = LOW, 1 = HIGH
+      const [serialLogs, setSerialLogs] = useState(['Gata pentru transmisie. Alege o tastă și apasă Trimite.']);
+      const [waveHistory, setWaveHistory] = useState(Array(25).fill(0)); // Visual wave array of 25 intervals of 200ms
+
+      const binaryString = selectedNumber.toString(2).padStart(5, '0');
+
+      useEffect(() => {
+        let interval;
+        if (txActive) {
+          interval = setInterval(() => {
+            const currentBitIndex = Math.floor(txTick / 5); // 5 ticks of 200ms per bit
+            const currentSubTick = txTick % 5; // tick inside the bit window (0 to 4)
+
+            if (currentBitIndex >= 5) {
+              setTxActive(false);
+              setTxBitIndex(-1);
+              setTxTick(0);
+              setTxSignal(0);
+              setSerialLogs(prev => ['🎉 Transmisie finalizată cu succes!', ...prev.slice(0, 4)]);
+              return;
+            }
+
+            setTxBitIndex(currentBitIndex);
+
+            // Get the current bit from LSB to MSB (as standard UART serial transmission)
+            const currentBit = (selectedNumber & (1 << currentBitIndex)) >> currentBitIndex;
+            let signalValue = 0;
+
+            if (currentSubTick === 0) {
+              // At start of bit window, signal is always set HIGH
+              signalValue = 1;
+            } else {
+              if (currentBit === 0) {
+                // For bit '0', signal falls to LOW at tick 1 (200ms)
+                signalValue = currentSubTick >= 1 ? 0 : 1;
+              } else {
+                // For bit '1', signal falls to LOW at tick 4 (800ms)
+                signalValue = currentSubTick >= 4 ? 0 : 1;
+              }
+            }
+
+            setTxSignal(signalValue);
+            setWaveHistory(prev => [...prev.slice(1), signalValue]);
+
+            const logMsg = `[Bit ${currentBitIndex}: valoare ${currentBit}] tick = ${currentSubTick} (timp = ${currentSubTick * 200}ms) => Pinul DATA = ${signalValue === 1 ? 'HIGH' : 'LOW'}`;
+            setSerialLogs(prev => [logMsg, ...prev.slice(0, 4)]);
+
+            setTxTick(prev => prev + 1);
+          }, 400); // Speed up tick interval slightly for better visualization
+        }
+        return () => clearInterval(interval);
+      }, [txActive, txTick, selectedNumber]);
+
+      const startSerialTx = () => {
+        if (txActive) return;
+        setTxActive(true);
+        setTxTick(0);
+        setTxBitIndex(0);
+        setWaveHistory(Array(25).fill(0));
+        setSerialLogs(['🚀 Transmisie începută. Se blochează citirea de taste noi...']);
+      };
+
+      // --- SECTION 5: Quiz Data ---
+      const quizQuestions = [
+        {
+          id: 'q1',
+          question: 'Cum configurezi pinul INT0 să declanșeze pe front coborâtor (Falling Edge) conform registrului MCUCR?',
+          options: [
+            'MCUCR |= (1 << ISC00); // ISC01 rămâne 0',
+            'MCUCR |= (1 << ISC01); // ISC00 rămâne 0 (ISC01=1, ISC00=0)',
+            'MCUCR |= (1 << ISC01) | (1 << ISC00); // Ambele pe 1',
+            'MCUCR = 0x00; // Declanșează doar la nivel de 0 logic'
+          ],
+          correct: 1,
+          explanation: 'Conform manualului ATmega16, bitul ISC01 setat pe 1 și ISC00 setat pe 0 configurează întreruperea externă INT0 să se declanșeze pe frontul coborâtor (momentul în care butonul cu pull-up este apăsat spre masă).'
+        },
+        {
+          id: 'q2',
+          question: 'De ce este necesar să impunem un prag maxim pentru delta_s (ex: delta_s > 8000) în algoritmul turometrului?',
+          options: [
+            'Pentru a preveni depășirea valorii maxime a registrului pe 8 biți OCR0.',
+            'Pentru a detecta oprirea roții și a forța viteza la 0, altfel viteza ar rămâne înghețată la ultima citire dacă magnetul nu mai trece prin fața senzorului.',
+            'Pentru a converti valoarea din pași direct în kilometri fără a mai efectua împărțirea.',
+            'Pentru a curăța vibrațiile mecanice ale contactelor senzorului magnetic.'
+          ],
+          correct: 1,
+          explanation: 'Dacă roata se oprește, nu se mai primesc amprente noi de timp în registrul ICR1. Fără acest prag, codul din main ar afișa continuu ultima viteză calculată. Pragul indică faptul că timpul scurs între rotații este prea mare (viteză sub pragul minim), deci roata stă.'
+        },
+        {
+          id: 'q3',
+          question: 'Care este registrul din care selectăm canalul de intrare ADC (ex: PA0 - PA7) și tensiunea de referință?',
+          options: [
+            'ADCSRA (ADC Control and Status Register A)',
+            'ADMUX (ADC Multiplexer Selection Register)',
+            'SREG (Status Register)',
+            'PORTA (Port A Data Register)'
+          ],
+          correct: 1,
+          explanation: 'ADMUX (ADC Multiplexer Selection Register) conține biții REFS1-REFS0 pentru selectarea tensiunii de referință și biții MUX4-MUX0 pentru rutarea canalului analogic dorit spre convertor.'
+        },
+        {
+          id: 'q4',
+          question: 'La emularea software a unui protocol serial (ex: trimiterea unei taste pe 5 biți), cum se determină perioada optimă a timerului?',
+          options: [
+            'Alegem cel mai mic divizor comun al tuturor timpilor din protocol.',
+            'Alegem cel mai mare divizor comun (CMMDC) al tuturor timpilor din diagramă (ex: pentru timpi de 200ms, 800ms și 1000ms, alegem baza de timp de 200ms).',
+            'Alegem întotdeauna valoarea fixă de 1ms conform bazei de timp standard.',
+            'Baza de timp se alege arbitrar, deoarece receptorul se auto-sincronizează la frecvența CPU-ului.'
+          ],
+          correct: 1,
+          explanation: 'Pentru a reprezenta corect toți timpii din protocol folosind un singur timer, rezoluția timerului trebuie să fie Cel Mai Mare Divizor Comun (CMMDC) al acelor timpi, obținând astfel o frecvență optimă pentru întreruperi, fără pierderi de precizie.'
+        }
+      ];
+
+      const [quizAnswers, setQuizAnswers] = useState({ q1: null, q2: null, q3: null, q4: null });
+      const [showQuizResults, setShowQuizResults] = useState(false);
+
+      return (
+        <div className="flex-1 flex flex-col justify-between">
+          <main className="relative mx-auto flex w-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8 justify-between animate-fade-in">
+            
+            {/* Header / Nav */}
+            <header className="flex items-center justify-between mb-8">
+              <nav className="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+                <a href="../index.html" className="flex items-center hover:text-white transition-colors duration-150 py-1 px-2 rounded-md hover:bg-white/5">
+                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                  </svg>
+                  Microprocesoare Hub
+                </a>
+                <span className="text-slate-600 font-semibold">/</span>
+                <span className="text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">Teorie: Master Jedi</span>
+              </nav>
+
+              <div className="hidden sm:flex items-center space-x-2 text-xs text-slate-400 bg-slate-900/60 border border-slate-800 rounded-full px-3 py-1.5 backdrop-blur-md">
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                <span className="font-semibold uppercase tracking-wider">Capitolul 4: Teorie</span>
+              </div>
+            </header>
+
+            {/* Hero Section */}
+            <section className="text-center sm:text-left mb-8 space-y-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-rose-400">
+                🚀 MEGA-MATERIAL ZIUA 3
+              </div>
+              <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
+                Analog & Timp Critic
+              </h1>
+              <p className="max-w-3xl text-sm leading-relaxed text-slate-400 font-medium">
+                Bine ai venit la nivelul de Maestru Jedi! Aici învățăm cum interacționăm cu lumea fizică reală: evenimente asincrone rapide (Întreruperi Externe), măsurători precise de viteză (Input Capture), citiri analogice (ADC) și emulare de protocoale de transmisie serială.
+              </p>
+            </section>
+
+            {/* Navigation Tabs */}
+            <nav className="flex flex-wrap gap-2 mb-8 border-b border-slate-900 pb-4">
+              <button 
+                onClick={() => setActiveTab('int')}
+                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'int' ? 'bg-rose-600 text-white shadow-glow-rose' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                1. Întreruperi INTx
+              </button>
+              <button 
+                onClick={() => setActiveTab('capture')}
+                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'capture' ? 'bg-rose-600 text-white shadow-glow-rose' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                2. Input Capture
+              </button>
+              <button 
+                onClick={() => setActiveTab('adc')}
+                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'adc' ? 'bg-rose-600 text-white shadow-glow-rose' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                3. Convertor ADC
+              </button>
+              <button 
+                onClick={() => setActiveTab('serial')}
+                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'serial' ? 'bg-rose-600 text-white shadow-glow-rose' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                4. Protocol Serial
+              </button>
+              <button 
+                onClick={() => setActiveTab('quiz')}
+                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 ${activeTab === 'quiz' ? 'bg-rose-600 text-white shadow-glow-rose' : 'bg-slate-900/65 text-slate-400 border border-slate-850 hover:bg-slate-900 hover:text-slate-200'}`}
+              >
+                5. Test Teorie
+              </button>
+            </nav>
+
+            {/* TAB 1: INTx EXTERNAL INTERRUPTS */}
+            {activeTab === 'int' && (
+              <section className="grid gap-6 lg:grid-cols-12 animate-slide-up">
+                
+                {/* Theory & Config */}
+                <div className="lg:col-span-5 space-y-6">
+                  <article className="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <BookIcon />
+                      Întreruperi Externe (Butonul de Panică)
+                    </h3>
+                    <div className="space-y-3 text-xs leading-relaxed text-slate-400 font-medium">
+                      <p>
+                        Nu poți pune un senzor critic (buton de oprire de urgență, coliziune) să fie citit prin interogare ciclică (polling) în <code className="text-white font-mono">while(1)</code>, deoarece procesorul ar putea fi ocupat cu calcule lungi și ar putea rata evenimentul.
+                      </p>
+                      <p>
+                        Folosim pinii hardware dedicați **INT0 (PD2)**, **INT1 (PD3)** sau **INT2 (PB2)**. O schimbare de tensiune pe acești pini forțează CPU să oprească execuția curentă și să ruleze codul de urgență.
+                      </p>
+                      
+                      <h4 className="font-bold text-white mt-4">Regiștri Configurați:</h4>
+                      <ul className="space-y-2 text-[11px] list-disc list-inside">
+                        <li><strong className="text-indigo-400">MCUCR</strong>: Setezi tipul de front (Front coborâtor, Front ridicător, Nivel LOW logic, Orice tranziție).</li>
+                        <li><strong className="text-violet-400">GICR</strong>: Armează individual fiecare pin de întrerupere.</li>
+                        <li><strong className="text-white font-mono">sei()</strong>: Activarea globală în SREG.</li>
+                      </ul>
+                    </div>
+                  </article>
+
+                  <article className="bg-[#1e1e1e] rounded-3xl border border-slate-800/80 overflow-hidden shadow-inner space-y-px">
+                    <div className="bg-[#181818] px-6 py-3 border-b border-slate-800/80 flex justify-between items-center text-xs font-mono select-none">
+                      <span className="text-slate-350">Inițializare INT0 pe Front Coborâtor</span>
+                      <button 
+                        onClick={() => handleCopy(`ISR(INT0_vect) {\n    alarma = 1; \n}\n\nvoid init_int0() {\n    DDRD &= ~(1 << 2); // PD2 ca intrare\n    PORTD |= (1 << 2); // Pull-up activat\n    MCUCR |= (1 << ISC01); // Falling Edge\n    GICR |= (1 << INT0); // Enable INT0\n    sei();\n}`, 'int_code')}
+                        className="text-rose-400 hover:text-rose-300 text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      >
+                        {copiedText === 'int_code' ? 'Copiat!' : 'Copiază Codul'}
+                      </button>
+                    </div>
+                    <pre className="p-4 font-mono text-[10.5px] leading-relaxed text-[#D4D4D4] overflow-x-auto">
+                      <span className="text-[#C586C0]">ISR</span>(<span className="text-[#9CDCFE]">INT0_vect</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#9CDCFE]">alarma</span> = <span class="text-[#B5CEA8]">1</span>;<br/>
+                      &#125;<br/><br/>
+                      <span className="text-[#569CD6]">void</span> <span class="text-[#DCDCAA]">init_int0</span>() &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">DDRD</span> &amp;= ~(<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#B5CEA8]">2</span>); <span className="text-[#6A9955]">// PD2 intrare</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">PORTD</span> |= (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#B5CEA8]">2</span>); <span className="text-[#6A9955]">// Pull-up activ</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#6A9955]">// Falling Edge: ISC01=1, ISC00=0</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">MCUCR</span> |= (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#9CDCFE]">ISC01</span>);<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">GICR</span> |= (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#9CDCFE]">INT0</span>);<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#DCDCAA]">sei</span>();<br/>
+                      &#125;
+                    </pre>
+                  </article>
+                </div>
+
+                {/* Interactive Sandbox */}
+                <div className="lg:col-span-7 space-y-6">
+                  <div className="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <CalculatorIcon />
+                      Visualizator Logic de Întreruperi (ISR)
+                    </h3>
+
+                    <div className="space-y-4 text-xs font-medium">
+                      <p className="text-slate-400">
+                        Alege comportamentul pinului INT0 și apasă butonul fizic pentru a simula semnalul de urgență:
+                      </p>
+
+                      <div className="flex flex-wrap gap-4 items-center justify-between p-4 bg-slate-950/60 border border-slate-850 rounded-2xl">
+                        <div className="space-y-1">
+                          <span className="text-[10px] text-slate-500 uppercase font-bold block">Front declanșare (MCUCR)</span>
+                          <select 
+                            value={intMode}
+                            onChange={(e) => setIntMode(e.target.value)}
+                            className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-white"
+                          >
+                            <option value="falling">Front Coborâtor (Falling Edge)</option>
+                            <option value="rising">Front Ridicător (Rising Edge)</option>
+                            <option value="low_level">Nivel logic 0 (Low Level)</option>
+                          </select>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={triggerInterrupt}
+                            disabled={cpuState === 'ISR_RUNNING'}
+                            className="bg-rose-600 hover:bg-rose-500 disabled:bg-slate-800 text-white rounded-xl px-5 py-3 font-bold transition-all shadow-glow-rose"
+                          >
+                            🚨 Apasă Buton Panică (PD2)
+                          </button>
+                          <button 
+                            onClick={() => { setIntAlarma(false); setIntLogs(['Senzori armați. Stare normală.']); }}
+                            className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 rounded-xl px-4 py-3 font-bold transition-all"
+                          >
+                            Reset Alarma
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* CPU & Memory Simulation Graphic */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className={`p-4 rounded-2xl border flex flex-col justify-between h-28 transition-all ${cpuState === 'ISR_RUNNING' ? 'bg-yellow-500/10 border-yellow-500/50 text-white' : 'bg-slate-950/40 border-slate-850 text-slate-400'}`}>
+                          <div>
+                            <span className="font-bold text-[10px] uppercase block">Execuție Procesor</span>
+                            <span className="text-xs font-mono font-bold mt-1 block">
+                              {cpuState === 'ISR_RUNNING' ? '⚙️ RULARE: ISR(INT0_vect)' : '💻 RULARE: main() - while(1)'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+                            <div className={`h-full transition-all duration-300 ${cpuState === 'ISR_RUNNING' ? 'bg-yellow-400 w-full animate-pulse' : 'bg-indigo-500 w-1/3 animate-pulse'}`}></div>
+                          </div>
+                        </div>
+
+                        <div className={`p-4 rounded-2xl border flex flex-col justify-between h-28 transition-all ${intAlarma ? 'bg-rose-500/10 border-rose-500/50 text-rose-400' : 'bg-slate-950/40 border-slate-850 text-slate-500'}`}>
+                          <div>
+                            <span className="font-bold text-[10px] uppercase block">Variabila Globală: "alarma"</span>
+                            <span className="text-lg font-mono font-bold mt-1 block">
+                              {intAlarma ? '1 (DECLAȘATĂ)' : '0 (NORMAL)'}
+                            </span>
+                          </div>
+                          <span className="text-[9px] uppercase tracking-wider block font-bold">
+                            {intAlarma ? '⚠️ OPREȘTE MOTOARELE' : '✅ SISTEM OK'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Debug console */}
+                      <div className="bg-slate-950 border border-slate-850 rounded-2xl p-4 space-y-1.5">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block border-b border-slate-850/50 pb-1 mb-2">Monitor CPU & Regiștri</span>
+                        <div className="font-mono text-[10px] space-y-1 leading-normal">
+                          {intLogs.map((log, idx) => (
+                            <div key={idx} className={`${idx === 0 ? (log.startsWith('⚡') || log.startsWith('🚀') ? 'text-yellow-400 font-bold' : 'text-emerald-400 font-bold') : 'text-slate-500'}`}>
+                              &gt; {log}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+              </section>
+            )}
+
+            {/* TAB 2: INPUT CAPTURE / TUROMETRU */}
+            {activeTab === 'capture' && (
+              <section className="grid gap-6 lg:grid-cols-12 animate-slide-up">
+                
+                {/* Math & Theory */}
+                <div className="lg:col-span-6 space-y-6">
+                  <article className="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <BookIcon />
+                      Input Capture (Măsurarea Timpului)
+                    </h3>
+                    <div className="space-y-3 text-xs leading-relaxed text-slate-400 font-medium">
+                      <p>
+                        Pentru a afla viteza de rotație (ex. roata de bicicletă, motor), trebuie să măsurăm exact timpul scurs între două treceri consecutive ale magnetului prin fața unui senzor.
+                      </p>
+                      <p>
+                        Folosim **Timer 1 în modul normal** și pinul dedicat **ICP1 (PD6)**. La fiecare trecere, hardware-ul face o "amprentă de timp" (salvează contorul în registrul <code className="text-white">ICR1</code>).
+                      </p>
+
+                      <h4 className="font-bold text-white mt-4">Calcule Fără Float (Regulă de Examen):</h4>
+                      <p>
+                        Timpul real dintre impulsuri este: t = delta * p * T_CLK_CPU.
+                      </p>
+                      <p>
+                        Pentru o roată de 2m diametru la frecvența CPU de 1.024 MHz și prescalerul p=256:
+                      </p>
+                      <div className="my-2 p-3 bg-slate-950 rounded-xl border border-slate-850 text-center font-mono text-white text-[11px]">
+                        viteza = Distanta / t = 2 * 1.024M * 3.6 / (256 * delta) = 28800 / delta
+                      </div>
+                      <p className="text-rose-400 font-semibold bg-rose-500/5 p-2.5 rounded-xl border border-rose-500/10">
+                        ⚠️ Capcana Opririi: Dacă roata se oprește, nu se mai primesc impulsuri noi. Valoarea delta ar rămâne neschimbată! Soluția este să impunem un prag maxim pentru delta (ex: delta &gt; 8000), caz în care forțăm viteza la 0.
+                      </p>
+                    </div>
+                  </article>
+                </div>
+
+                {/* Interactive Sandbox */}
+                <div className="lg:col-span-6 space-y-6">
+                  
+                  {/* C Code Template */}
+                  <article className="bg-[#1e1e1e] rounded-3xl border border-slate-800/80 overflow-hidden shadow-inner space-y-px">
+                    <div className="bg-[#181818] px-6 py-3 border-b border-slate-800/80 flex justify-between items-center text-xs font-mono select-none">
+                      <span className="text-slate-350">Cod citire viteza în main() (C)</span>
+                      <button 
+                        onClick={() => handleCopy(`void init_capture() {\n    TCCR1A = 0x00; // Normal mode\n    TCCR1B = (1 << ICES1) | (1 << CS12); // Capture on rising, p=256\n}\n\n// În main loop:\nif (TIFR & (1 << ICF1)) {\n    TIFR |= (1 << ICF1); // Clear flag\n    s1 = s2;\n    s2 = ICR1;\n    delta = s2 - s1;\n    if (delta <= 8000) {\n        viteza = 28800UL / delta;\n    } else {\n        viteza = 0; // Oprit\n    }\n}`, 'capt_code')}
+                        className="text-rose-400 hover:text-rose-300 text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      >
+                        {copiedText === 'capt_code' ? 'Copiat!' : 'Copiază Codul'}
+                      </button>
+                    </div>
+                    <pre className="p-4 font-mono text-[10px] leading-relaxed text-[#D4D4D4] overflow-x-auto">
+                      <span className="text-[#6A9955]">// 1. Inițializare: front ridicător și prescaler 256</span><br/>
+                      <span className="text-[#9CDCFE]">TCCR1B</span> = (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#9CDCFE]">ICES1</span>) | (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#9CDCFE]">CS12</span>);<br/><br/>
+                      <span className="text-[#6A9955]">// 2. Interogare în main():</span><br/>
+                      <span className="text-[#C586C0]">if</span> (<span className="text-[#9CDCFE]">TIFR</span> &amp; (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#9CDCFE]">ICF1</span>)) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">TIFR</span> |= (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#9CDCFE]">ICF1</span>); <span className="text-[#6A9955]">// Ștergere flag</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">s1</span> = <span className="text-[#9CDCFE]">s2</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">s2</span> = <span className="text-[#9CDCFE]">ICR1</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">delta</span> = <span className="text-[#9CDCFE]">s2</span> - <span className="text-[#9CDCFE]">s1</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#C586C0]">if</span> (<span className="text-[#9CDCFE]">delta</span> &lt;= <span className="text-[#B5CEA8]">8000</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">viteza</span> = <span className="text-[#B5CEA8]">28800UL</span> / <span className="text-[#9CDCFE]">delta</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&#125; <span className="text-[#C586C0]">else</span> &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">viteza</span> = <span className="text-[#B5CEA8]">0</span>; <span className="text-[#6A9955]">// Pragul depășit</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &#125;
+                    </pre>
+                  </article>
+
+                  {/* Turometrul Live Sandbox */}
+                  <div className="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <CalculatorIcon />
+                      Simulator Turometru & Magnet
+                    </h3>
+
+                    <div className="space-y-4 text-xs">
+                      
+                      <div className="flex flex-col sm:flex-row gap-6 items-center p-4 bg-slate-950/60 border border-slate-850 rounded-2xl justify-between">
+                        
+                        {/* Wheel animation */}
+                        <div className="flex flex-col items-center shrink-0 w-28">
+                          <span className="text-[9px] font-bold text-slate-500 uppercase mb-2">Vizualizare Roată</span>
+                          <div className="w-16 h-16 rounded-full border-2 border-slate-700 relative flex items-center justify-center">
+                            <div className="absolute w-14 h-0.5 bg-slate-800"></div>
+                            <div className="absolute w-0.5 h-14 bg-slate-800"></div>
+                            {/* Magnet pin */}
+                            <div className="absolute w-3 h-3 bg-red-500 rounded-full top-0 -mt-1.5 shadow-md shadow-red-500/50"></div>
+                          </div>
+                          <button 
+                            onClick={simulateRotation}
+                            className="mt-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-2.5 py-1.5 font-bold text-[10px]"
+                          >
+                            Puls Rotație
+                          </button>
+                        </div>
+
+                        {/* Interactive speed slider */}
+                        <div className="flex-1 w-full space-y-3">
+                          <div className="flex justify-between items-center text-[10px]">
+                            <span className="text-slate-400 uppercase font-bold">Viteza Roții:</span>
+                            <span className="text-rose-400 font-mono font-bold text-sm bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">{wheelSpeed} km/h</span>
+                          </div>
+                          <input 
+                            type="range"
+                            min="0"
+                            max="60"
+                            value={wheelSpeed}
+                            onChange={(e) => setWheelSpeed(parseInt(e.target.value))}
+                            className="w-full h-1 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-rose-600 focus:outline-none"
+                          />
+                          <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+                            <div className="bg-slate-950 p-2 rounded-lg border border-slate-850">
+                              <span className="text-slate-500 block">s1 (Timestamp 1)</span>
+                              <span className="font-mono text-white block mt-0.5">{s1}</span>
+                            </div>
+                            <div className="bg-slate-950 p-2 rounded-lg border border-slate-850">
+                              <span className="text-slate-500 block">s2 (Timestamp 2)</span>
+                              <span className="font-mono text-white block mt-0.5">{s2}</span>
+                            </div>
+                            <div className="bg-slate-950 p-2 rounded-lg border border-slate-850">
+                              <span className="text-slate-500 block">delta (s2 - s1)</span>
+                              <span className={`font-mono block mt-0.5 ${delta > 8000 ? 'text-red-400 font-bold' : 'text-indigo-400'}`}>{delta}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+
+                      {/* Diagnostic console */}
+                      <div className="bg-slate-950 border border-slate-850 rounded-2xl p-4 space-y-1">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block border-b border-slate-850/50 pb-1 mb-2">Amprente de timp în ICR1</span>
+                        <div className="font-mono text-[10px] space-y-1 leading-normal">
+                          {icLogs.map((log, idx) => (
+                            <div key={idx} className={`${idx === 0 ? 'text-rose-400 font-bold' : 'text-slate-500'}`}>
+                              &gt; {log}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+
+              </section>
+            )}
+
+            {/* TAB 3: ANALOG-TO-DIGITAL CONVERTER */}
+            {activeTab === 'adc' && (
+              <section className="grid gap-6 lg:grid-cols-12 animate-slide-up">
+                
+                {/* Theory & Code */}
+                <div className="lg:col-span-5 space-y-6">
+                  <article className="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <BookIcon />
+                      Convertorul Analog-Digital (ADC)
+                    </h3>
+                    <div className="space-y-3 text-xs leading-relaxed text-slate-400 font-medium">
+                      <p>
+                        Lumea reală ne oferă tensiuni continuu variabile (ex. 0V la 5V de la un potențiometru sau senzor analogic). ADC traduce această tensiune într-un număr întreg între **0 și 1023** (rezoluție pe 10 biți: 2^10 = 1024 pași).
+                      </p>
+                      <div className="my-2 p-3 bg-slate-950 rounded-xl border border-slate-850 text-center font-mono text-white text-[11px]">
+                        Numar_ADC = (V_in * 1023) / V_ref
+                      </div>
+                      
+                      <h4 className="font-bold text-white mt-4">Regiștrii Cheie:</h4>
+                      <ul className="space-y-3 text-[11px]">
+                        <li className="bg-slate-950/50 p-2.5 rounded-xl border border-slate-850">
+                          <strong className="text-indigo-400 font-mono text-xs">ADMUX</strong>: Selectează referința (ex. REFS0=1 pentru AVCC=5V) și canalul (MUX0-MUX2 aleg pinii PA0-PA7).
+                        </li>
+                        <li className="bg-slate-950/50 p-2.5 rounded-xl border border-slate-850">
+                          <strong className="text-violet-400 font-mono text-xs">ADCSRA</strong>: Activează ADC (`ADEN=1`), pornește conversia (`ADSC=1`) și selectează prescalerul ceasului ADC (recomandat divizor de 128 pentru ceas stabil sub 200kHz).
+                        </li>
+                        <li className="bg-slate-950/50 p-2.5 rounded-xl border border-slate-850">
+                          <strong className="text-white font-mono text-xs">ADC</strong>: Registrul de rezultat pe 16 biți (obținut din ADCL și ADCH combinat).
+                        </li>
+                      </ul>
+                    </div>
+                  </article>
+                </div>
+
+                {/* Interactive Sandbox */}
+                <div className="lg:col-span-7 space-y-6">
+                  
+                  {/* ADC Code */}
+                  <article className="bg-[#1e1e1e] rounded-3xl border border-slate-800/80 overflow-hidden shadow-inner space-y-px">
+                    <div className="bg-[#181818] px-6 py-3 border-b border-slate-800/80 flex justify-between items-center text-xs font-mono select-none">
+                      <span className="text-slate-350">Rutina standard de citire ADC (C)</span>
+                      <button 
+                        onClick={() => handleCopy(`void init_adc() {\n    ADMUX = (1 << REFS0); // AVCC ref (5V)\n    ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0); // Prescaler 128\n}\n\nunsigned int citeste_adc(unsigned char canal) {\n    ADMUX = (ADMUX & 0xF8) | (canal & 0x07); // Alege canalul\n    ADCSRA |= (1 << ADSC); // Start conversion\n    while (ADCSRA & (1 << ADSC)); // Așteaptă hardware-ul\n    return ADC; // Rezultatul de 10-biti\n}`, 'adc_code')}
+                        className="text-rose-400 hover:text-rose-300 text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      >
+                        {copiedText === 'adc_code' ? 'Copiat!' : 'Copiază Codul'}
+                      </button>
+                    </div>
+                    <pre className="p-4 font-mono text-[10px] leading-relaxed text-[#D4D4D4] overflow-x-auto">
+                      <span className="text-[#569CD6]">void</span> <span className="text-[#DCDCAA]">init_adc</span>() &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">ADMUX</span> = (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#9CDCFE]">REFS0</span>); <span className="text-[#6A9955]">// Referință AVCC 5V</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">ADCSRA</span> = (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#9CDCFE]">ADEN</span>) | (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#9CDCFE]">ADPS2</span>) | (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#9CDCFE]">ADPS1</span>) | (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#9CDCFE]">ADPS0</span>); <span className="text-[#6A9955]">// p=128</span><br/>
+                      &#125;<br/><br/>
+                      <span className="text-[#569CD6]">unsigned int</span> <span className="text-[#DCDCAA]">citeste_adc</span>(<span className="text-[#569CD6]">unsigned char</span> <span className="text-[#9CDCFE]">canal</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">ADMUX</span> = (<span className="text-[#9CDCFE]">ADMUX</span> &amp; <span className="text-[#B5CEA8]">0xF8</span>) | (<span className="text-[#9CDCFE]">canal</span> &amp; <span className="text-[#B5CEA8]">0x07</span>);<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">ADCSRA</span> |= (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#9CDCFE]">ADSC</span>); <span className="text-[#6A9955]">// Start</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#C586C0]">while</span> (<span className="text-[#9CDCFE]">ADCSRA</span> &amp; (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#9CDCFE]">ADSC</span>)); <span className="text-[#6A9955]">// Așteptare conversie</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#C586C0]">return</span> <span className="text-[#9CDCFE]">ADC</span>;<br/>
+                      &#125;
+                    </pre>
+                  </article>
+
+                  {/* Potentiometer & Resistor Ladder Sandbox */}
+                  <div className="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <CalculatorIcon />
+                      Simulator Potențiometru & Divizor Rezistiv (Taste ADC)
+                    </h3>
+
+                    <div className="space-y-4 text-xs font-medium">
+                      
+                      {/* Potentiometer Slider */}
+                      <div className="bg-slate-950/50 p-4 rounded-2xl border border-slate-850 space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-400">Tensiune analogică pe PA0:</span>
+                          <span className="text-emerald-400 font-mono font-bold text-sm bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20">{adcVolts.toFixed(2)} Volți</span>
+                        </div>
+                        <input 
+                          type="range"
+                          min="0"
+                          max="5"
+                          step="0.05"
+                          value={adcVolts}
+                          onChange={(e) => setAdcVolts(parseFloat(e.target.value))}
+                          className="w-full h-1.5 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-emerald-500 focus:outline-none"
+                        />
+                        <div className="flex justify-between text-[10px] text-slate-500">
+                          <span>0V (GND)</span>
+                          <span>2.5V</span>
+                          <span>5V (AVCC)</span>
+                        </div>
+                      </div>
+
+                      {/* Visual Results Grid */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-850 text-center">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Valoare ADC (Registru)</span>
+                          <span className="font-mono text-white text-2xl font-bold block mt-1.5">{adcSteps}</span>
+                          <span className="text-[9px] text-slate-500 block mt-1">Gama: 0 - 1023 (10-bit)</span>
+                        </div>
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-850 text-center">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Tasta Detectată (Examen)</span>
+                          <span className="font-mono text-emerald-400 text-sm font-bold block mt-3">{getDetectedKey()}</span>
+                          <span className="text-[9px] text-slate-500 block mt-1">Fereastră cu marjă de +/- 25 pași</span>
+                        </div>
+                      </div>
+
+                      {/* Resistor Ladder Guide */}
+                      <div className="bg-slate-950/30 p-4 rounded-xl border border-slate-850/60">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Comportament Butoane (Ladder):</span>
+                        <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+                          <div className={`p-2 rounded-lg border ${getDetectedKey().includes('Tasta 1') ? 'bg-emerald-500/10 border-emerald-500/35 text-white font-bold' : 'bg-slate-950/20 border-slate-900 text-slate-500'}`}>
+                            <span>Tasta 1 (1V)</span>
+                            <span className="block font-mono text-[9px] mt-0.5">ADC 180-230</span>
+                          </div>
+                          <div className={`p-2 rounded-lg border ${getDetectedKey().includes('Tasta 2') ? 'bg-emerald-500/10 border-emerald-500/35 text-white font-bold' : 'bg-slate-950/20 border-slate-900 text-slate-500'}`}>
+                            <span>Tasta 2 (2.5V)</span>
+                            <span className="block font-mono text-[9px] mt-0.5">ADC 490-540</span>
+                          </div>
+                          <div className={`p-2 rounded-lg border ${getDetectedKey().includes('Tasta 3') ? 'bg-emerald-500/10 border-emerald-500/35 text-white font-bold' : 'bg-slate-950/20 border-slate-900 text-slate-500'}`}>
+                            <span>Tasta 3 (4.0V)</span>
+                            <span className="block font-mono text-[9px] mt-0.5">ADC 795-845</span>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+
+              </section>
+            )}
+
+            {/* TAB 4: SERIAL BIT-BANGING */}
+            {activeTab === 'serial' && (
+              <section className="grid gap-6 lg:grid-cols-12 animate-slide-up">
+                
+                {/* Theory & Mathematics */}
+                <div className="lg:col-span-5 space-y-6">
+                  <article className="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <BookIcon />
+                      Comunicație Serială (Bit-Banging)
+                    </h3>
+                    <div className="space-y-3 text-xs leading-relaxed text-slate-400 font-medium">
+                      <p>
+                        Când dorești să trimiți un cod (ex. o tastă de 5 biți) pe un singur fir, trebuie să controlezi semnalul în timp generând manual forma de undă a fiecărui bit (tehnică numită *bit-banging*).
+                      </p>
+                      <p>
+                        <strong>Regula CMMDC (Cel Mai Mare Divizor Comun):</strong> Dacă diagrama ta are nevoie de mai mulți timpi diferiți (ex: o fereastră de 1000ms, timpi activi de 800ms pentru bitul "1" și 200ms pentru bitul "0"), rezoluția timerului va fi CMMDC-ul acelor timpi => **200 ms**.
+                      </p>
+                      
+                      <h4 className="font-bold text-white mt-4">Matematica Timerului la 16 MHz (Timer 1):</h4>
+                      <p>
+                        T_cycle = 200ms = 0.2s.
+                      </p>
+                      <div className="p-3 bg-slate-950 rounded-xl border border-slate-850 font-mono text-white text-[11px]">
+                        0.2 = p * N * (1 / 16.000.000) => p * N = 3.200.000.
+                        <br/>
+                        Alegem prescaler p=1024 => N = 3125.
+                        <br/>
+                        Valoarea OCR1A = 3124.
+                      </div>
+                      <p>
+                        La fiecare 200ms, intrăm în ISR. O fereastră de bit are 1000ms (adică 5 tick-uri de 200ms). Numărăm tick-urile de la 0 la 4 și controlăm pinul DATA corespunzător bitului curent.
+                      </p>
+                    </div>
+                  </article>
+                </div>
+
+                {/* Interactive Signal Sandbox */}
+                <div className="lg:col-span-7 space-y-6">
+                  
+                  <article className="bg-[#1e1e1e] rounded-3xl border border-slate-800/80 overflow-hidden shadow-inner space-y-px">
+                    <div className="bg-[#181818] px-6 py-3 border-b border-slate-800/80 flex justify-between items-center text-xs font-mono select-none">
+                      <span className="text-slate-350">Logica de bit-banging din ISR (C)</span>
+                      <button 
+                        onClick={() => handleCopy(`ISR(TIMER1_COMPA_vect) {\n    if (trimitem_acum) {\n        unsigned char bit_curent = (cod_tasta & (1 << bit_index)) >> bit_index;\n        if (tick == 0) PORTC |= (1 << 0); // Start HIGH\n        if (bit_curent == 0 && tick == 1) PORTC &= ~(1 << 0); // Fall after 200ms\n        if (bit_curent == 1 && tick == 4) PORTC &= ~(1 << 0); // Fall after 800ms\n        tick++;\n        if (tick == 5) {\n            tick = 0;\n            bit_index++;\n            if (bit_index == 5) {\n                trimitem_acum = 0; // Done\n            }\n        }\n    }\n}`, 'ser_code')}
+                        className="text-rose-400 hover:text-rose-300 text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      >
+                        {copiedText === 'ser_code' ? 'Copiat!' : 'Copiază Codul'}
+                      </button>
+                    </div>
+                    <pre className="p-3 font-mono text-[9px] leading-normal text-[#D4D4D4] overflow-x-auto max-h-[250px]">
+                      <span className="text-[#C586C0]">ISR</span>(<span className="text-[#9CDCFE]">TIMER1_COMPA_vect</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#C586C0]">if</span> (<span className="text-[#9CDCFE]">trimitem_acum</span> == <span className="text-[#B5CEA8]">1</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#569CD6]">unsigned char</span> <span className="text-[#9CDCFE]">bit_curent</span> = (<span className="text-[#9CDCFE]">cod_tasta</span> &amp; (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#9CDCFE]">bit_index</span>)) &gt;&gt; <span className="text-[#9CDCFE]">bit_index</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#C586C0]">if</span> (<span className="text-[#9CDCFE]">tick</span> == <span className="text-[#B5CEA8]">0</span>) <span className="text-[#9CDCFE]">PORTC</span> |= (<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#B5CEA8]">0</span>); <span className="text-[#6A9955]">// Start HIGH</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#C586C0]">if</span> (<span className="text-[#9CDCFE]">bit_curent</span> == <span className="text-[#B5CEA8]">0</span> &amp;&amp; <span className="text-[#9CDCFE]">tick</span> == <span className="text-[#B5CEA8]">1</span>) <span className="text-[#9CDCFE]">PORTC</span> &amp;= ~(<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#B5CEA8]">0</span>); <span className="text-[#6A9955]">// 200ms</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#C586C0]">if</span> (<span className="text-[#9CDCFE]">bit_curent</span> == <span className="text-[#B5CEA8]">1</span> &amp;&amp; <span className="text-[#9CDCFE]">tick</span> == <span className="text-[#B5CEA8]">4</span>) <span className="text-[#9CDCFE]">PORTC</span> &amp;= ~(<span className="text-[#B5CEA8]">1</span> &lt;&lt; <span className="text-[#B5CEA8]">0</span>); <span className="text-[#6A9955]">// 800ms</span><br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">tick</span>++;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#C586C0]">if</span> (<span className="text-[#9CDCFE]">tick</span> == <span className="text-[#B5CEA8]">5</span>) &#123;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">tick</span> = <span className="text-[#B5CEA8]">0</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#9CDCFE]">bit_index</span>++;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#C586C0]">if</span> (<span className="text-[#9CDCFE]">bit_index</span> == <span className="text-[#B5CEA8]">5</span>) <span className="text-[#9CDCFE]">trimitem_acum</span> = <span className="text-[#B5CEA8]">0</span>;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &nbsp;&nbsp;&nbsp;&nbsp;&#125;<br/>
+                      &#125;
+                    </pre>
+                  </article>
+
+                  {/* Serial visualizer sandbox */}
+                  <div className="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-4">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <SignalIcon />
+                      Visualizator Transmisie Serială în Timp Real
+                    </h3>
+
+                    <div className="space-y-4 text-xs">
+                      
+                      <div className="flex flex-wrap gap-4 items-center justify-between p-4 bg-slate-950/60 border border-slate-850 rounded-2xl">
+                        <div className="space-y-1">
+                          <span className="text-[10px] text-slate-500 uppercase font-bold block">Tasta de trimis (Valoare 5-bit)</span>
+                          <select 
+                            value={selectedNumber}
+                            onChange={(e) => setSelectedNumber(parseInt(e.target.value))}
+                            disabled={txActive}
+                            className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-white"
+                          >
+                            <option value={12}>Tasta 12 (01100 bin)</option>
+                            <option value={9}>Tasta 9 (01001 bin)</option>
+                            <option value={19}>Tasta 19 (10011 bin)</option>
+                            <option value={31}>Tasta 31 (11111 bin)</option>
+                          </select>
+                        </div>
+
+                        <button 
+                          onClick={startSerialTx}
+                          disabled={txActive}
+                          className="bg-rose-600 hover:bg-rose-500 disabled:bg-slate-800 text-white rounded-xl px-5 py-3 font-bold transition-all shadow-glow-rose"
+                        >
+                          {txActive ? 'Se transmite...' : 'Trimite Serial'}
+                        </button>
+                      </div>
+
+                      {/* Output visual wave */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold uppercase">
+                          <span>Nivel Pin DATA (PC0): {txSignal === 1 ? 'HIGH (1)' : 'LOW (0)'}</span>
+                          <span>Bit curent index: {txBitIndex !== -1 ? txBitIndex : 'Inactiv'}</span>
+                        </div>
+                        <div className="h-16 bg-slate-950 rounded-xl border border-slate-850 overflow-hidden relative flex items-end">
+                          {/* Grid ticks vertical lines */}
+                          <div className="absolute inset-0 flex justify-between pointer-events-none">
+                            {Array(25).fill(0).map((_, i) => (
+                              <div key={i} className={`h-full border-r ${i % 5 === 0 ? 'border-slate-800/80' : 'border-slate-900/40'}`} style={{ width: `${100/25}%` }}></div>
+                            ))}
+                          </div>
+                          {/* Draw wave segments */}
+                          <div className="w-full h-10 flex items-end relative px-1">
+                            {waveHistory.map((val, idx) => (
+                              <div 
+                                key={idx} 
+                                className={`h-full transition-all duration-75 ${val === 1 ? 'bg-rose-500 border-t border-rose-400' : 'bg-slate-900 border-t border-slate-850'}`}
+                                style={{ 
+                                  width: `${100/25}%`, 
+                                  height: val === 1 ? '100%' : '8px',
+                                  opacity: idx === waveHistory.length - 1 ? 1 : 0.6 + (idx * 0.015)
+                                }}
+                              ></div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex justify-between text-[8px] text-slate-650 font-bold px-1 select-none">
+                          <span>Bit 0 (LSB)</span>
+                          <span>Bit 1</span>
+                          <span>Bit 2</span>
+                          <span>Bit 3</span>
+                          <span>Bit 4 (MSB)</span>
+                        </div>
+                      </div>
+
+                      {/* Debug console */}
+                      <div className="bg-slate-950 border border-slate-850 rounded-2xl p-4 space-y-1">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block border-b border-slate-850/50 pb-1 mb-2">Monitor Serial Bit-Banging</span>
+                        <div className="font-mono text-[10px] space-y-1 leading-normal">
+                          {serialLogs.map((log, idx) => (
+                            <div key={idx} className={`${idx === 0 ? 'text-rose-400 font-bold' : 'text-slate-500'}`}>
+                              &gt; {log}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+
+              </section>
+            )}
+
+            {/* TAB 5: QUIZ DE TEORIE */}
+            {activeTab === 'quiz' && (
+              <section className="max-w-3xl mx-auto animate-slide-up space-y-6">
+                
+                <div className="bg-slate-900/30 border border-slate-800 rounded-3xl p-6 backdrop-blur-md space-y-6">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <BookIcon />
+                    Quiz rapid: Testează-ți Teoria
+                  </h3>
+
+                  <div className="space-y-6">
+                    {quizQuestions.map((q, qIndex) => (
+                      <div key={q.id} className="space-y-2.5">
+                        <h4 className="text-xs font-bold text-slate-300 leading-relaxed">
+                          {qIndex + 1}. {q.question}
+                        </h4>
+                        
+                        <div className="grid gap-2">
+                          {q.options.map((opt, optIndex) => {
+                            const isSelected = quizAnswers[q.id] === optIndex;
+                            const isCorrect = optIndex === q.correct;
+                            let style = "bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white";
+
+                            if (showQuizResults) {
+                              if (isCorrect) {
+                                style = "bg-emerald-500/10 border-emerald-500/35 text-emerald-400";
+                              } else if (isSelected) {
+                                style = "bg-rose-500/10 border-rose-500/35 text-rose-400";
+                              } else {
+                                style = "bg-slate-950/20 border-slate-900 text-slate-650 opacity-60";
+                              }
+                            } else if (isSelected) {
+                              style = "bg-rose-500/10 border-rose-500/40 text-rose-400";
+                            }
+
+                            return (
+                              <button
+                                key={optIndex}
+                                onClick={() => {
+                                  if (showQuizResults) return;
+                                  setQuizAnswers({ ...quizAnswers, [q.id]: optIndex });
+                                }}
+                                disabled={showQuizResults}
+                                className={`text-left text-xs px-4 py-3 rounded-xl border transition-all duration-150 leading-relaxed ${style}`}
+                              >
+                                {opt}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {showQuizResults && (
+                          <p className="text-[11px] text-slate-500 italic mt-1 leading-relaxed pl-2 border-l border-rose-500/25">
+                            Explicație: {q.explanation}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex space-x-4 pt-4 border-t border-slate-800/80 justify-end">
+                    {showQuizResults ? (
+                      <button
+                        onClick={() => {
+                          setQuizAnswers({ q1: null, q2: null, q3: null, q4: null });
+                          setShowQuizResults(false);
+                        }}
+                        className="bg-[#25252b] hover:bg-slate-800 text-slate-350 px-5 py-2.5 rounded-xl text-xs font-bold border border-slate-850"
+                      >
+                        Resetează Quiz-ul
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setShowQuizResults(true)}
+                        disabled={Object.values(quizAnswers).some(x => x === null)}
+                        className="bg-rose-600 hover:bg-rose-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-white px-6 py-2.5 rounded-xl text-xs font-bold transition-all"
+                      >
+                        Verifică Răspunsurile
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+              </section>
+            )}
+
+          </main>
+
+          {/* Footer */}
+          <footer className="mt-auto py-6 border-t border-slate-900 text-center text-xs text-slate-600 font-semibold tracking-wide uppercase">
+            &copy; 2026 ExamTrainers. Construit cu React, Tailwind CSS și dragoste pentru <a href="https://github.com/andreisugu" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors duration-150 normal-case underline decoration-wavy decoration-indigo-500/30 underline-offset-4">sisteme încorporate</a> de <a href="https://github.com/andreisugu" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-indigo-400 transition-colors duration-150 normal-case font-mono ml-0.5"><svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>@andreisugu</a>.
+          </footer>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
