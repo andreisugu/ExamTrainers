@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Play, CheckCircle, XCircle, BookOpen, RotateCcw, Code } from 'lucide-react';
+import { Play, CheckCircle, XCircle, BookOpen, RotateCcw, Code, ArrowLeft } from 'lucide-react';
 
 // --- SKELETON DE BAZĂ (HELLO WORLD) ---
 const helloWorldSkeleton = `#include <avr/io.h>
@@ -892,6 +892,13 @@ export default function App() {
       {/* Header */}
       <header className="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center">
         <div className="flex items-center space-x-2">
+          <a 
+            href="../index.html" 
+            title="Înapoi la Panou" 
+            className="mr-2 p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition duration-150 flex items-center justify-center"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </a>
           <Code className="w-6 h-6 text-green-400" />
           <h1 className="text-xl font-bold tracking-wide">AVR Examen Trainer (ATmega16)</h1>
         </div>

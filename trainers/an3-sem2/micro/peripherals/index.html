@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AVR Examen Trainer (Periferice și FSM)</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.25s ease-out forwards',
+            'slide-in': 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideIn: {
+              '0%': { transform: 'translateY(8px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React & ReactDOM UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <!-- Babel Standalone for TSX parsing in browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* Custom scrollbars for a premium feel */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(139, 92, 246, 0.2);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(139, 92, 246, 0.4);
+    }
+    
+    /* Ensure textarea, pre, and line numbers match perfectly */
+    textarea, pre, #line-numbers {
+      line-height: 1.625 !important;
+      font-size: 15px !important;
+    }
+
+    pre#syntax-pre {
+      color: #D4D4D4;
+    }
+
+    /* VS Code Dark+ C/C++ Syntax Highlights */
+    .syntax-comment { color: #6A9955; font-style: italic; }
+    .syntax-preprocessor { color: #C586C0; }
+    .syntax-string { color: #CE9178; }
+    .syntax-number { color: #B5CEA8; }
+    .syntax-keyword-control { color: #C586C0; font-weight: 600; }
+    .syntax-keyword-type { color: #569CD6; }
+    .syntax-macro { color: #4FC1FF; }
+    .syntax-function { color: #DCDCAA; }
+    .syntax-variable { color: #9CDCFE; }
+    .syntax-operator { color: #D4D4D4; }
+    .syntax-text { color: #D4D4D4; }
+  </style>
+</head>
+<body class="h-full bg-slate-50 text-slate-800 font-sans selection:bg-violet-500 selection:text-white overflow-hidden">
+
+  <div id="root" class="h-full flex flex-col"></div>
+
+  <!-- TSX Script block -->
+  <script type="text/babel">
+    const { useState } = React;
+
+    // --- CUSTOM SVG ICONS FOR OFFLINE / ZERO-DEP USAGE ---
+    
+    const Code = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="16 18 22 12 16 6" />
+        <polyline points="8 6 2 12 8 18" />
+      </svg>
+    );
+
+    const RotateCcw = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+        <polyline points="3 3 3 8 8 8" />
+      </svg>
+    );
+
+    const Play = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="6 3 20 12 6 21 6 3" />
+      </svg>
+    );
+
+    const CheckCircle = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+      </svg>
+    );
+
+    const XCircle = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="15" y1="9" x2="9" y2="15" />
+        <line x1="9" y1="9" x2="15" y2="15" />
+      </svg>
+    );
+
+    const BookOpen = ({ className }) => (
+      <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+      </svg>
+    );
+
+    // --- SKELETON DE BAZĂ (HELLO WORLD) ---
+    const helloWorldSkeleton = `#include <avr/io.h>
+#include <avr/interrupt.h>
+
+int main(void) {
+    // Scrie codul aici
+    
+    
+    while(1) {
+        // Bucla principală
+        
+    }
+    return 0;
+}`;
+
+    // --- DATA & PROBLEM GENERATORS ---
+
+    const generateProblem1 = () => {
+      return {
+        type: 'Afișor 7 Segmente (LUT)',
+        title: 'Contor pe 7 Segmente cu LUT',
+        task: `Scrie un program complet în main() care citește un buton activ pe 0 conectat la PB0 folosind funcția push_detect() (care returnează 1 la apăsare validă și e gata definită) și afișează cifra curentă pe un afișor 7 segmente conectat la Portul C.\n\nReguli:\n1. Configurează Portul C ca ieșire și PB0 ca intrare cu pull-up activat.\n2. Folosește vectorul global 'const unsigned char cifre[10]' deja declarat sub include-uri pentru decodare.\n3. Contorul începe de la 0, iar când crește peste 9, se resetează înapoi la 0.\n4. Trimite valoarea corespunzătoare direct din LUT pe Portul C.`,
+        skeleton: `#include <avr/io.h>
+
+const unsigned char cifre[10] = { 0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F };
+unsigned char push_detect(void);
+
+int main(void) {
+    // Inițializare
+    
+    
+    while(1) {
+        // Bucla principală
+        
+    }
+    return 0;
+}`,
+        checks: [
+          { regex: /(?:DDRC\s*=\s*(?:0xFF|0b11111111|255)\s*;)/, desc: "Configurează tot Portul C ca ieșire în DDRC." },
+          { regex: /(?:DDRB\s*&=\s*~\s*\(?\s*1\s*<<\s*(?:PB)?0\s*\)?|clrbit\s*\(\s*DDRB\s*,\s*(?:PB)?0\s*\))/, desc: "Configurează pinul PB0 ca intrare (buton)." },
+          { regex: /(?:PORTB\s*\|?=\s*\(?\s*1\s*<<\s*(?:PB)?0\s*\)?|setbit\s*\(\s*PORTB\s*,\s*(?:PB)?0\s*\))/, desc: "Activează rezistența de pull-up pe pinul PB0 în PORTB." },
+          { regex: /if\s*\(\s*push_detect\s*\(\s*\)\s*==\s*1\s*\)/, desc: "Apelează push_detect() în bucla while(1) pentru a detecta apăsările." },
+          { regex: /(?:contor\s*\+\+\s*;|\bcontor\s*=\s*contor\s*\+\s*1\s*;)/, desc: "Incrementează contorul la detectarea unei apăsări." },
+          { regex: /(?:contor\s*>\s*9|\bcontor\s*>=\s*10)/, desc: "Verifică dacă s-a depășit cifra 9 pentru a realiza resetarea." },
+          { regex: /PORTC\s*=\s*cifre\s*\[\s*contor\s*\]\s*;/, desc: "Trimite valoarea corespunzătoare cifrei din LUT pe PORTC (PORTC = cifre[contor])." }
+        ],
+        guide: `Metoda Look-Up Table (LUT) este standardul de aur pentru afișarea pe 7 segmente. \n- Inițializezi DDRC ca ieșire (0xFF) și PB0 ca intrare (DDRB &= ~(1<<0)) cu pull-up activ (PORTB |= (1<<0)).\n- Declari un contor local (de exemplu, \`unsigned char contor = 0;\`) pe care îl actualizezi în \`while(1)\` la fiecare apăsare de buton (\`push_detect() == 1\`).\n- Dacă \`contor > 9\`, îl egalezi cu 0.\n- La final, scrii \`PORTC = cifre[contor];\` pentru actualizarea afișorului.`,
+        solution: `int main(void) {\n    DDRC = 0xFF; // Portul C ca ieșire\n    DDRB &= ~(1 << 0); // PB0 ca intrare\n    PORTB |= (1 << 0); // Pull-up pe PB0\n    \n    unsigned char contor = 0;\n    PORTC = cifre[contor]; // Afișăm 0 la început\n    \n    while(1) {\n        if (push_detect() == 1) {\n            contor++;\n            if (contor > 9) {\n                contor = 0;\n            }\n            PORTC = cifre[contor];\n        }\n    }\n    return 0;\n}`
+      };
+    };
+
+    const generateProblem2 = () => {
+      return {
+        type: 'Afișor 7 Segmente (LUT)',
+        title: 'Problema 45: Zarul Electronic',
+        task: `Scrie un program complet în main() care implementează un zar electronic.\n\nDate hardware:\n- Un buton activ pe 0 conectat la PB0 cu pull-up activ (folosește funcția push_detect() care returnează 1 la o apăsare validă).\n- Un afișor 7 segmente conectat pe Portul C.\n\nAlgoritm:\n1. Inițializează Portul C ca ieșire și PB0 ca intrare cu pull-up activ.\n2. Într-o buclă infinită, incrementează constant o variabilă locală 'zar' de la 1 la 6 (dacă 'zar' depășește 6, redevine 1) pentru a simula generarea aleatorie rapidă.\n3. Când butonul este apăsat (push_detect() == 1), trimite valoarea corespunzătoare numărului din zar pe Portul C. Decodificarea se face folosinf vectorul global LUT 'const unsigned char cifre[10]'.`,
+        skeleton: `#include <avr/io.h>
+
+const unsigned char cifre[10] = { 0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F };
+unsigned char push_detect(void);
+
+int main(void) {
+    // Inițializare
+    
+    
+    while(1) {
+        // Rulează zarul și verifică butonul
+        
+    }
+    return 0;
+}`,
+        checks: [
+          { regex: /(?:DDRC\s*=\s*(?:0xFF|0b11111111|255)\s*;)/, desc: "Configurează tot Portul C ca ieșire în DDRC." },
+          { regex: /(?:DDRB\s*&=\s*~\s*\(?\s*1\s*<<\s*(?:PB)?0\s*\)?|clrbit\s*\(\s*DDRB\s*,\s*(?:PB)?0\s*\))/, desc: "Configurează pinul PB0 ca intrare (buton)." },
+          { regex: /(?:PORTB\s*\|?=\s*\(?\s*1\s*<<\s*(?:PB)?0\s*\)?|setbit\s*\(\s*PORTB\s*,\s*(?:PB)?0\s*\))/, desc: "Activează rezistența de pull-up pe pinul PB0 în PORTB." },
+          { regex: /(?:zar\s*\+\+\s*;|\bzar\s*=\s*zar\s*\+\s*1\s*;)/, desc: "Incrementează continuu variabila 'zar' în buclă." },
+          { regex: /(?:zar\s*>\s*6|\bzar\s*>=\s*7)/, desc: "Resetează valoarea zarului înapoi la 1 când depășește 6." },
+          { regex: /if\s*\(\s*push_detect\s*\(\s*\)\s*==\s*1\s*\)/, desc: "Apelează push_detect() pentru a prelua valoarea zarului." },
+          { regex: /PORTC\s*=\s*cifre\s*\[\s*zar\s*\]\s*;/, desc: "Trimite valoarea corespunzătoare cifrei din LUT pe PORTC (PORTC = cifre[zar])." }
+        ],
+        guide: `Zarul electronic rulează continuu un contor între 1 și 6 în bucla while(1). La apăsarea butonului (push_detect() == 1), capturăm valoarea curentă a contorului și o afișăm pe Portul C: \`PORTC = cifre[zar];\`. Dacă zarul trece de 6, îl egalezi cu 1.`,
+        solution: `int main(void) {\n    DDRC = 0xFF; // Portul C ca ieșire\n    DDRB &= ~(1 << 0); // PB0 ca intrare\n    PORTB |= (1 << 0); // Pull-up pe PB0\n    \n    unsigned char zar = 1;\n    \n    while(1) {\n        zar++;\n        if (zar > 6) {\n            zar = 1;\n        }\n        \n        if (push_detect() == 1) {\n            PORTC = cifre[zar];\n        }\n    }\n    return 0;\n}`
+      };
+    };
+
+    const generateProblem3 = () => {
+      return {
+        type: 'Shift Register (T4)',
+        title: 'Problema 64: Ghirlanda cu 16 LED-uri (Shift Register)',
+        task: `Implementează o funcție \`void trimite_serial_16biti(unsigned int date_leduri)\` care să trimită o valoare pe 16 biți către un registru de deplasare.\n\nDate hardware:\n- Pinul de Date (SD) este PC7\n- Pinul de Ceas (CP) este PC6\n\nPentru fiecare din cei 16 biți (de la cel mai puțin semnificativ la cel mai semnificativ):\n1. Setează pinul SD pe 1 sau 0 în funcție de starea bitului curent.\n2. Generează un puls complet de ceas pe CP (urcă-l în 1 logic, apoi coboară-l în 0 logic).`,
+        skeleton: `#include <avr/io.h>
+
+#define SD 7
+#define CP 6
+
+void trimite_serial_16biti(unsigned int date_leduri) {
+    // Scrie logica for-ului și bitwise-ului aici
+    
+}`,
+        checks: [
+          { regex: /for\s*\(\s*int\s+i\s*=\s*0\s*;\s*i\s*<\s*16\s*;\s*i\s*\+\+\s*\)/, desc: "Implementează o buclă for care rulează de 16 ori (de la 0 la 15)." },
+          { regex: /date_leduri\s*&\s*\(\s*1\s*<<\s*i\s*\)/, desc: "Verifică corect bitul 'i' folosind mascarea bitwise (date_leduri & (1 << i))." },
+          { regex: /(?:PORTC\s*\|?=\s*\(?\s*1\s*<<\s*SD\s*\)?|setbit\s*\(\s*PORTC\s*,\s*SD\s*\))/, desc: "Setează pinul SD (PC7) pe 1 când bitul curent este 1." },
+          { regex: /(?:PORTC\s*&=\s*~\s*\(?\s*1\s*<<\s*SD\s*\)?|clrbit\s*\(\s*PORTC\s*,\s*SD\s*\))/, desc: "Setează pinul SD (PC7) pe 0 când bitul curent este 0." },
+          { regex: /(?:PORTC\s*\|?=\s*\(?\s*1\s*<<\s*CP\s*\)?|setbit\s*\(\s*PORTC\s*,\s*CP\s*\))/, desc: "Generează frontul crescător al ceasului (CP = 1)." },
+          { regex: /(?:PORTC\s*&=\s*~\s*\(?\s*1\s*<<\s*CP\s*\)?|clrbit\s*\(\s*PORTC\s*,\s*CP\s*\))/, desc: "Generează frontul coborâtor al ceasului (CP = 0)." }
+        ],
+        guide: `Pentru serializare, parcurgi o buclă for de la 0 la 15:\n- Verifici starea bitului curent: \`if (date_leduri & (1 << i))\`\n- Dacă este 1: activezi SD cu \`PORTC |= (1 << SD);\` (sau \`setbit(PORTC, SD);\`).\n- Dacă este 0: dezactivezi SD cu \`PORTC &= ~(1 << SD);\` (sau \`clrbit(PORTC, SD);\`).\n- Trimiti bitul forțând un puls de ceas (CP high, apoi CP low): \n  \`PORTC |= (1 << CP);\` urmat de \`PORTC &= ~(1 << CP);\`.`,
+        solution: `void trimite_serial_16biti(unsigned int date_leduri) {\n    for (int i = 0; i < 16; i++) {\n        if (date_leduri & (1 << i)) {\n            PORTC |= (1 << SD);\n        } else {\n            PORTC &= ~(1 << SD);\n        }\n        \n        PORTC |= (1 << CP); // Puls ceas HIGH\n        PORTC &= ~(1 << CP); // Puls ceas LOW\n    }\n}`
+      };
+    };
+
+    const generateProblem4 = () => {
+      return {
+        type: 'Mașini de Stare (FSM)',
+        title: 'Problema 68: Controlul Ușii Automate (FSM)',
+        task: `Scrie mașina de stări finit (FSM) pentru o ușă automată în bucla while(1).\nStările posibile sunt ST_INCHIS (0) și ST_DESCHIS (1).\n\nComportament:\n1. În starea ST_INCHIS, dacă variabila globală 'senzor_om' devine 1, pornește motorul (apelează funcția 'porneste_motor()'), reține timpul curent (variabila 'timp_start' primește valoarea contorului 'milisecunde') și treci în starea ST_DESCHIS.\n2. În starea ST_DESCHIS, verifică dacă au trecut 5 secunde (5000 ms). Dacă da, oprește motorul (apelează 'opreste_motor()') și revino în starea ST_INCHIS.`,
+        skeleton: `#include <avr/io.h>
+
+#define ST_INCHIS 0
+#define ST_DESCHIS 1
+
+volatile unsigned int milisecunde = 0;
+unsigned char senzor_om = 0;
+
+void porneste_motor(void);
+void opreste_motor(void);
+
+int main(void) {
+    unsigned char stare_usa = ST_INCHIS;
+    unsigned int timp_start = 0;
+    
+    while(1) {
+        // Scrie switch-ul masinii de stare aici
+        
+    }
+    return 0;
+}`,
+        checks: [
+          { regex: /switch\s*\(\s*stare_usa\s*\)/, desc: "Implementează mașina de stări printr-un switch-case pe variabila stare_usa." },
+          { regex: /case\s+ST_INCHIS\s*:/, desc: "Implementează cazul pentru starea ST_INCHIS." },
+          { regex: /if\s*\(\s*senzor_om\s*==\s*1\s*\)/, desc: "Verifică activarea senzorului (senzor_om == 1) în starea ST_INCHIS." },
+          { regex: /porneste_motor\s*\(\s*\)\s*;/, desc: "Apelează funcția porneste_motor() la detecția persoanei." },
+          { regex: /timp_start\s*=\s*milisecunde\s*;/, desc: "Salvează momentul începerii deschiderii ușii (timp_start = milisecunde)." },
+          { regex: /stare_usa\s*=\s*ST_DESCHIS\s*;/, desc: "Efectuează tranziția de stare către ST_DESCHIS." },
+          { regex: /case\s+ST_DESCHIS\s*:/, desc: "Implementează cazul pentru starea ST_DESCHIS." },
+          { regex: /milisecunde\s*-\s*timp_start\s*\)?\s*>=\s*5000/, desc: "Verifică scurgerea timpului de 5000 ms pentru debouncing sau temporizare." },
+          { regex: /opreste_motor\s*\(\s*\)\s*;/, desc: "Apelează funcția opreste_motor() după scurgerea timpului." },
+          { regex: /stare_usa\s*=\s*ST_INCHIS\s*;/, desc: "Revine în starea ST_INCHIS după închiderea ușii." }
+        ],
+        guide: `Mașinile de stare (FSM) sunt extrem de curate. Folosești un bloc switch(stare_usa):\n- case ST_INCHIS: dacă \`senzor_om == 1\`, pornești motorul, înregistrezi timpul curent (\`timp_start = milisecunde;\`) și muți starea: \`stare_usa = ST_DESCHIS;\`.\n- case ST_DESCHIS: dacă diferența de timp \`(milisecunde - timp_start) >= 5000\` s-a îndeplinit, oprești motorul și revii la starea inițială: \`stare_usa = ST_INCHIS;\`. Nu uita de break-urile de la sfârșitul fiecărui case!`,
+        solution: `    while(1) {\n        switch(stare_usa) {\n            case ST_INCHIS:\n                if (senzor_om == 1) {\n                    porneste_motor();\n                    timp_start = milisecunde;\n                    stare_usa = ST_DESCHIS;\n                }\n                break;\n            case ST_DESCHIS:\n                if ((milisecunde - timp_start) >= 5000) {\n                    opreste_motor();\n                    stare_usa = ST_INCHIS;\n                }\n                break;\n        }\n    }`
+      };
+    };
+
+    const generateProblem5 = () => {
+      return {
+        type: 'Mașini de Stare (FSM)',
+        title: 'Problema 43n: Controlul Cuptorului cu Microunde (FSM Complex)',
+        task: `Scrie mașina de stări finit (FSM) pentru un cuptor cu microunde în bucla while(1).\nStările posibile sunt ST_SET (0) și ST_HEAT (1).\n\nComportament:\n1. În starea ST_SET:\n  - Dacă se apasă butonul SEC (btn_sec == 1), adaugă 10 la secunde. Dacă secunde devine 60, resetează secunde la 0 și incrementează minute.\n  - Dacă se apasă butonul START (btn_start == 1) și avem timp setat (minute > 0 sau secunde > 0), aprinde LED-ul de funcționare (apelează 'aprinde_led_run()') și treci în starea ST_HEAT.\n2. În starea ST_HEAT:\n  - La fiecare secundă (când variabila globală 'a_trecut_o_secunda' devine 1), scade timpul: setează 'a_trecut_o_secunda = 0'. Dacă secunde > 0, scade secunde. Dacă secunde == 0 și minute > 0, scade minute și setează secunde = 59.\n  - Dacă timpul se termină (minute == 0 și secunde == 0), oprește încălzirea (apelează 'stinge_led_run()') și revino în starea ST_SET.\n  - Dacă se apasă butonul CANCEL (btn_cancel == 1), oprește încălzirea, resetează timpul (minute = 0, secunde = 0) și revino în starea ST_SET.`,
+        skeleton: `#include <avr/io.h>
+
+#define ST_SET 0
+#define ST_HEAT 1
+
+volatile unsigned char a_trecut_o_secunda = 0;
+unsigned char minute = 0;
+unsigned char secunde = 0;
+
+unsigned char push_detect_start(void);
+unsigned char push_detect_cancel(void);
+unsigned char push_detect_sec(void);
+void aprinde_led_run(void);
+void stinge_led_run(void);
+
+int main(void) {
+    unsigned char stare_cuptor = ST_SET;
+    
+    while(1) {
+        unsigned char btn_start = push_detect_start();
+        unsigned char btn_cancel = push_detect_cancel();
+        unsigned char btn_sec = push_detect_sec();
+        
+        // Scrie switch-ul masinii de stare aici
+        
+    }
+    return 0;
+}`,
+        checks: [
+          { regex: /switch\s*\(\s*stare_cuptor\s*\)/, desc: "Implementează mașina de stări printr-un switch-case pe variabila stare_cuptor." },
+          { regex: /case\s+ST_SET\s*:/, desc: "Implementează cazul pentru starea ST_SET." },
+          { regex: /if\s*\(\s*btn_sec(?: == 1)?\s*\)/, desc: "Verifică apăsarea butonului SEC (btn_sec)." },
+          { regex: /if\s*\(\s*btn_start\s*==\s*1\s*&&\s*\(\s*minute\s*>\s*0\s*\|\|\s*secunde\s*>\s*0\s*\)\s*\)/, desc: "Verifică apăsarea butonului START cu timp valid setat." },
+          { regex: /aprinde_led_run\s*\(\s*\)\s*;/, desc: "Apelează aprinde_led_run() la începerea încălzirii." },
+          { regex: /stare_cuptor\s*=\s*ST_HEAT\s*;/, desc: "Treci în starea ST_HEAT." },
+          { regex: /case\s+ST_HEAT\s*:/, desc: "Implementează cazul pentru starea ST_HEAT." },
+          { regex: /if\s*\(\s*a_trecut_o_secunda(?: == 1)?\s*\)/, desc: "Decrementează timpul doar când a_trecut_o_secunda este 1." },
+          { regex: /a_trecut_o_secunda\s*=\s*0\s*;/, desc: "Resetează flagul a_trecut_o_secunda." },
+          { regex: /if\s*\(\s*minute\s*==\s*0\s*&&\s*secunde\s*==\s*0\s*\)/, desc: "Verifică dacă timpul s-a scurs." },
+          { regex: /if\s*\(\s*btn_cancel\s*==\s*1\s*\)/, desc: "Verifică dacă s-a apăsat butonul CANCEL de urgență." },
+          { regex: /stinge_led_run\s*\(\s*\)\s*;/, desc: "Apelează stinge_led_run() când încălzirea se oprește sau este anulată." }
+        ],
+        guide: `Mașina de stare pentru cuptor (FSM complex):\n- În ST_SET: modifici timpul la apăsarea btn_sec. Când se apasă btn_start și există timp (minute > 0 sau secunde > 0), apelezi aprinde_led_run() și schimbi starea în ST_HEAT.\n- În ST_HEAT: la fiecare secundă (a_trecut_o_secunda == 1), pui flag-ul pe 0 și scazi timpul. Dacă secunde > 0, scazi secunde; altfel, dacă minute > 0, scazi minute și setezi secunde = 59. Când minute și secunde ajung la 0, sau dacă se apasă btn_cancel, apelezi stinge_led_run(), setezi timpul pe 0 și revii în ST_SET.`,
+        solution: `    while(1) {\n        unsigned char btn_start = push_detect_start();\n        unsigned char btn_cancel = push_detect_cancel();\n        unsigned char btn_sec = push_detect_sec();\n        \n        switch(stare_cuptor) {\n            case ST_SET:\n                if (btn_sec) {\n                    secunde += 10;\n                    if (secunde >= 60) {\n                        secunde = 0;\n                        minute++;\n                    }\n                }\n                if (btn_start == 1 && (minute > 0 || secunde > 0)) {\n                    aprinde_led_run();\n                    stare_cuptor = ST_HEAT;\n                }\n                break;\n                \n            case ST_HEAT:\n                if (a_trecut_o_secunda) {\n                    a_trecut_o_secunda = 0;\n                    if (secunde > 0) {\n                        secunde--;\n                    } else if (minute > 0) {\n                        minute--;\n                        secunde = 59;\n                    }\n                }\n                \n                if (minute == 0 && secunde == 0) {\n                    stinge_led_run();\n                    stare_cuptor = ST_SET;\n                }\n                else if (btn_cancel == 1) {\n                    stinge_led_run();\n                    minute = 0;\n                    secunde = 0;\n                    stare_cuptor = ST_SET;\n                }\n                break;\n        }\n    }`
+      };
+    };
+
+    const generateProblem6 = () => {
+      return {
+        type: 'Scanare Tastatură (kbscan)',
+        title: 'Problema 48: Scanare Tastatură Matriceală 4x4',
+        task: `Scrie o funcție \`unsigned char kbscan(void)\` care verifică apăsarea unei taste pe o tastatură matriceală 4x4 conectată la Portul A.\n\nDate hardware:\n- Liniile sunt ieșiri conectate la pinii PA4-PA7.\n- Coloanele sunt intrări cu pull-up conectate la pinii PA0-PA3.\n\nAlgoritm scanare:\n1. Parcurge cele 4 linii (de la 0 la 3).\n2. Activează linia curentă punând-o pe 0 logic și ține celelalte linii inactive (pe 1 logic), păstrând totodată pull-up-urile active pe coloane. Formula rapidă: \`PORTA = ~(1 << (linie + 4)) | 0x0F;\`.\n3. Adaugă instrucțiunea \`asm volatile("nop");\` pentru stabilizare.\n4. Parcurge cele 4 coloane (de la 0 la 3). Dacă pinul corespunzător coloanei citește 0, returnează codul tastei: \`(linie * 4) + coloana\`.\n5. Dacă nu se detectează nicio apăsare, returnează \`0xFF\`.`,
+        skeleton: `#include <avr/io.h>
+
+unsigned char kbscan(void) {
+    // Implementează algoritmul kbscan pentru 4x4 pe PORTA
+    
+}`,
+        checks: [
+          { regex: /for\s*\(\s*int\s+linie\s*=\s*0\s*;\s*linie\s*<\s*4\s*;\s*linie\s*\+\+\s*\)/, desc: "Implementează bucla exterioară pentru parcurgerea celor 4 linii." },
+          { regex: /PORTA\s*=\s*~\s*\(?\s*1\s*<<\s*\(\s*linie\s*\+\s*4\s*\)\s*\)?\s*\|\s*0x0F\s*;/, desc: "Setează corect linia activă pe 0 și liniile inactive pe 1, menținând pull-up-ul (0x0F)." },
+          { regex: /asm\s+volatile\s*\(\s*"nop"\s*\)\s*;/, desc: "Adaugă instrucțiunea de nop pentru stabilizarea hardware." },
+          { regex: /for\s*\(\s*int\s+coloana\s*=\s*0\s*;\s*coloana\s*<\s*4\s*;\s*coloana\s*\+\+\s*\)/, desc: "Implementează bucla interioară pentru parcurgerea celor 4 coloane." },
+          { regex: /(?:\(\s*PINA\s*&\s*\(?\s*1\s*<<\s*coloana\s*\)?\s*\)\s*==\s*0|testbit\s*\(\s*PINA\s*,\s*coloana\s*\)\s*==\s*0)/, desc: "Verifică dacă s-a citit 0 pe coloana curentă (PINA & (1 << coloana) == 0)." },
+          { regex: /return\s*\(?\s*linie\s*\*\s*4\s*\+\s*coloana\s*\)?\s*;/, desc: "Returnează indexul unic al tastei: linie * 4 + coloana." },
+          { regex: /return\s*(?:0xFF|255)\s*;/, desc: "Returnează 0xFF la sfârșitul funcției dacă nicio tastă nu a fost apăsată." }
+        ],
+        guide: `Scanarea matriceală elimină pinii redundanți:\n- Creezi o buclă for pentru \`linie\` de la 0 la 3.\n- Pe PORTA, setezi linia curentă (linie + 4) pe 0 logic și restul liniilor pe 1, lăsând primii 4 biți pe 1 pentru pull-up-urile coloanelor: \`PORTA = ~(1 << (linie + 4)) | 0x0F;\`.\n- Adaugi o instrucțiune \`asm volatile("nop");\` pentru a permite stabilizarea hardware a semnalelor.\n- Parcurgi o buclă for pentru \`coloana\` de la 0 la 3.\n- Citesc pinul: \`if ((PINA & (1 << coloana)) == 0)\` &rarr; dacă da, returnez codul tastei: \`return (linie * 4) + coloana;\`.\n- În afara buclelor returnezi \`0xFF;\`.`,
+        solution: `unsigned char kbscan(void) {\n    for (int linie = 0; linie < 4; linie++) {\n        PORTA = ~(1 << (linie + 4)) | 0x0F;\n        asm volatile("nop");\n        \n        for (int coloana = 0; coloana < 4; coloana++) {\n            if ((PINA & (1 << coloana)) == 0) {\n                return (linie * 4) + coloana;\n            }\n        }\n    }\n    return 0xFF;\n}`
+      };
+    };
+
+    const problemGenerators = [generateProblem1, generateProblem2, generateProblem3, generateProblem4, generateProblem5, generateProblem6];
+
+    // --- SYNTAX HIGHLIGHTER ---
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function highlightC(code) {
+      let res = "";
+      let i = 0;
+      while (i < code.length) {
+        // Comentariu Multi-linie
+        if (code.startsWith("/*", i)) {
+          let end = code.indexOf("*/", i + 2);
+          if (end === -1) end = code.length; else end += 2;
+          res += `<span class="syntax-comment">${escapeHtml(code.slice(i, end))}</span>`;
+          i = end; continue;
+        }
+        // Comentariu Single-linie
+        if (code.startsWith("//", i)) {
+          let end = code.indexOf("\n", i + 2);
+          if (end === -1) end = code.length;
+          res += `<span class="syntax-comment">${escapeHtml(code.slice(i, end))}</span>`;
+          i = end; continue;
+        }
+        // Directive Preprocesor (#include, #define)
+        if (code[i] === '#' && (i === 0 || code[i-1] === '\n')) {
+          let end = code.indexOf("\n", i + 1);
+          if (end === -1) end = code.length;
+          res += `<span class="syntax-preprocessor">${escapeHtml(code.slice(i, end))}</span>`;
+          i = end; continue;
+        }
+        // String-uri ("...")
+        if (code[i] === '"') {
+          let end = i + 1;
+          while(end < code.length && (code[end] !== '"' || code[end-1] === '\\')) end++;
+          if (end < code.length) end++;
+          res += `<span class="syntax-string">${escapeHtml(code.slice(i, end))}</span>`;
+          i = end; continue;
+        }
+        // Numere (decimale sau hexazecimale)
+        if (/\d/.test(code[i]) || (code[i] === '.' && i+1<code.length && /\d/.test(code[i+1]))) {
+          let match = code.slice(i).match(/^(0x[0-9a-fA-F]+|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?(?:[uUlLfF]+)?)/);
+          if (match) {
+             res += `<span class="syntax-number">${match[0]}</span>`;
+             i += match[0].length; continue;
+          }
+        }
+        // Cuvinte (Cuvinte cheie, tipuri, funcții, registre)
+        if (/[a-zA-Z_]/.test(code[i])) {
+          let match = code.slice(i).match(/^[a-zA-Z_]\w*/);
+          if (match) {
+            let word = match[0];
+            let nextStr = code.slice(i + word.length);
+            let isFunction = /^\s*\(/.test(nextStr);
+            let spanClass = "syntax-text";
+            
+            const keywordsControl = ['if','else','while','for','switch','case','break','return'];
+            const keywordsType = ['int','char','void','long','short','float','double','volatile','static','unsigned'];
+            
+            if (keywordsControl.includes(word)) {
+               spanClass = "syntax-keyword-control";
+            } else if (keywordsType.includes(word)) {
+               spanClass = "syntax-keyword-type";
+            } else if (word === 'ISR') {
+               spanClass = "syntax-keyword-control";
+            } else if (/^[A-Z][A-Z0-9_]*$/.test(word)) {
+               spanClass = "syntax-macro"; // Registre si Macrouri AVR
+            } else if (isFunction) {
+               spanClass = "syntax-function"; // Functii
+            } else {
+               spanClass = "syntax-variable"; // Variabile clasice
+            }
+            
+            res += `<span class="${spanClass}">${word}</span>`;
+            i += word.length; continue;
+          }
+        }
+        // Operatori C
+        if (/[+\-*/%&|^=<>!~]/.test(code[i])) {
+          res += `<span class="syntax-operator">${escapeHtml(code[i])}</span>`;
+          i++; continue;
+        }
+
+        // Restul caracterelor (, ; { } etc)
+        res += escapeHtml(code[i]);
+        i++;
+      }
+      return res + (res.endsWith('\n') ? ' ' : '');
+    }
+
+    // --- C CODE FORMATTER ---
+    function formatCCode(code) {
+      const lines = code.split('\n');
+      let indentLevel = 0;
+      const indentStep = '    '; // 4 spaces
+      const result = [];
+      
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        
+        if (line === '') {
+          if (result.length > 0 && result[result.length - 1] !== '') {
+            result.push('');
+          }
+          continue;
+        }
+        
+        let openBraces = 0;
+        let closeBraces = 0;
+        for (let char of line) {
+          if (char === '{') openBraces++;
+          if (char === '}') closeBraces++;
+        }
+        
+        let preDecrement = 0;
+        if (line.startsWith('}')) {
+          preDecrement = closeBraces;
+          if (openBraces > 0 && line.endsWith('{')) {
+            preDecrement = Math.max(0, closeBraces - openBraces);
+          }
+        }
+        
+        let currentIndent = Math.max(0, indentLevel - preDecrement);
+        
+        const isCaseOrDefault = /^(case\s+[^:]+|default)\s*:/.test(line);
+        let renderIndent = currentIndent;
+        if (isCaseOrDefault && renderIndent > 0) {
+          renderIndent -= 1;
+        }
+        
+        const isPreprocessor = line.startsWith('#');
+        const indentStr = isPreprocessor ? '' : indentStep.repeat(renderIndent);
+        
+        line = line.replace(/\b(if|while|for|switch)\s*\(/g, '$1 (');
+        line = line.replace(/\s*\{\s*$/g, ' {');
+        
+        result.push(indentStr + line);
+        
+        indentLevel = Math.max(0, indentLevel + openBraces - closeBraces);
+      }
+      
+      for (let i = 0; i < result.length; i++) {
+        // Fix indentation for lines inside functions
+      }
+
+      while (result.length > 0 && result[result.length - 1] === '') {
+        result.pop();
+      }
+      
+      return result.join('\n');
+    }
+
+    // --- GET ALTERNATIVES FOR A SOLUTION LINE ---
+    function getAlternativesForLine(line) {
+      const trimmed = line.trim();
+      const alternatives = [];
+
+      // 1. Global variable declaration (symmetric)
+      if (/^volatile\s+(?:unsigned\s+)?(?:int|long|short)\s+milisecunde\s*(?:=\s*0)?\s*;/.test(trimmed)) {
+        if (trimmed.includes('=')) {
+          alternatives.push("volatile unsigned int milisecunde;");
+        } else {
+          alternatives.push("volatile unsigned int milisecunde = 0;");
+        }
+      }
+
+      // 2. Bitwise Toggle (XOR) on PC7
+      if (/^PORTC\s*\^=\s*\(?\s*1\s*<<\s*7\s*\)?\s*;/.test(trimmed)) {
+        alternatives.push("PORTC ^= 1 << 7;");
+        alternatives.push("PORTC = PORTC ^ (1 << 7);");
+        alternatives.push("PORTC = PORTC ^ 1 << 7;");
+        alternatives.push("setbit(PORTC, 7);");
+      }
+
+      // 3. setbit(REG, BIT); => alternatives: REG |= (1 << BIT); and REG |= 1 << BIT;
+      const macroSetbitMatch = trimmed.match(/^setbit\s*\(\s*([A-Za-z0-9_]+)\s*,\s*([A-Za-z0-9_]+)\s*\)\s*;?/);
+      if (macroSetbitMatch) {
+        const reg = macroSetbitMatch[1];
+        const bit = macroSetbitMatch[2];
+        alternatives.push(`${reg} |= (1 << ${bit});`);
+        alternatives.push(`${reg} |= 1 << ${bit};`);
+      }
+
+      // 4. clrbit(REG, BIT); => alternatives: REG &= ~(1 << BIT);
+      const macroClrbitMatch = trimmed.match(/^clrbit\s*\(\s*([A-Za-z0-9_]+)\s*,\s*([A-Za-z0-9_]+)\s*\)\s*;?/);
+      if (macroClrbitMatch) {
+        const reg = macroClrbitMatch[1];
+        const bit = macroClrbitMatch[2];
+        alternatives.push(`${reg} &= ~(1 << ${bit});`);
+      }
+
+      // 5. testbit(PIN, BIT) in conditions => alternatives: (PIN & (1 << BIT))
+      const testbitRegex = /testbit\s*\(\s*([A-Za-z0-9_]+)\s*,\s*([A-Za-z0-9_]+)\s*\)/g;
+      if (testbitRegex.test(trimmed)) {
+        testbitRegex.lastIndex = 0;
+        const replaced = trimmed.replace(testbitRegex, (_, reg, bit) => `(${reg} & (1 << ${bit}))`);
+        alternatives.push(replaced);
+      }
+
+      // 6. DDRx or PORTx or TIMSK |= (1 << BIT) => alternatives: setbit(REG, BIT);
+      const setbitMatch = trimmed.match(/^([A-Za-z0-9_]+)\s*\|=\s*\(?\s*1\s*<<\s*([A-Za-z0-9_]+)\s*\)?\s*;/);
+      if (setbitMatch) {
+        const reg = setbitMatch[1];
+        const bit = setbitMatch[2];
+        alternatives.push(`setbit(${reg}, ${bit});`);
+      }
+
+      // 7. REG &= ~(1 << BIT) => alternatives: clrbit(REG, BIT);
+      const clrbitMatch = trimmed.match(/^([A-Za-z0-9_]+)\s*&=\s*~\s*\(?\s*1\s*<<\s*([A-Za-z0-9_]+)\s*\)?\s*;/);
+      if (clrbitMatch) {
+        const reg = clrbitMatch[1];
+        const bit = clrbitMatch[2];
+        alternatives.push(`clrbit(${reg}, ${bit});`);
+      }
+
+      // 8. Button reading / pin reading (masking) in conditions: (PIN & (1 << BIT)) => testbit(PIN, BIT)
+      const pinReadRegex = /\((PIN[A-D])\s*&\s*\(\s*1\s*<<\s*(\d+)\s*\)\)/g;
+      if (pinReadRegex.test(trimmed)) {
+        pinReadRegex.lastIndex = 0;
+        const replaced = trimmed.replace(pinReadRegex, (_, pin, bit) => `testbit(${pin}, ${bit})`);
+        alternatives.push(replaced);
+      }
+
+      return alternatives;
+    }
+
+    const formatSolutionCode = (solutionText, showComments) => {
+      if (showComments) {
+        return solutionText;
+      }
+      return solutionText.split('\n').map(line => {
+        if (line.trim().startsWith('//')) {
+          return line;
+        }
+        const idx = line.indexOf('//');
+        if (idx !== -1) {
+          return line.substring(0, idx).trimEnd();
+        }
+        return line;
+      }).join('\n');
+    };
+
+    // --- SOLUTION LINE COMPONENT WITH PREMIUM PORTAL TOOLTIP ---
+    function SolutionLine({ line }) {
+      const [isHovered, setIsHovered] = React.useState(false);
+      const [coords, setCoords] = React.useState({ top: 0, left: 0, height: 0 });
+      const alternatives = getAlternativesForLine(line);
+      const hasAlternatives = alternatives.length > 0;
+      
+      const highlighted = highlightC(line);
+
+      const handleMouseEnter = (e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        setCoords({
+          top: rect.top + window.scrollY,
+          left: rect.left + window.scrollX,
+          height: rect.height
+        });
+        setIsHovered(true);
+      };
+
+      if (!hasAlternatives) {
+        return (
+          <div 
+            className="min-h-[1.625rem] px-1 py-0.5 whitespace-pre font-mono text-[11px]"
+            dangerouslySetInnerHTML={{ __html: highlighted || ' ' }}
+          />
+        );
+      }
+
+      return (
+        <div 
+          className="relative group min-h-[1.625rem] px-1 py-0.5 whitespace-pre rounded transition-colors duration-150 cursor-help hover:bg-slate-800/80 hover:shadow-sm"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <span 
+            className="border-b border-dashed border-violet-400/60 pb-[1px]"
+            dangerouslySetInnerHTML={{ __html: highlighted }}
+          />
+          
+          {isHovered && ReactDOM.createPortal(
+            <div 
+              style={{ 
+                position: 'absolute', 
+                top: `${coords.top + coords.height + 8}px`, 
+                left: `${coords.left}px`,
+              }}
+              className="z-[9999] bg-[#16161a] border border-[#2b2b36] rounded-lg shadow-xl p-3.5 text-xs w-[340px] whitespace-normal font-sans text-slate-300 animate-slide-in select-none"
+            >
+              <div className="flex items-center space-x-1.5 mb-2.5 text-violet-400 font-semibold text-[10px] uppercase tracking-wider">
+                <svg className="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <span>Variante alternative acceptate:</span>
+              </div>
+              <div className="space-y-2 font-mono text-[10.5px]">
+                {alternatives.map((alt, i) => (
+                  <div key={i} className="bg-[#1f1f28] px-2.5 py-1.5 rounded border border-[#2b2b36]/60 whitespace-pre">
+                    <code className="text-[#e3e3e3]" dangerouslySetInnerHTML={{ __html: highlightC(alt) }} />
+                  </div>
+                ))}
+              </div>
+              {/* Arrow pointing up */}
+              <div className="absolute left-6 bottom-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-[#2b2b36]"></div>
+            </div>,
+            document.body
+          )}
+        </div>
+      );
+    }
+
+    // --- MAIN APP COMPONENT ---
+
+    function App() {
+      const [problemIndex, setProblemIndex] = useState(0);
+      const problems = React.useMemo(() => [
+        generateProblem1(),
+        generateProblem2(),
+        generateProblem3(),
+        generateProblem4(),
+        generateProblem5(),
+        generateProblem6()
+      ], []);
+      
+      const [problem, setProblem] = useState(problems[0]);
+      const [code, setCode] = useState(problems[0].skeleton);
+      const [feedback, setFeedback] = useState([]);
+      const [showSolution, setShowSolution] = useState(false);
+      const [showComments, setShowComments] = useState(false);
+      const [leftWidth, setLeftWidth] = useState(450);
+      const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
+      const [isResizing, setIsResizing] = useState(false);
+
+      const startResize = (e) => {
+        e.preventDefault();
+        setIsResizing(true);
+      };
+
+      React.useEffect(() => {
+        if (!isResizing) return;
+
+        const doResize = (e) => {
+          const newWidth = Math.max(250, Math.min(800, e.clientX));
+          setLeftWidth(newWidth);
+        };
+
+        const stopResize = () => {
+          setIsResizing(false);
+        };
+
+        window.addEventListener('mousemove', doResize);
+        window.addEventListener('mouseup', stopResize);
+
+        return () => {
+          window.removeEventListener('mousemove', doResize);
+          window.removeEventListener('mouseup', stopResize);
+        };
+      }, [isResizing]);
+
+      const selectProblem = (idx) => {
+        setProblemIndex(idx);
+        const nextProb = problems[idx];
+        setProblem(nextProb);
+        setCode(nextProb.skeleton);
+        setFeedback([]);
+        setShowSolution(false);
+      };
+
+      const loadNextProblem = () => {
+        const nextIdx = (problemIndex + 1) % problems.length;
+        selectProblem(nextIdx);
+      };
+
+      const handleKeyDown = (e) => {
+        const textarea = e.target;
+        const { selectionStart, selectionEnd, value } = textarea;
+        
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          if (e.shiftKey) {
+            // Outdent
+            const currentLineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+            const currentLine = value.substring(currentLineStart, selectionStart);
+            
+            let spacesToRemove = 0;
+            if (currentLine.startsWith('    ')) {
+              spacesToRemove = 4;
+            } else {
+              const match = currentLine.match(/^ +/);
+              if (match) {
+                spacesToRemove = match[0].length;
+              }
+            }
+            
+            if (spacesToRemove > 0) {
+              textarea.setSelectionRange(currentLineStart, currentLineStart + spacesToRemove);
+              document.execCommand('delete');
+              textarea.setSelectionRange(selectionStart - spacesToRemove, selectionStart - spacesToRemove);
+            }
+          } else {
+            // Indent
+            document.execCommand('insertText', false, '    ');
+          }
+          return;
+        }
+        
+        // Auto-close pairs
+        const pairs = {
+          '{': '}',
+          '(': ')',
+          '[': ']',
+          '"': '"',
+          "'": "'",
+        };
+        
+        if (pairs[e.key] !== undefined) {
+          e.preventDefault();
+          const char = e.key;
+          const closingChar = pairs[char];
+          
+          if (selectionStart !== selectionEnd) {
+            const selectedText = value.substring(selectionStart, selectionEnd);
+            document.execCommand('insertText', false, char + selectedText + closingChar);
+            textarea.setSelectionRange(selectionStart + 1, selectionEnd + 1);
+          } else {
+            document.execCommand('insertText', false, char + closingChar);
+            textarea.setSelectionRange(selectionStart + 1, selectionStart + 1);
+          }
+          return;
+        }
+        
+        // Skip typing a closing bracket if it's already there
+        const closers = ['}', ')', ']', '"', "'"];
+        if (closers.includes(e.key) && value[selectionStart] === e.key) {
+          e.preventDefault();
+          textarea.setSelectionRange(selectionStart + 1, selectionStart + 1);
+          return;
+        }
+        
+        // Deleting pairs on Backspace
+        if (e.key === 'Backspace' && selectionStart === selectionEnd) {
+          const prevChar = value[selectionStart - 1];
+          const nextChar = value[selectionStart];
+          if (
+            (prevChar === '{' && nextChar === '}') ||
+            (prevChar === '(' && nextChar === ')') ||
+            (prevChar === '[' && nextChar === ']') ||
+            (prevChar === '"' && nextChar === '"') ||
+            (prevChar === "'" && nextChar === "'")
+          ) {
+            e.preventDefault();
+            textarea.setSelectionRange(selectionStart - 1, selectionStart + 1);
+            document.execCommand('delete');
+            return;
+          }
+        }
+        
+        // Auto-indent on Enter
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const currentLineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+          const currentLine = value.substring(currentLineStart, selectionStart);
+          const leadingSpacesMatch = currentLine.match(/^\s*/);
+          const leadingSpaces = leadingSpacesMatch ? leadingSpacesMatch[0] : '';
+          
+          let extraIndent = '';
+          const trimmedLine = currentLine.trim();
+          if (trimmedLine.endsWith('{')) {
+            extraIndent = '    ';
+          }
+          
+          let inserted = '\n' + leadingSpaces + extraIndent;
+          const nextChar = value[selectionStart];
+          let adjustCursor = 0;
+          
+          if (trimmedLine.endsWith('{') && nextChar === '}') {
+            inserted += '\n' + leadingSpaces;
+            adjustCursor = - (leadingSpaces.length + 1);
+          }
+          
+          document.execCommand('insertText', false, inserted);
+          if (adjustCursor !== 0) {
+            const newPos = selectionStart + inserted.length + adjustCursor;
+            textarea.setSelectionRange(newPos, newPos);
+          }
+          return;
+        }
+        
+        // Ctrl + / toggle comments
+        if (e.key === '/' && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          const currentLineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+          let currentLineEnd = value.indexOf('\n', selectionStart);
+          if (currentLineEnd === -1) currentLineEnd = value.length;
+          
+          const currentLine = value.substring(currentLineStart, currentLineEnd);
+          let newLine;
+          
+          if (currentLine.trim().startsWith('//')) {
+            newLine = currentLine.replace('// ', '').replace('//', '');
+          } else {
+            const match = currentLine.match(/^(\s*)/);
+            const ws = match ? match[1] : '';
+            newLine = ws + '// ' + currentLine.substring(ws.length);
+          }
+          
+          textarea.setSelectionRange(currentLineStart, currentLineEnd);
+          document.execCommand('insertText', false, newLine);
+          
+          const cursorOffset = newLine.length - currentLine.length;
+          const newCursorPos = selectionStart + cursorOffset;
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+          return;
+        }
+      };
+
+      const verifyCode = () => {
+        const newFeedback = problem.checks.map(check => {
+          const isPassed = typeof check.test === 'function' ? check.test(code) : (check.regex ? check.regex.test(code) : false);
+          return { desc: check.desc, passed: isPassed };
+        });
+        setFeedback(newFeedback);
+      };
+
+      const isAllPassed = feedback.length > 0 && feedback.every(f => f.passed);
+
+      return (
+        <div class="min-h-screen bg-slate-50 flex flex-col font-sans animate-fade-in">
+          
+          {/* Header */}
+          <header class="bg-slate-900 border-b border-slate-800 text-white px-6 py-4 shadow-lg flex justify-between items-center z-20">
+            <div class="flex items-center space-x-3">
+              <a 
+                href="../index.html" 
+                title="Înapoi la Panou" 
+                className="mr-2 p-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 hover:border-slate-750 transition-all duration-150 flex items-center justify-center active:scale-95 shadow-inner"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+              </a>
+              <div class="bg-violet-600/30 border border-violet-500/50 p-2 rounded-lg text-violet-400">
+                <Code className="w-6 h-6" />
+              </div>
+              <div>
+                <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+                  AVR Periferice & FSM Trainer
+                </h1>
+                <p class="text-xs text-slate-400 font-medium tracking-wide uppercase">ATmega16 Platform</p>
+              </div>
+            </div>
+
+            {/* Problem Navigation Tabs */}
+            <div class="hidden md:flex space-x-1.5 bg-slate-950/40 p-1 rounded-xl border border-slate-800">
+              {problems.map((prob, i) => (
+                <button
+                  key={i}
+                  onClick={() => selectProblem(i)}
+                  class={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    problemIndex === i 
+                      ? 'bg-violet-600 text-white shadow-md' 
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                  }`}
+                >
+                  T{i+1}
+                </button>
+              ))}
+            </div>
+            
+            <button 
+              onClick={loadNextProblem}
+              class="flex items-center space-x-2 bg-gradient-to-r from-violet-600 to-violet-750 hover:from-violet-500 hover:to-violet-650 text-white px-5 py-2.5 rounded-lg shadow-lg hover:shadow-violet-500/20 active:scale-95 transition-all duration-155 font-semibold text-sm"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Problema Următoare</span>
+            </button>
+          </header>
+
+          {/* Mobile Problem Picker */}
+          <div class="flex md:hidden bg-slate-850 border-b border-slate-800 p-2 justify-around text-slate-400 text-xs font-semibold z-10">
+            {problems.map((prob, i) => (
+              <button
+                key={i}
+                onClick={() => selectProblem(i)}
+                class={`px-3 py-1 rounded ${problemIndex === i ? 'bg-violet-600 text-white font-bold' : ''}`}
+              >
+                P{i+1}
+              </button>
+            ))}
+          </div>
+
+          {/* Main Content */}
+          <main class={`flex-1 flex flex-col lg:flex-row overflow-hidden relative ${isResizing ? 'select-none' : ''}`}>
+            
+            {/* Left Panel: Instructions & Feedback */}
+            <section 
+              style={{ width: isLeftCollapsed ? 0 : `${leftWidth}px`, display: isLeftCollapsed ? 'none' : 'flex' }}
+              class="bg-white border-r border-slate-200 p-6 flex flex-col overflow-y-auto z-10 shadow-sm transition-all duration-150 relative shrink-0"
+            >
+              
+              <div class="mb-6">
+                <div class="flex justify-between items-center mb-3">
+                  <span class="inline-block px-3 py-1 bg-violet-50 text-violet-700 border border-violet-100 text-[10px] font-bold rounded-md uppercase tracking-wider">
+                    {problem.type}
+                  </span>
+                  <button
+                    onClick={() => setIsLeftCollapsed(true)}
+                    title="Ascunde panoul stâng"
+                    class="p-1 rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                    </svg>
+                  </button>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 tracking-tight leading-snug mb-4">{problem.title}</h2>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-slate-600 whitespace-pre-wrap leading-relaxed text-sm font-medium">
+                  {problem.task}
+                </div>
+              </div>
+
+              <div class="mb-6">
+                <button 
+                  onClick={verifyCode}
+                  class="w-full flex items-center justify-center space-x-2 bg-slate-900 hover:bg-slate-850 text-white py-3.5 rounded-xl font-bold hover:shadow-lg hover:shadow-slate-900/10 active:scale-[0.98] transition-all duration-150"
+                >
+                  <Play className="w-4 h-4 text-emerald-400" />
+                  <span>Verifică Soluția</span>
+                </button>
+              </div>
+
+              {feedback.length > 0 && (
+                <div class="mb-6 space-y-3 animate-slide-in">
+                  <h3 class="font-bold text-slate-800 text-sm flex items-center tracking-wide uppercase">
+                    {isAllPassed ? (
+                      <span class="flex items-center text-emerald-600">
+                        <CheckCircle className="w-5 h-5 text-emerald-500 mr-2 shrink-0" />
+                        Felicitări! Soluție Corectă
+                      </span>
+                    ) : (
+                      <span class="flex items-center text-rose-600">
+                        <XCircle className="w-5 h-5 text-rose-500 mr-2 shrink-0" />
+                        Verificare Eșuată
+                      </span>
+                    )}
+                  </h3>
+                  <ul class="space-y-2">
+                    {feedback.map((item, idx) => (
+                      <li key={idx} class={`flex items-start space-x-3 p-3.5 rounded-xl border transition-all duration-200 ${item.passed ? 'bg-emerald-50/50 border-emerald-100' : 'bg-rose-50/30 border-rose-100'}`}>
+                        {item.passed ? 
+                          <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /> : 
+                          <XCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                        }
+                        <span class={`text-xs leading-relaxed ${item.passed ? 'text-slate-600' : 'text-slate-700 font-medium'}`}>
+                          {item.desc}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div class="mt-auto pt-6 border-t border-slate-100">
+                <button 
+                  onClick={() => setShowSolution(!showSolution)}
+                  class="flex items-center text-violet-600 hover:text-violet-750 font-semibold text-sm transition-colors"
+                >
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  {showSolution ? "Ascunde Ghidul" : "Arată Ghidul și Soluția"}
+                </button>
+                
+                {showSolution && (
+                  <div class="mt-4 bg-violet-50/50 border border-violet-100 rounded-xl p-4 text-xs space-y-3 animate-slide-in">
+                    <div>
+                      <h4 class="font-bold text-violet-900 mb-1 uppercase tracking-wider text-[10px]">Ghid de rezolvare</h4>
+                      <p class="text-violet-800/95 whitespace-pre-wrap leading-relaxed">{problem.guide}</p>
+                    </div>
+                    <div>
+                      <div class="flex justify-between items-center mb-1.5">
+                        <h4 class="font-bold text-violet-900 mb-0 uppercase tracking-wider text-[10px]">Soluție Corectă</h4>
+                        <button
+                          onClick={() => setShowComments(!showComments)}
+                          class={`flex items-center space-x-1.5 px-2 py-1 rounded transition-all text-[9.5px] font-bold uppercase tracking-wider ${
+                            showComments
+                              ? 'bg-violet-650 border border-violet-700 text-white shadow-sm'
+                              : 'bg-violet-50 hover:bg-violet-100 border border-violet-100 text-violet-700'
+                          }`}
+                        >
+                          <svg class="w-3 h-3 text-violet-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                          <span>{showComments ? 'Cu comentarii' : 'Fără comentarii'}</span>
+                        </button>
+                      </div>
+                      <div class="bg-[#1e1e1e] text-[#D4D4D4] p-3.5 rounded-lg overflow-x-auto font-mono text-[11px] leading-relaxed shadow-inner flex flex-col">
+                        {formatSolutionCode(problem.solution, showComments).split('\n').map((line, idx) => (
+                          <SolutionLine key={idx} line={line} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+            </section>
+            
+            {/* Resizer Handle */}
+            {!isLeftCollapsed && (
+              <div
+                onMouseDown={startResize}
+                class={`hidden lg:block w-1 hover:w-1.5 bg-slate-200 hover:bg-violet-500 cursor-col-resize select-none transition-all duration-150 z-20 ${isResizing ? 'bg-violet-600 w-1.5' : ''}`}
+              />
+            )}
+            
+            {/* Right Panel: Code Editor */}
+            <section class={`flex-1 bg-[#1e1e1e] flex flex-col overflow-hidden relative shadow-inner ${isResizing ? 'pointer-events-none' : ''}`}>
+              <div class="bg-[#181818] px-6 py-3 border-b border-slate-800/80 flex justify-between items-center text-slate-400 text-xs font-mono select-none">
+                <span class="flex items-center space-x-2">
+                  {isLeftCollapsed && (
+                    <button
+                      onClick={() => setIsLeftCollapsed(false)}
+                      title="Arată panoul stâng"
+                      class="mr-3 p-1 rounded bg-slate-855 hover:bg-slate-700 text-violet-400 hover:text-violet-300 transition-colors flex items-center justify-center"
+                    >
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  )}
+                  <span class="w-2.5 h-2.5 rounded-full bg-violet-550"></span>
+                  <span class="font-medium text-slate-300">main.c</span>
+                </span>
+                
+                <div class="flex items-center space-x-4">
+                  <button
+                    onClick={() => setCode(formatCCode(code))}
+                    title="Formatează Codul"
+                    class="flex items-center space-x-1.5 px-3 py-1.5 rounded bg-[#25252b] hover:bg-slate-800 hover:text-white text-slate-300 transition-all border border-slate-800/80 hover:border-slate-700 active:scale-95 text-[11px] font-semibold font-sans"
+                  >
+                    <svg class="w-3.5 h-3.5 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.656 48.656 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3M3 12a48.654 48.654 0 011.04-6.62M3 12l3 3m-3-3l-3 3M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM10.5 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM14.25 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                    </svg>
+                    <span>Formatează</span>
+                  </button>
+                  <span class="text-[10px] text-slate-500 uppercase tracking-widest">AVR-GCC C99</span>
+                </div>
+              </div>
+              <div class="flex-1 flex overflow-hidden relative">
+                {/* Line Numbers Column */}
+                <div 
+                  id="line-numbers"
+                  class="w-12 bg-[#1c1c1c] text-[#5a5a5a] font-mono text-[15px] py-6 pr-3 text-right select-none border-r border-slate-800/40 overflow-hidden h-full"
+                >
+                  {code.split('\n').map((_, index) => (
+                    <div key={index}>{index + 1}</div>
+                  ))}
+                </div>
+                
+                {/* Editor Container */}
+                <div class="flex-1 relative overflow-hidden h-full">
+                  <textarea
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onScroll={(e) => {
+                      const pre = document.getElementById('syntax-pre');
+                      if (pre) {
+                        pre.scrollTop = e.target.scrollTop;
+                        pre.scrollLeft = e.target.scrollLeft;
+                      }
+                      const lineNumbers = document.getElementById('line-numbers');
+                      if (lineNumbers) {
+                        lineNumbers.scrollTop = e.target.scrollTop;
+                      }
+                    }}
+                    spellCheck="false"
+                    class="absolute inset-0 w-full h-full py-6 px-4 bg-transparent text-transparent caret-violet-400 outline-none resize-none whitespace-pre font-mono text-[15px] leading-relaxed z-10"
+                    style={{ tabSize: 4 }}
+                  />
+                  <pre
+                    id="syntax-pre"
+                    class="absolute inset-0 w-full h-full py-6 px-4 pointer-events-none whitespace-pre overflow-hidden font-mono text-[15px] leading-relaxed z-0"
+                    style={{ tabSize: 4 }}
+                    dangerouslySetInnerHTML={{ __html: highlightC(code) }}
+                  />
+                </div>
+              </div>
+            </section>
+
+          </main>
+        </div>
+      );
+    }
+
+    // Render App
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
