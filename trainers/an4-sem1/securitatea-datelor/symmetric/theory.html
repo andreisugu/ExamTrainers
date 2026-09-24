@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teorie: Criptografie Simetrică & Moduri de Operare - Exam Trainers</title>
+  <meta name="description" content="Ghid teoretic: Principiile Shannon, Rețele Feistel, DES, Algoritmul AES complet (SPN, GF(2^8), transformări), moduri de operare bloc (ECB, CBC, CTR, GCM).">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code/Math) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(244, 63, 94, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.06) 0%, transparent 45%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-rose-500 selection:text-white">
+
+  <main class="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-8 sm:px-6 lg:px-8 justify-between">
+    
+    <!-- Top Nav -->
+    <header class="flex items-center justify-between mb-8 pb-4 border-b border-slate-800">
+      <nav class="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+        <a href="../../../index.html" class="hover:text-white transition-colors duration-150 py-1 px-2 rounded-md hover:bg-white/5">ExamTrainers</a>
+        <span class="text-slate-600 font-semibold">/</span>
+        <a href="../index.html" class="hover:text-white transition-colors duration-150 py-1 px-2 rounded-md hover:bg-white/5">Securitatea Datelor</a>
+        <span class="text-slate-600 font-semibold">/</span>
+        <span class="text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 font-mono">Simetric & Moduri</span>
+      </nav>
+
+      <a href="./index.html" class="inline-flex items-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-1.5 text-xs font-bold text-white transition-all shadow-md shadow-rose-600/10">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+        </svg>
+        Deschide Simulatorul AES
+      </a>
+    </header>
+
+    <!-- Content Article -->
+    <article class="space-y-10">
+      
+      <!-- Title Section -->
+      <div class="space-y-2">
+        <div class="inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-rose-400">
+          Capitolul 4 &bull; Standard Universitar UCV
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          Criptografie Simetrică Modernă, Cifrul AES & Moduri de Operare
+        </h1>
+        <p class="text-base text-slate-400 mt-2 leading-relaxed">
+          Principiile lui Shannon, Rețelele Feistel (DES), arhitectura SPN a algoritmului AES, corpul Galois GF(2<sup>8</sup>), cele 4 transformări de rundă și analiza comparativă a modurilor de operare (ECB, CBC, CTR, GCM).
+        </p>
+      </div>
+
+      <!-- Top Traps Alert Box -->
+      <div class="p-6 bg-rose-950/25 border border-rose-500/30 rounded-3xl backdrop-blur-xl space-y-3">
+        <div class="flex items-center gap-2.5 text-rose-400 font-bold text-sm tracking-wide uppercase">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          Capcana Fatală de Examen: Runda Finală AES (Runda 10)
+        </div>
+        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+          La examenul scris, una dintre cele mai frecvente erori este includerea transformării <code>MixColumns</code> în runda a 10-a! În AES-128, runda finală conține <strong>strict 3 transformări</strong>: <code>SubBytes</code>, <code>ShiftRows</code> și <code>AddRoundKey</code>. Transformarea <code>MixColumns</code> este omisă în mod deliberat pentru a permite simetria la decriptare fără un pas de inversare suplimentar inutil.
+        </p>
+      </div>
+
+      <!-- Section 1: Principiile Shannon & One-Time Pad -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center font-mono text-sm border border-rose-500/30">1</span>
+          Principiile lui Shannon & Securitatea Perfectă (OTP)
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            În lucrarea sa fundamentală din 1949 (<em>Communication Theory of Secrecy Systems</em>), Claude Shannon a formalizat cele două mecanisme vitale pentru proiectarea oricărui cifru simetric modern:
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <div class="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl space-y-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-rose-400 font-mono">A. Confuzia (Confusion)</span>
+              <p class="text-xs text-slate-400">
+                Face relația dintre cheia secretă și criptotext cât mai complexă și neliniară posibil. În algoritmii moderni, confuzia este obținută prin <strong>S-box-uri (Substituție Neliniară)</strong>. Dacă un atacator cunoaște părți din criptotext, el nu poate deduce proprietăți matematice simple ale cheii.
+              </p>
+            </div>
+            <div class="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl space-y-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-indigo-400 font-mono">B. Difuzia (Diffusion)</span>
+              <p class="text-xs text-slate-400">
+                Dispersează structura statistică și redundanța textului clar pe tot criptotextul. Un singur bit modificat în textul clar sau în cheie trebuie să schimbe în medie 50% din biții criptotextului (<strong>Efectul de Avalanșă</strong>). Se realizează prin permutări, transpuneri și înmulțiri matriceale (<code>ShiftRows</code>, <code>MixColumns</code>).
+              </p>
+            </div>
+          </div>
+
+          <div class="p-4 bg-slate-950/40 border border-slate-800/80 rounded-2xl text-xs space-y-2">
+            <strong class="text-slate-200">One-Time Pad (Cifrul Vernam):</strong>
+            <p class="text-slate-400 leading-relaxed">
+              Singurul cifru cu securitate absolută (perfect secrecy): <em>H(M | C) = H(M)</em>. Cunoașterea criptotextului <em>C</em> nu oferă absolut nicio informație despre mesajul clar <em>M</em>. <br />
+              <strong>Condițiile Shannon pentru securitate perfectă:</strong> Cheia <em>K</em> trebuie să fie complet aleatorie (adevărat zgomot termic), de lungime egală sau mai mare cu mesajul (<em>|K| &ge; |M|</em>) și folosită <strong>o singură dată</strong>. Reutilizarea unei chei <em>K</em> pentru două mesaje duce la compromiterea imediată prin XOR: <em>C<sub>1</sub> &oplus; C<sub>2</sub> = M<sub>1</sub> &oplus; M<sub>2</sub></em>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Rețele Feistel & DES -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-mono text-sm border border-indigo-500/30">2</span>
+          Rețele Feistel & Cifrul DES (Data Encryption Standard)
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            O <strong>rețea Feistel</strong> este o arhitectură iterativă ce împarte blocul de date în două jumătăți egale (<em>L<sub>i</sub></em> și <em>R<sub>i</sub></em>) și garantează că procesul de decriptare este identic structural cu procesul de criptare, chiar dacă funcția de rundă <em>F</em> nu este inversabilă matematic:
+          </p>
+
+          <div class="p-4 bg-slate-950 border border-slate-800 rounded-2xl font-mono text-xs text-indigo-300 space-y-1">
+            <div>Runda de criptare i:</div>
+            <div>&bull; L<sub>i</sub> = R<sub>i-1</sub></div>
+            <div>&bull; R<sub>i</sub> = L<sub>i-1</sub> &oplus; F(R<sub>i-1</sub>, K<sub>i</sub>)</div>
+            <div class="text-slate-500 pt-1">// La decriptare, subcheile se aplică pur și simplu în ordine inversă: K<sub>16</sub>, K<sub>15</sub> ... K<sub>1</sub></div>
+          </div>
+
+          <div class="space-y-3 pt-2">
+            <h3 class="text-base font-bold text-white">Particularitățile Cifrului DES:</h3>
+            <ul class="list-disc pl-5 text-xs text-slate-400 space-y-2">
+              <li><strong>Dimensiune bloc:</strong> 64 biți.</li>
+              <li><strong>Număr de runde:</strong> 16 runde Feistel precedate de o Permutare Inițială (IP) și urmate de Permutarea Finală (FP = IP<sup>-1</sup>).</li>
+              <li><strong>Cheia:</strong> are o lungime declarată de 64 biți, dar fiecare al 8-lea bit este folosit pentru paritate &rarr; <strong>cheie efectivă de doar 56 biți</strong> (spațiu de căutare 2<sup>56</sup>).</li>
+              <li><strong>S-box-uri:</strong> 8 tabele neliniare S<sub>1</sub>..S<sub>8</sub> care realizează o comprimare 6-la-4 (preiau 6 biți și produc 4 biți). Primul și ultimul bit selectează rândul (0-3), iar cei 4 biți centrali selectează coloana (0-15).</li>
+              <li><strong>De ce a fost înlocuit?</strong> Un spațiu de chei de 56 biți poate fi spart prin forță brută în mai puțin de o zi pe hardware modern (sau asic dedicated cum a fost EFF Deep Crack încă din 1998).</li>
+              <li><strong>Triple-DES (3DES) & Atacul Meet-in-the-Middle:</strong> 3DES aplică <em>C = E<sub>K3</sub>(D<sub>K2</sub>(E<sub>K1</sub>(M)))</em>. De ce nu s-a folosit Double-DES (2 chei)? Deoarece un atac Meet-in-the-Middle reduce complexitatea de la 2<sup>112</sup> la doar 2 &times; 2<sup>56</sup> = 2<sup>57</sup> operații cu memorie mare!</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Algoritmul AES Exhaustiv -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono text-sm border border-emerald-500/30">3</span>
+          Algoritmul AES (Rijndael) & Corpul Galois GF(2<sup>8</sup>)
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Spre deosebire de DES, AES nu este o rețea Feistel, ci o <strong>Rețea de Substituție-Permutare (SPN)</strong> pe blocuri fixe de <strong>128 biți</strong> (16 octeți).
+            Blocul de date este organizat intern sub forma unei <em>Matrice de Stare (State Matrix)</em> de <strong>4 &times; 4 octeți</strong>, completată pe coloane.
+          </p>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left border-collapse font-mono">
+              <thead>
+                <tr class="bg-slate-800/80 text-slate-300 border-b border-slate-700">
+                  <th class="p-3 font-semibold">Versiune AES</th>
+                  <th class="p-3 font-semibold">Lungime Cheie</th>
+                  <th class="p-3 font-semibold">Număr Runde (Nr)</th>
+                  <th class="p-3 font-semibold">Mărime Subchei Generate</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800 text-slate-400">
+                <tr><td class="p-3 text-emerald-400 font-bold">AES-128</td><td class="p-3">128 biți (16 octeți)</td><td class="p-3 font-bold text-white">10 runde</td><td class="p-3">11 subchei &times; 16 = 176 octeți</td></tr>
+                <tr><td class="p-3 text-indigo-400 font-bold">AES-192</td><td class="p-3">192 biți (24 octeți)</td><td class="p-3 font-bold text-white">12 runde</td><td class="p-3">13 subchei &times; 16 = 208 octeți</td></tr>
+                <tr><td class="p-3 text-rose-400 font-bold">AES-256</td><td class="p-3">256 biți (32 octeți)</td><td class="p-3 font-bold text-white">14 runde</td><td class="p-3">15 subchei &times; 16 = 240 octeți</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="space-y-4 pt-2">
+            <h3 class="text-base font-bold text-white">Cele 4 Transformări ale unei Runde AES:</h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- SubBytes -->
+              <div class="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl space-y-1.5">
+                <div class="flex items-center justify-between text-xs font-bold text-emerald-400 font-mono">
+                  <span>1. SubBytes</span>
+                  <span class="text-slate-500 font-normal">Neliniaritate (Confuzie)</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                  Fiecare octet din State Matrix este înlocuit independent cu o valoare dintr-un tabel fix de substituție (S-box de 16 &times; 16). Matematic, se calculează inversul multiplicativ în corpul Galois <code>GF(2<sup>8</sup>)</code> modulo polinomul ireductibil <code>m(x) = x<sup>8</sup> + x<sup>4</sup> + x<sup>3</sup> + x + 1</code> (în hex: <strong>0x11B</strong>), urmat de o transformare afină.
+                </p>
+              </div>
+
+              <!-- ShiftRows -->
+              <div class="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl space-y-1.5">
+                <div class="flex items-center justify-between text-xs font-bold text-indigo-400 font-mono">
+                  <span>2. ShiftRows</span>
+                  <span class="text-slate-500 font-normal">Permutare Linii (Difuzie)</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                  Liniile matricei de stare sunt deplasate ciclic la stânga cu un număr diferit de poziții (offsets):
+                  <br />&bull; Rândul 0: <strong>shift 0</strong> (nemodificat)
+                  <br />&bull; Rândul 1: <strong>shift 1</strong> octet la stânga
+                  <br />&bull; Rândul 2: <strong>shift 2</strong> octeți la stânga
+                  <br />&bull; Rândul 3: <strong>shift 3</strong> octeți la stânga
+                </p>
+              </div>
+
+              <!-- MixColumns -->
+              <div class="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl space-y-1.5">
+                <div class="flex items-center justify-between text-xs font-bold text-amber-400 font-mono">
+                  <span>3. MixColumns</span>
+                  <span class="text-slate-500 font-normal">Difuzie Totală pe Coloane</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                  Fiecare coloană de 4 octeți este tratată ca un polinom de gradul 3 și multiplicată modulo <code>x<sup>4</sup> + 1</code> cu o matrice MDS (Maximum Distance Separable) fixă peste <code>GF(2<sup>8</sup>)</code>. Fiecare octet rezultat depinde de toți cei 4 octeți ai coloanei inițiale! <br />
+                  <strong class="text-rose-400">Atenție:</strong> Se execută în rundele 1..Nr-1. <strong>Lipsește complet în runda Nr!</strong>
+                </p>
+              </div>
+
+              <!-- AddRoundKey -->
+              <div class="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl space-y-1.5">
+                <div class="flex items-center justify-between text-xs font-bold text-rose-400 font-mono">
+                  <span>4. AddRoundKey</span>
+                  <span class="text-slate-500 font-normal">Injectare Cheie (XOR)</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                  Fiecare octet al matricei de stare este combinat bit-cu-bit prin operația logică <strong>XOR (&oplus;)</strong> cu octetul corespunzător din subcheia de rundă generată prin Key Schedule (folosind cuvinte de 32 biți, rotații ciclice <code>RotWord</code>, substituții <code>SubWord</code> și constante de rundă <code>Rcon</code>).
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: Moduri de Operare Cifruri Bloc -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-mono text-sm border border-purple-500/30">4</span>
+          Moduri de Operare ale Cifrelor Bloc (ECB, CBC, CTR, GCM)
+        </h2>
+
+        <div class="space-y-6 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Un cifru bloc criptează date de dimensiune fixă (ex: 128 biți pentru AES). Pentru a cripta mesaje arbitrar de lungi, este obligatorie selectarea unui <em>Mod de Operare</em>:
+          </p>
+
+          <div class="space-y-4">
+            <!-- ECB -->
+            <div class="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-rose-400 font-mono text-xs uppercase tracking-wide">1. ECB — Electronic Codebook (INTERZIS)</span>
+                <span class="text-[10px] bg-rose-500/10 text-rose-400 px-2 py-0.5 rounded border border-rose-500/20 font-bold uppercase">Insecure</span>
+              </div>
+              <p class="text-xs text-slate-400 leading-relaxed">
+                Fiecare bloc <em>P<sub>i</sub></em> este criptat separat cu aceeași cheie: <code>C<sub>i</sub> = E<sub>K</sub>(P<sub>i</sub>)</code>. <br />
+                <strong>Vulnerabilitate:</strong> Două blocuri de clar identice produc întotdeauna blocuri de criptotext identice. Criptotextul păstrează conturul și tiparele statistice (celebrul experiment cu Tux). În plus, este vulnerabil la atacuri de reordonare și rejucare a blocurilor fără detectare.
+              </p>
+            </div>
+
+            <!-- CBC -->
+            <div class="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-indigo-400 font-mono text-xs uppercase tracking-wide">2. CBC — Cipher Block Chaining</span>
+                <span class="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/20 font-bold uppercase">Standard Clasic</span>
+              </div>
+              <p class="text-xs text-slate-400 leading-relaxed">
+                Fiecare bloc de clar este xorat cu blocul cifrat anterior înainte de criptare: <code>C<sub>i</sub> = E<sub>K</sub>(P<sub>i</sub> &oplus; C<sub>i-1</sub>)</code>, unde <code>C<sub>0</sub> = IV</code> (Vector de Inițializare aleatoriu și imprevizibil). <br />
+                <strong>Propagarea Erorilor:</strong> O eroare pe 1 bit în <em>C<sub>i</sub></em> distruge complet blocul decriptat <em>P<sub>i</sub></em> și inversează bitul corespunzător din <em>P<sub>i+1</sub></em>. Blocurile <em>P<sub>i+2</sub>...</em> rămân neafectate! Necesită padding (standardul <strong>PKCS#7</strong>). Criptarea este strict secvențială (nu se poate paraleliza), dar decriptarea se poate paraleliza.
+              </p>
+            </div>
+
+            <!-- CTR -->
+            <div class="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-emerald-400 font-mono text-xs uppercase tracking-wide">3. CTR — Counter Mode</span>
+                <span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-bold uppercase">Stream Cipher Mode</span>
+              </div>
+              <p class="text-xs text-slate-400 leading-relaxed">
+                Transformă cifrul bloc într-un cifru pe flux (stream cipher): criptează un contor succesiv (Nonce || Counter) și face XOR cu textul clar: <code>C<sub>i</sub> = P<sub>i</sub> &oplus; E<sub>K</sub>(Nonce || i)</code>. <br />
+                <strong>Avantaje majore:</strong> Nu necesită padding, permite <em>Random Access</em> la orice octet fără decriptarea fișierului anterior, și permite paralelizare 100% atât la criptare cât și la decriptare. Regula de aur: un Nonce nu trebuie reutilizat NICIODATĂ cu aceeași cheie.
+              </p>
+            </div>
+
+            <!-- GCM -->
+            <div class="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-amber-400 font-mono text-xs uppercase tracking-wide">4. GCM — Galois/Counter Mode (AEAD)</span>
+                <span class="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20 font-bold uppercase">Standardul Modern TLS 1.3</span>
+              </div>
+              <p class="text-xs text-slate-400 leading-relaxed">
+                Criptare autentificată cu date asociate (AEAD). Combină modul CTR pentru asigurarea confidențialității cu un cod de autentificare universal (GHASH bazat pe multiplicare în corpul Galois <code>GF(2<sup>128</sup>)</code>) pentru asigurarea integrității și autenticității. Produce un Tag de Autentificare care garantează că datele nu au fost modificate în tranzit.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </article>
+
+    <!-- Footer -->
+    <footer class="mt-12 py-6 border-t border-slate-900 text-center text-xs text-slate-600 font-semibold tracking-wide uppercase">
+      &copy; 2026 ExamTrainers. Securitatea Datelor &bull; Prof. Marius Marian &bull; UCV CR4.1.
+    </footer>
+
+  </main>
+</body>
+</html>

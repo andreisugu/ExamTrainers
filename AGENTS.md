@@ -163,3 +163,17 @@ Before completing any task or proposing a git commit, agents must execute the fo
 5. **Git Protocol:**
    - Remote URL must use SSH: `git@github.com:andreisugu/ExamTrainers.git`.
    - Never push to `main` without explicit user permission.
+
+---
+
+## 📜 6. The "Tratat Complet" Academic Standard & Synthesis Protocol
+
+For deep theoretical fidelity, every ExamTrainer subject maps to an authoritative, 20–35 page academic treatise generated in Typst (located in `DocsAGY/` of the course repository):
+- **Core Directive:** Read `DocsAGY/GHID_CREARE_TRATATE_COMPLETE.md` before generating or upgrading subject theory.
+- **The 5-Layer Synthesis Architecture:**
+  1. *Stratul 1 (Top Traps):* Fatal exam traps classified by student failure rate.
+  2. *Stratul 2 (Formal Theory):* Rigorous mathematical definitions (Shannon, Euler, Fermat, Galois Fields $\mathrm{GF}(2^8)$, CFG, LALR(1)).
+  3. *Stratul 3 (Step-by-Step Manual Calculations):* Every algorithm must be trace-printable (Bézout tables, Square-and-Multiply bit-by-bit traces, Delastelle partial blocks). Zero Hand-Waving permitted!
+  4. *Stratul 4 (Applied Security & Labs):* Exact payloads, Burp Suite request length heuristics, DVWA level differences, WAF bypasses.
+  5. *Stratul 5 (Exam Bank & The 10 Commandments):* Comprehensive exam questions with model answers + summary cheat sheet.
+

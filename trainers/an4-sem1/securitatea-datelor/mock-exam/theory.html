@@ -180,6 +180,56 @@
             Criptează fiecare bloc identic cu aceeași cheie, păstrând forma și silueta datelor (exemplul Tux).
           </p>
         </div>
+
+        <div class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-1.5">
+          <div class="flex items-center gap-2.5 font-bold text-white text-sm">
+            <span class="w-6 h-6 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center text-xs border border-rose-500/30">11</span>
+            <span>Runda Finală AES (Runda 10) OMITE complet MixColumns</span>
+          </div>
+          <p class="text-slate-400 pl-8 leading-relaxed font-sans text-xs">
+            În AES-128, runda 10 execută doar SubBytes, ShiftRows și AddRoundKey. Omiterea MixColumns este deliberată pentru a asigura simetria structurală a algoritmului la decriptare.
+          </p>
+        </div>
+
+        <div class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-1.5">
+          <div class="flex items-center gap-2.5 font-bold text-white text-sm">
+            <span class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs border border-cyan-500/30">12</span>
+            <span>Paradoxul Zilelor de Naștere & Coliziunile Hash: O(2<sup>n/2</sup>)</span>
+          </div>
+          <p class="text-slate-400 pl-8 leading-relaxed font-sans text-xs">
+            Pentru o funcție hash de n biți, rezistența la coliziuni este de doar 2<sup>n/2</sup> (nu 2<sup>n</sup>), deoarece comparăm perechi arbitrare k(k-1)/2. De aceea MD5 (128 biți) oferă doar 64 biți de securitate la coliziuni!
+          </p>
+        </div>
+
+        <div class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-1.5">
+          <div class="flex items-center gap-2.5 font-bold text-white text-sm">
+            <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs border border-amber-500/30">13</span>
+            <span>Square-and-Multiply & Atacurile pe Canale Laterale</span>
+          </div>
+          <p class="text-slate-400 pl-8 leading-relaxed font-sans text-xs">
+            La bitul 0 se execută doar Square (pătrat); la bitul 1 se execută Square + Multiply. Măsurarea duratei de timp sau a consumului electric (Side-Channel Timing Attack) trădează biții cheii private!
+          </p>
+        </div>
+
+        <div class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-1.5">
+          <div class="flex items-center gap-2.5 font-bold text-white text-sm">
+            <span class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs border border-indigo-500/30">14</span>
+            <span>Semnăturile RSA sunt Maleabile fără RSA-PSS</span>
+          </div>
+          <p class="text-slate-400 pl-8 leading-relaxed font-sans text-xs">
+            S(M<sub>1</sub> &middot; M<sub>2</sub>) = S(M<sub>1</sub>) &middot; S(M<sub>2</sub>) mod n. Niciodată nu se semnează date brute; se impune folosirea schemei probabilistice RSA-PSS cu salt aleatoriu.
+          </p>
+        </div>
+
+        <div class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-1.5">
+          <div class="flex items-center gap-2.5 font-bold text-white text-sm">
+            <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs border border-emerald-500/30">15</span>
+            <span>Kerberos: Fereastra de Timestamp &plusmn;5 Minute împotriva Rejucării</span>
+          </div>
+          <p class="text-slate-400 pl-8 leading-relaxed font-sans text-xs">
+            Authenticator-ul include timestamp-ul clientului. KDC/Serverul respinge pachetele dacă ceasul diferă cu &gt; 5 minute, impunând sincronizarea strictă NTP în rețea.
+          </p>
+        </div>
       </div>
 
     </article>

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simulator de Examen (Mock Exam) - Securitatea Datelor</title>
-  <meta name="description" content="Simulare de examen grilă și calcul matematic pentru Securitatea Datelor (CR4.1): cronometru 45 minute, calcul notă automată și diagnoză detaliată.">
+  <title>Mock Exam: Simulator de Test Securitatea Datelor - Exam Trainers</title>
+  <meta name="description" content="Simulator de examen la Securitatea Datelor (CR4.1, UCV). Test grilă cronometrat cu 30 de întrebări din criptografie clasică, AES, RSA, protocoale și DVWA.">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -21,9 +21,6 @@
           fontFamily: {
             sans: ['Outfit', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace'],
-          },
-          boxShadow: {
-            'glow-purple': '0 0 25px -5px rgba(168, 85, 247, 0.4)',
           }
         }
       }
@@ -40,7 +37,7 @@
   <style>
     body {
       background: 
-        radial-gradient(circle at 10% 15%, rgba(168, 85, 247, 0.10) 0%, transparent 40%),
+        radial-gradient(circle at 10% 15%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
         radial-gradient(circle at 90% 85%, rgba(244, 63, 94, 0.08) 0%, transparent 45%),
         #090d16;
     }
@@ -58,16 +55,16 @@
   <div id="root" class="min-h-screen flex flex-col"></div>
 
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useMemo } = React;
 
-    const EXAM_QUESTIONS = [
+    const ALL_EXAM_QUESTIONS = [
       {
         id: 1,
         category: "Cifruri Clasice - Delastelle",
         question: "La cifrul Trifid cu perioada p=5, cum se criptează ultimul bloc dacă acesta are doar 2 litere (ex: 'UI')?",
         options: [
           "Se completează obligatoriu cu 3 caractere X până la perioada 5.",
-          "Cele 6 cifre de coordonate (3k) se grupează în 2 triplete de câte 3 cifre (P, L, C).",
+          "Cele 6 cifre de coordonate (3k) se grupează direct în 2 triplete de câte 3 cifre (P, L, C).",
           "Se renunță la transpunere și se aplică substituție monoalfabetică simplă.",
           "Cifrul Trifid generează o eroare matematică dacă lungimea nu este multiplu de p."
         ],
@@ -190,14 +187,282 @@
         ],
         correct: 1,
         explanation: "SHA-256 este o funcție rapidă. Parolele cer funcții special concepute să fie lente și consumatoare de memorie (KDF: Argon2id, bcrypt, PBKDF2) însoțite de un salt unic."
+      },
+      {
+        id: 11,
+        category: "Criptografie Simetrică - AES",
+        question: "Ce transformare de rundă este OMITĂ în mod deliberat în runda finală (Runda 10) a cifrului AES-128?",
+        options: [
+          "SubBytes",
+          "ShiftRows",
+          "MixColumns",
+          "AddRoundKey"
+        ],
+        correct: 2,
+        explanation: "Capcană majoră la examen! Runda 10 din AES conține strict SubBytes, ShiftRows și AddRoundKey. MixColumns este omis pentru a asigura simetria inversării la decriptare."
+      },
+      {
+        id: 12,
+        category: "Criptografie Simetrică - AES & Corpuri Galois",
+        question: "Care este polinomul ireductibil m(x) utilizat pentru operațiile de multiplicare în corpul Galois GF(2^8) la AES?",
+        options: [
+          "m(x) = x^8 + x^4 + x^3 + x + 1 (hexadecimal 0x11B)",
+          "m(x) = x^8 + x^7 + x^2 + 1 (hexadecimal 0x185)",
+          "m(x) = x^8 + 1 (hexadecimal 0x101)",
+          "m(x) = x^16 + x^12 + x^5 + 1"
+        ],
+        correct: 0,
+        explanation: "Standardul FIPS 197 specifică polinomul ireductibil de grad 8: m(x) = x^8 + x^4 + x^3 + x + 1, reprezentat în binar prin 100011011 (sau 0x11B în hex)."
+      },
+      {
+        id: 13,
+        category: "Criptografie Simetrică - AES",
+        question: "Ce rol are transformarea SubBytes în arhitectura SPN a algoritmului AES?",
+        options: [
+          "Realizează permutarea rândurilor pentru difuzie maximă.",
+          "Injectează subcheia de rundă prin operația XOR.",
+          "Asigură neliniaritatea (Confuzia lui Shannon) prin invers modular în GF(2^8) și transformare afină.",
+          "Comprimă matricea de stare de la 128 biți la 64 biți."
+        ],
+        correct: 2,
+        explanation: "SubBytes este singura transformare neliniară din AES. Substituția prin S-box rupe orice relație algebrică simplă, protejând împotriva criptanalizei liniare și diferențiale."
+      },
+      {
+        id: 14,
+        category: "Criptografie Simetrică - DES",
+        question: "Deși o cheie DES este reprezentată pe 64 biți, care este dimensiunea sa efectivă de securitate?",
+        options: [
+          "64 biți",
+          "56 biți (deoarece 8 biți sunt folosiți pentru controlul parității)",
+          "48 biți",
+          "128 biți"
+        ],
+        correct: 1,
+        explanation: "Fiecare al 8-lea bit dintr-un octet de cheie DES este un bit de paritate. Prin urmare, cheia efectivă are doar 56 de biți, putând fi spartă prin forță brută în mai puțin de o zi."
+      },
+      {
+        id: 15,
+        category: "Criptografie Simetrică - Feistel",
+        question: "Care este marele avantaj structural al unei rețele Feistel (utilizată în DES)?",
+        options: [
+          "Nu necesită niciodată chei secrete.",
+          "Decriptarea este structural identică cu criptarea, fără a cere ca funcția de rundă F să fie inversabilă.",
+          "Este imună la orice atac pe canale laterale.",
+          "Nu folosește operația XOR."
+        ],
+        correct: 1,
+        explanation: "Într-o rețea Feistel, ecuațiile L_i = R_{i-1} și R_i = L_{i-1} ⊕ F(R_{i-1}, K_i) permit inversarea directă indiferent de complexitatea internă a funcției F, aplicând doar subcheile în ordine inversă."
+      },
+      {
+        id: 16,
+        category: "Criptografie Simetrică - Atacuri",
+        question: "De ce criptarea dublă (Double-DES cu două chei de 56 biți) NU oferă o securitate de 2^112 operații?",
+        options: [
+          "Pentru că operația DES este un grup matematic perfect închis.",
+          "Datorită atacului Meet-in-the-Middle, care reduce complexitatea la doar 2 * 2^56 = 2^57 operații cu memorie mare.",
+          "Pentru că a doua cheie trebuie să fie identică cu prima.",
+          "Pentru că cheile DES sunt generate întotdeauna simetric."
+        ],
+        correct: 1,
+        explanation: "Atacul Meet-in-the-Middle criptează mesajul clar de la stânga și decriptează criptotextul de la dreapta, căutând o potrivire a stării intermediare într-un tabel hash (complexitate 2^57)."
+      },
+      {
+        id: 17,
+        category: "Moduri de Operare - CBC",
+        question: "Dacă un bit din criptotextul C_k se corupe pe canalul de comunicație în modul CBC, ce se întâmplă la decriptare?",
+        options: [
+          "Tot fișierul de la blocul k până la sfârșit este compromis iremediabil.",
+          "Blocul clar P_k este complet distrus, blocul P_{k+1} suferă o eroare pe exact un singur bit, iar blocurile P_{k+2}... sunt intacte.",
+          "Nu se produce nicio eroare datorită vectorului IV.",
+          "Algoritmul aruncă o excepție matematică și oprește decriptarea."
+        ],
+        correct: 1,
+        explanation: "În CBC: P_i = D_K(C_i) ⊕ C_{i-1}. O eroare în C_k distruge complet blocul curent P_k prin decriptorul bloc și inversează exact bitul corespunzător în P_{k+1} prin XOR."
+      },
+      {
+        id: 18,
+        category: "Moduri de Operare - CTR",
+        question: "Care dintre următoarele afirmații despre modul CTR (Counter Mode) este ADEVĂRATĂ?",
+        options: [
+          "Transformă cifrul bloc într-un stream cipher, permițând Random Access și paralelizare totală.",
+          "Necesită aplicarea obligatorie a padding-ului PKCS#7 la sfârșitul mesajului.",
+          "Criptarea este secvențială și depinde de criptotextul anterior.",
+          "Permite reutilizarea aceluiași Nonce cu aceeași cheie fără riscuri."
+        ],
+        correct: 0,
+        explanation: "Modul CTR criptează independent valori succesive (Nonce || Counter) și face XOR cu textul clar. Nu necesită padding și poate fi paralelizat 100% atât la criptare cât și la decriptare."
+      },
+      {
+        id: 19,
+        category: "Moduri de Operare - GCM",
+        question: "Ce proprietăți de securitate garantează modul de operare GCM (Galois/Counter Mode)?",
+        options: [
+          "Doar confidențialitate simplă.",
+          "Confidențialitate și Integritate autentificată (AEAD) folosind multiplicare Galois GHASH în GF(2^128).",
+          "Anonimitate completă peste rețeaua Tor.",
+          "Rezistență împotriva calculatoarelor cuantice prin zgomot LWE."
+        ],
+        correct: 1,
+        explanation: "GCM este standardul de aur în TLS 1.3 (AEAD). Combină modul CTR pentru cifrare cu o funcție de autentificare universală GHASH în corpul Galois GF(2^128), producând un Authentication Tag."
+      },
+      {
+        id: 20,
+        category: "Criptografie Asimetrică - Exponențiere Modulară",
+        question: "În algoritmul Square-and-Multiply (parcurgere MSB -> LSB), ce operații se execută la întâlnirea unui bit 1?",
+        options: [
+          "Doar ridicare la pătrat (Square).",
+          "Doar multiplicare cu baza (Multiply).",
+          "Mai întâi ridicare la pătrat (Square), urmată de multiplicare cu baza (Multiply).",
+          "Nicio operație; bitul 1 este ignorat."
+        ],
+        correct: 2,
+        explanation: "Pentru fiecare bit se execută întotdeauna Square: R = (R * R) mod n. Dacă bitul este 1, se execută suplimentar Multiply: R = (R * M) mod n."
+      },
+      {
+        id: 21,
+        category: "Atacuri Asimetrice - Canale Laterale",
+        question: "Cum poate un atacator să extragă cheia privată d din execuția naivă a algoritmului Square-and-Multiply?",
+        options: [
+          "Prin rezolvarea logaritmului discret în timp polinomial.",
+          "Prin măsurarea timpului de execuție sau consumului de energie (Side-Channel Timing Attack), deoarece bitul 1 durează mai mult (2 operații vs 1).",
+          "Prin trimiterea unui mesaj clar nul (M = 0).",
+          "Prin inversarea matricei Bézout."
+        ],
+        correct: 1,
+        explanation: "Bitul 0 execută doar Square, în timp ce bitul 1 execută Square + Multiply. Discrepanța de timp/consum relevă fiecare bit al exponentului privat d dacă nu se folosesc măsuri de constant-time."
+      },
+      {
+        id: 22,
+        category: "Optimizare RSA - Teorema Resturilor Chineze",
+        question: "De ce decriptarea RSA privată folosește Teorema Resturilor Chineze (CRT)?",
+        options: [
+          "Pentru a elimina necesitatea numerelor prime p și q.",
+          "Pentru a reduce lungimea cheii publice e.",
+          "Pentru a accelera decriptarea de aproximativ 4 ori (4x speedup) prin împărțirea calculelor modulo p și modulo q.",
+          "Pentru a permite semnături fără hash."
+        ],
+        correct: 2,
+        explanation: "Calculul modulo n (2048 biți) are complexitate O(k^3). Lucrând separat modulo p și modulo q (1024 biți), calculele sunt de 8 ori mai rapide per modul, rezultând o accelerare netă de ~4x."
+      },
+      {
+        id: 23,
+        category: "Semnături Digitale - RSA",
+        question: "De ce semnătura RSA simplă S = M^d mod n este considerată periculoasă fără o schemă de padding precum RSA-PSS?",
+        options: [
+          "Pentru că este maleabilă multiplicativ: S(M1 * M2) = S(M1) * S(M2) mod n, permițând falsificarea semnăturilor.",
+          "Pentru că semnătura are o lungime variabilă.",
+          "Pentru că necesită cunoașterea lui phi(n) de către verificator.",
+          "Pentru că nu poate fi verificată cu exponentul public e."
+        ],
+        correct: 0,
+        explanation: "Omomorfismul multiplicativ permite unui atacator să combine semnături valide ale mesajelor M1 și M2 pentru a obține semnătura mesajului produs M1*M2 fără cheie privată. RSA-PSS folosește salt aleatoriu pentru a împiedica acest atac."
+      },
+      {
+        id: 24,
+        category: "Funcții Hash - Integritate",
+        question: "Conform Paradoxului Zilelor de Naștere, care este complexitatea găsirii unei coliziuni arbitrare pentru un hash de n biți?",
+        options: [
+          "O(2^n)",
+          "O(2^{n/2})",
+          "O(n^2)",
+          "O(log n)"
+        ],
+        correct: 1,
+        explanation: "Comparând perechi arbitrare k(k-1)/2, probabilitatea de 50% de a găsi o coliziune este atinsă după ~1.177 * 2^{n/2} evaluări. De aceea un hash de 128 biți oferă doar 2^64 securitate la coliziune!"
+      },
+      {
+        id: 25,
+        category: "Funcții Hash - HMAC",
+        question: "Ce vulnerabilitate a construcției Merkle-Damgård este rezolvată prin standardul HMAC (RFC 2104)?",
+        options: [
+          "Atacul de extensie de lungime (Length Extension Attack), prin utilizarea a două constante fixe: ipad (0x36) și opad (0x5C).",
+          "Coliziunile din funcția SHA-3 Keccak.",
+          "Atacurile Man-in-the-Middle pe canale TLS.",
+          "Inversarea tabelelor curcubeu (Rainbow Tables)."
+        ],
+        correct: 0,
+        explanation: "Dacă se folosește H(Secret || Mesaj), starea internă Merkle-Damgård poate fi continuată de atacator. HMAC folosește o construcție imbricată: H((K ⊕ opad) || H((K ⊕ ipad) || M)) prevenind complet extensia."
+      },
+      {
+        id: 26,
+        category: "Protocoale de Securitate - Kerberos",
+        question: "În arhitectura protocolului Kerberos, cu ce cheie este criptat tichetul TGT (Ticket Granting Ticket)?",
+        options: [
+          "Cu parola în clar a utilizatorului.",
+          "Cu cheia secretă a serverului TGS (cunoscută doar de KDC).",
+          "Cu cheia publică RSA a clientului.",
+          "Cu cheia de sesiune generată pentru serverul final."
+        ],
+        correct: 1,
+        explanation: "TGT-ul este returnat clientului de către AS, dar clientul nu îl poate deschide sau modifica deoarece este criptat strict cu cheia secretă a serverului TGS (K_TGS)."
+      },
+      {
+        id: 27,
+        category: "Protocoale de Securitate - Kerberos",
+        question: "Cum se protejează protocolul Kerberos împotriva atacurilor de rejucare (Replay Attacks)?",
+        options: [
+          "Folosește conexiuni VPN IPSec obligatorii.",
+          "Include un timestamp în Authenticator și respinge orice cerere a cărei oră diferă cu mai mult de ±5 minute față de KDC.",
+          "Cere reintroducerea parolei la fiecare 30 de secunde.",
+          "Schimbă adresa IP a clientului după fiecare tichet."
+        ],
+        correct: 1,
+        explanation: "Fereastra de toleranță de ±5 minute (Kerberos Clock Skew) împiedică un atacator să rejueze pachetele interceptate ulterior. Protocolul depinde critic de sincronizarea prin NTP."
+      },
+      {
+        id: 28,
+        category: "Protocoale de Securitate - TLS 1.3",
+        question: "De ce TLS 1.3 a eliminat complet mecanismul static de schimb de chei bazat pe criptarea RSA?",
+        options: [
+          "Pentru că RSA nu mai este suportat de procesoare x86.",
+          "Pentru a garanta Perfect Forward Secrecy (PFS) prin obligativitatea protocolului ECDHE.",
+          "Pentru că RSA necesită certificate X.509 de 10 ori mai mari.",
+          "Pentru a permite conexiuni fără conexiune TCP."
+        ],
+        correct: 1,
+        explanation: "Cu RSA static, dacă cheia privată a serverului era compromisă ulterior, atacatorul putea decripta retroactiv tot traficul istoric înregistrat. Cu ECDHE (PFS), cheile de sesiune sunt efemere și nu pot fi recuperate."
+      },
+      {
+        id: 29,
+        category: "Protocoale de Securitate - TLS 1.3",
+        question: "Care este riscul de securitate asociat modului 0-RTT (Early Data) din TLS 1.3?",
+        options: [
+          "Nu criptează deloc datele din primul pachet.",
+          "Este vulnerabil la atacuri de rejucare (Replay Attacks), nefiind recomandat pentru cereri non-idempotente (tranzacții financiare POST).",
+          "Mărește timpul de handshake la 4-RTT.",
+          "Necesită semnături manuale din partea administratorului."
+        ],
+        correct: 1,
+        explanation: "Pachetele trimise în faza 0-RTT pot fi înregistrate de un atacator și retransmise către server. Dacă cererea este un transfer bancar POST, plata ar putea fi executată de două ori!"
+      },
+      {
+        id: 30,
+        category: "Securitate Web - Blind SQLi",
+        question: "Care este diferența dintre Boolean-based Blind SQLi și Time-based Blind SQLi?",
+        options: [
+          "Boolean-based folosește portul 80, Time-based folosește portul 443.",
+          "Boolean-based deduce datele analizând diferențele din răspunsul paginii (True vs False), în timp ce Time-based măsoară întârzierea serverului (SLEEP / BENCHMARK).",
+          "Time-based funcționează doar noaptea.",
+          "Boolean-based cere obligatoriu drepturi de administrator (DBA)."
+        ],
+        correct: 1,
+        explanation: "În Blind SQLi nu se afișează erori sau date pe ecran. În Boolean-based testăm caracter cu caracter (ex: SUBSTRING(pass,1,1)='a') și verificăm dacă pagina afișează 'User exists'. În Time-based forțăm serverul să execute SLEEP(5) dacă predicatul este adevărat."
       }
     ];
 
     function App() {
+      const [examMode, setExamMode] = useState("all"); // "quick10", "sim20", "all"
       const [currentQIdx, setCurrentQIdx] = useState(0);
       const [selectedAnswers, setSelectedAnswers] = useState({});
       const [isFinished, setIsFinished] = useState(false);
       const [timeLeft, setTimeLeft] = useState(45 * 60);
+
+      // Filtered questions based on selected mode
+      const activeQuestions = useMemo(() => {
+        if (examMode === "quick10") return ALL_EXAM_QUESTIONS.slice(0, 10);
+        if (examMode === "sim20") return ALL_EXAM_QUESTIONS.slice(0, 20);
+        return ALL_EXAM_QUESTIONS;
+      }, [examMode]);
 
       useEffect(() => {
         if (isFinished || timeLeft <= 0) return;
@@ -205,7 +470,7 @@
         return () => clearInterval(timer);
       }, [isFinished, timeLeft]);
 
-      const q = EXAM_QUESTIONS[currentQIdx];
+      const q = activeQuestions[currentQIdx] || activeQuestions[0];
       const answeredCount = Object.keys(selectedAnswers).length;
 
       const handleSelect = (idx) => {
@@ -215,38 +480,76 @@
 
       const calculateScore = () => {
         let correct = 0;
-        EXAM_QUESTIONS.forEach((quest, idx) => {
+        activeQuestions.forEach((quest, idx) => {
           if (selectedAnswers[idx] === quest.correct) correct++;
         });
         return correct;
       };
 
       const score = calculateScore();
+      const rawGrade = (score / activeQuestions.length) * 10;
+      const finalGrade = Math.max(1, Math.round(rawGrade * 10) / 10);
+
+      const resetExam = (mode = examMode) => {
+        setExamMode(mode);
+        setSelectedAnswers({});
+        setIsFinished(false);
+        setCurrentQIdx(0);
+        const durations = { quick10: 15 * 60, sim20: 30 * 60, all: 45 * 60 };
+        setTimeLeft(durations[mode] || 45 * 60);
+      };
 
       return (
         <div className="flex-1 flex flex-col justify-between max-w-5xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8">
           
-          <header className="mb-8 pb-6 border-b border-slate-800 flex items-center justify-between">
+          {/* Header */}
+          <header className="mb-6 pb-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <nav className="flex items-center space-x-2 text-sm text-slate-400 font-medium">
               <a href="../../../index.html" className="hover:text-white transition-colors">ExamTrainers</a>
               <span className="text-slate-600">/</span>
               <a href="../index.html" className="hover:text-white transition-colors">Securitatea Datelor</a>
               <span className="text-slate-600">/</span>
               <span className="text-purple-400 font-bold bg-purple-500/10 px-2.5 py-0.5 rounded border border-purple-500/20 font-mono">
-                Mock Exam
+                Mock Exam Simulator
               </span>
             </nav>
 
-            <a href="theory.html" className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-purple-500/40 text-xs font-bold text-slate-300 transition-all">
+            <a href="theory.html" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-purple-500/40 text-xs font-bold text-slate-300 transition-all">
               <span>📋</span>
-              <span>Cheat Sheet Examen</span>
+              <span>Cele 15 Porunci ale Examenului</span>
             </a>
           </header>
 
+          {/* Mode Switcher */}
+          {!isFinished && (
+            <div className="flex flex-wrap gap-2 mb-6 p-2 bg-slate-900/80 border border-slate-800 rounded-2xl">
+              <span className="text-xs font-bold text-slate-400 self-center px-2 font-mono">Mod Examen:</span>
+              <button
+                onClick={() => resetExam("quick10")}
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${examMode === "quick10" ? "bg-purple-600 text-white shadow-md shadow-purple-600/20" : "bg-slate-950 text-slate-400 hover:text-white"}`}
+              >
+                Test Rapid (10 Întrebări)
+              </button>
+              <button
+                onClick={() => resetExam("sim20")}
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${examMode === "sim20" ? "bg-purple-600 text-white shadow-md shadow-purple-600/20" : "bg-slate-950 text-slate-400 hover:text-white"}`}
+              >
+                Simulare Examen (20 Întrebări)
+              </button>
+              <button
+                onClick={() => resetExam("all")}
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${examMode === "all" ? "bg-purple-600 text-white shadow-md shadow-purple-600/20" : "bg-slate-950 text-slate-400 hover:text-white"}`}
+              >
+                Maraton Complet (30 Întrebări)
+              </button>
+            </div>
+          )}
+
+          {/* Status Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 bg-slate-900/70 border border-slate-800 rounded-3xl backdrop-blur-xl mb-6">
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold uppercase tracking-wider text-purple-400 font-mono">
-                Întrebarea {currentQIdx + 1} din {EXAM_QUESTIONS.length}
+                Întrebarea {currentQIdx + 1} din {activeQuestions.length}
               </span>
               <span className="text-xs text-slate-500 font-mono">
                 ({answeredCount} rezolvate)
@@ -313,7 +616,7 @@
                   ← Anterioara
                 </button>
                 <button
-                  disabled={currentQIdx === EXAM_QUESTIONS.length - 1}
+                  disabled={currentQIdx === activeQuestions.length - 1}
                   onClick={() => setCurrentQIdx(c => c + 1)}
                   className="px-4 py-2 bg-slate-950 hover:bg-slate-800 disabled:opacity-30 text-xs font-bold text-slate-300 rounded-xl transition-all"
                 >
@@ -324,18 +627,33 @@
           ) : (
             <div className="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-8">
               <div className="text-center space-y-2">
-                <div className="text-xs font-bold uppercase tracking-widest text-slate-400">Raport de Evaluare Examen SD</div>
-                <h2 className="text-3xl sm:text-4xl font-black text-white">
-                  Ai obținut nota {((score / EXAM_QUESTIONS.length) * 10).toFixed(1)} / 10
+                <div className="text-xs font-bold uppercase tracking-widest text-slate-400">Raport Oficial de Evaluare &bull; Examen SD</div>
+                <h2 className="text-4xl sm:text-5xl font-black text-white">
+                  Nota {finalGrade.toFixed(1)} / 10
                 </h2>
                 <p className="text-sm font-medium text-slate-400">
-                  Ai răspuns corect la <strong className="text-emerald-400">{score}</strong> din {EXAM_QUESTIONS.length} întrebări.
+                  Ai răspuns corect la <strong className="text-emerald-400">{score}</strong> din {activeQuestions.length} întrebări ({Math.round((score / activeQuestions.length) * 100)}%).
                 </p>
+                <div className="pt-2">
+                  {finalGrade >= 9 ? (
+                    <span className="inline-flex px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs font-bold rounded-full border border-emerald-500/30">
+                      🏆 Nivel Excelent: Ești pregătit complet pentru nota 10 la examen!
+                    </span>
+                  ) : finalGrade >= 5 ? (
+                    <span className="inline-flex px-3 py-1 bg-indigo-500/20 text-indigo-300 text-xs font-bold rounded-full border border-indigo-500/30">
+                      ✅ Nivel Admis: Ai promovat, dar revizuiește capcanele marcate cu roșu mai jos.
+                    </span>
+                  ) : (
+                    <span className="inline-flex px-3 py-1 bg-rose-500/20 text-rose-300 text-xs font-bold rounded-full border border-rose-500/30">
+                      🚨 Nivel Sub Punctaj: Recitește tratatul de 22 de pagini și ghidurile teoretice!
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">Revizuirea Răspunsurilor & Explicații de Curs:</h3>
-                {EXAM_QUESTIONS.map((quest, idx) => {
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">Revizuirea Răspunsurilor & Explicații Pas-cu-Pas:</h3>
+                {activeQuestions.map((quest, idx) => {
                   const userAns = selectedAnswers[idx];
                   const isCorrect = userAns === quest.correct;
 
@@ -351,7 +669,7 @@
                       </div>
                       <div className="text-slate-400">
                         Răspunsul tău: <strong className={isCorrect ? 'text-emerald-300' : 'text-rose-300'}>
-                          {userAns !== undefined ? quest.options[userAns] : 'Niciun răspuns'}
+                          {userAns !== undefined ? quest.options[userAns] : 'Niciun răspuns selectat'}
                         </strong>
                       </div>
                       {!isCorrect && (
@@ -360,7 +678,7 @@
                         </div>
                       )}
                       <div className="p-3 bg-slate-950 rounded-xl text-slate-300 leading-relaxed font-mono text-[11px]">
-                        💡 <strong>Explicație:</strong> {quest.explanation}
+                        💡 <strong>Justificare:</strong> {quest.explanation}
                       </div>
                     </div>
                   );
@@ -369,20 +687,16 @@
 
               <div className="text-center pt-4">
                 <button
-                  onClick={() => {
-                    setSelectedAnswers({});
-                    setIsFinished(false);
-                    setCurrentQIdx(0);
-                    setTimeLeft(45 * 60);
-                  }}
+                  onClick={() => resetExam(examMode)}
                   className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white rounded-2xl transition-all shadow-lg shadow-purple-600/30"
                 >
-                  Reia Examenul cu Întrebări Resetate
+                  Reia Examenul
                 </button>
               </div>
             </div>
           )}
 
+          {/* Footer */}
           <footer className="mt-12 py-6 border-t border-slate-800 text-center text-xs text-slate-500">
             &copy; 2026 ExamTrainers • Securitatea Datelor CR4.1 (UCV)
           </footer>

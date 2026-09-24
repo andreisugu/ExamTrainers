@@ -141,22 +141,182 @@
         </div>
       </section>
 
-      <!-- Block Modes -->
-      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-4">
+      <!-- Section 3: Square-and-Multiply -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
         <h2 class="text-2xl font-bold text-white flex items-center gap-3">
           <span class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-mono text-sm border border-amber-500/30">3</span>
-          Moduri de Operare Cifruri Bloc (ECB vs. CBC & CTR)
+          Algoritmul Square-and-Multiply (Exponențiere Modulară Rapidă)
         </h2>
 
-        <p class="text-sm text-slate-300 leading-relaxed">
-          În modul <strong>ECB (Electronic Codebook)</strong>, fiecare bloc este cifrat separat cu aceeași cheie. Dacă două blocuri din textul clar sunt identice, blocurile cifrate vor fi de asemenea identice. Acest lucru dezvăluie complet structura datelor (faimosul exemplu cu silueta pinguinului Tux).
-        </p>
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Calculul direct al lui <em>M<sup>e</sup></em> mod <em>n</em> ar fi imposibil pentru exponenți mari (numere cu mii de cifre). Algoritmul <strong>Square-and-Multiply</strong> (sau Exponențiere Binară) reduce complexitatea de la <em>O(e)</em> la <em>O(log<sub>2</sub> e)</em> prin parcurgerea biților exponentului <em>e</em> de la cel mai semnificativ (MSB) la cel mai puțin semnificativ (LSB).
+          </p>
 
-        <ul class="list-disc pl-5 text-xs text-slate-400 space-y-1">
-          <li><strong>CBC (Cipher Block Chaining):</strong> Fiecare bloc este xorat cu blocul cifrat anterior înainte de criptare. Primul bloc necesită un <em>Vector de Inițializare (IV)</em> aleatoriu și imprevizibil.</li>
-          <li><strong>CTR (Counter Mode) / GCM (Galois/Counter Mode):</strong> Transformă cifrul bloc într-un cifru pe flux (stream cipher), asigurând confidențialitate și integritate (Authenticated Encryption).</li>
-        </ul>
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2">
+            <span class="text-xs font-bold text-amber-400 uppercase tracking-wider font-mono">Regulile de Execuție Pas-cu-Pas:</span>
+            <ul class="list-disc pl-5 text-xs text-slate-400 space-y-1">
+              <li>Se convertește exponentul <em>e</em> în binar: <em>e = (b<sub>k</sub> b<sub>k-1</sub> ... b<sub>0</sub>)<sub>2</sub></em>, unde <em>b<sub>k</sub> = 1</em>.</li>
+              <li>Se inițializează acumulatorul: <em>R = 1</em>.</li>
+              <li>Pentru fiecare bit <em>b<sub>i</sub></em> de la stânga la dreapta:
+                <br />&bull; <strong>Întotdeauna se ridică la pătrat (Square):</strong> <em>R = (R &times; R) mod n</em>.
+                <br />&bull; <strong>Dacă bitul curent este 1 (Multiply):</strong> se multiplică cu baza: <em>R = (R &times; M) mod n</em>.
+              </li>
+            </ul>
+          </div>
+
+          <div class="overflow-x-auto pt-2">
+            <div class="text-xs font-bold text-slate-300 mb-2 font-mono">Exercițiu de Examen Rezolvat: Calculul lui 7<sup>23</sup> mod 55 (baza M = 7, exponent e = 23 = 10111<sub>2</sub>, modul n = 55):</div>
+            <table class="w-full text-xs text-left border-collapse font-mono">
+              <thead>
+                <tr class="bg-slate-800/80 text-slate-300 border-b border-slate-700">
+                  <th class="p-2.5">Pas</th>
+                  <th class="p-2.5">Bit (b<sub>i</sub>)</th>
+                  <th class="p-2.5">Operație Executată</th>
+                  <th class="p-2.5">Calcul Matematic Pas-cu-Pas</th>
+                  <th class="p-2.5">Rezultat Intermediar R mod 55</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800 text-slate-400">
+                <tr><td class="p-2.5">Init</td><td class="p-2.5">-</td><td class="p-2.5">Inițializare</td><td class="p-2.5">R = 1</td><td class="p-2.5 font-bold text-emerald-400">1</td></tr>
+                <tr><td class="p-2.5">1</td><td class="p-2.5 text-white font-bold">1 (MSB)</td><td class="p-2.5">Square & Multiply</td><td class="p-2.5">1<sup>2</sup> = 1; 1 &times; 7 = 7</td><td class="p-2.5 font-bold text-emerald-400">7</td></tr>
+                <tr><td class="p-2.5">2</td><td class="p-2.5 text-white font-bold">0</td><td class="p-2.5">Doar Square</td><td class="p-2.5">7<sup>2</sup> = 49</td><td class="p-2.5 font-bold text-emerald-400">49</td></tr>
+                <tr><td class="p-2.5">3</td><td class="p-2.5 text-white font-bold">1</td><td class="p-2.5">Square & Multiply</td><td class="p-2.5">49<sup>2</sup> = 2401 &equiv; 36; 36 &times; 7 = 252 &equiv; 32</td><td class="p-2.5 font-bold text-emerald-400">32</td></tr>
+                <tr><td class="p-2.5">4</td><td class="p-2.5 text-white font-bold">1</td><td class="p-2.5">Square & Multiply</td><td class="p-2.5">32<sup>2</sup> = 1024 &equiv; 34; 34 &times; 7 = 238 &equiv; 18</td><td class="p-2.5 font-bold text-emerald-400">18</td></tr>
+                <tr><td class="p-2.5">5</td><td class="p-2.5 text-white font-bold">1 (LSB)</td><td class="p-2.5">Square & Multiply</td><td class="p-2.5">18<sup>2</sup> = 324 &equiv; 49; 49 &times; 7 = 343 &equiv; 13</td><td class="p-2.5 font-bold text-rose-400">13 (REZULTAT FINAL)</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="p-4 bg-rose-950/20 border border-rose-500/30 rounded-2xl text-xs space-y-1">
+            <strong class="text-rose-400">🚨 Vulnerabilitate la Canale Laterale (Side-Channel Timing Attacks):</strong>
+            <p class="text-slate-400">
+              Observă că pentru bitul <code>0</code> se execută <em>o singură operație</em> (Square), iar pentru bitul <code>1</code> se execută <em>două operații</em> (Square + Multiply). Un atacator care măsoară consumul de energie sau durata execuției poate deduce fiecare bit al exponentului privat <em>d</em>! <br />
+              <strong>Soluție tehnică:</strong> Implementări în timp constant (ex: <em>Montgomery Ladder</em>) sau adăugarea de înmulțiri fictive (dummy multiplications).
+            </p>
+          </div>
+        </div>
       </section>
+
+      <!-- Section 4: CRT & Maleabilitate RSA -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-mono text-sm border border-purple-500/30">4</span>
+          Optimizarea RSA prin Teorema Resturilor Chineze (CRT) & Semnături Digitale
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Decriptarea și semnarea RSA clasică presupun calculul lui <em>M = C<sup>d</sup> mod n</em>. Deoarece modulul <em>n</em> are 2048–4096 biți, calculul este costisitor pe servere.
+            Deoarece entitatea privată cunoaște factorii primi <em>p</em> și <em>q</em>, ea poate decupla operația în două sub-operații pe numere de două ori mai mici folosind <strong>Teorema Resturilor Chineze (CRT)</strong>:
+          </p>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs space-y-2 text-indigo-300">
+            <div>1. Exponenți reduși: d<sub>p</sub> = d mod (p - 1) &nbsp;&bull;&nbsp; d<sub>q</sub> = d mod (q - 1)</div>
+            <div>2. Invers modular CRT: q<sub>inv</sub> = q<sup>-1</sup> mod p</div>
+            <div>3. Sub-decriptări: m<sub>1</sub> = C<sup>d<sub>p</sub></sup> mod p &nbsp;&bull;&nbsp; m<sub>2</sub> = C<sup>d<sub>q</sub></sup> mod q</div>
+            <div>4. Reconstrucție finală: M = m<sub>2</sub> + q &times; ((m<sub>1</sub> - m<sub>2</sub>) &times; q<sub>inv</sub> mod p)</div>
+            <div class="text-emerald-400 font-bold pt-1">&rArr; Factor de accelerare teoretică: de 4 ori mai rapid (4&times;) decât calculul direct!</div>
+          </div>
+
+          <div class="space-y-3 pt-2">
+            <h3 class="text-base font-bold text-white">Maleabilitatea Semnăturilor RSA & Schema RSA-PSS:</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              O semnătură RSA simplă este definită ca <em>S = M<sup>d</sup> mod n</em>.
+              Datorită omomorfismului multiplicativ al exponențierii:
+              <br /><code class="text-rose-400">S(M<sub>1</sub> &times; M<sub>2</sub>) = (M<sub>1</sub> &times; M<sub>2</sub>)<sup>d</sup> = M<sub>1</sub><sup>d</sup> &times; M<sub>2</sub><sup>d</sup> = S(M<sub>1</sub>) &times; S(M<sub>2</sub>) mod n</code>.
+              <br />Aceasta înseamnă că un atacator poate multiplica două semnături valide pentru a genera o a treia semnătură validă pentru mesajul produs <em>M<sub>1</sub> &times; M<sub>2</sub></em> fără a deține cheia privată <em>d</em>!
+              <br /><strong>Soluție obligatorie:</strong> Nu se semnează niciodată mesajul brut! Se calculează hash-ul mesajului și se aplică o schemă probabilistică de padding: <strong>RSA-PSS (Probabilistic Signature Scheme)</strong> sau PKCS#1 v2.1.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5: Funcții Hash, Birthday Paradox & HMAC -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-mono text-sm border border-cyan-500/30">5</span>
+          Funcții Hash Criptografice, Paradoxul Zilelor de Naștere & HMAC
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            O funcție hash criptografică comprimă un mesaj de lungime arbitrară într-un rezumat (digest) de lungime fixă (ex: 256 biți pentru SHA-256). Pentru a fi sigură, trebuie să satisfacă trei proprietăți fundamentale:
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1 text-xs">
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-1">
+              <strong class="text-cyan-400 font-mono">1. Rezistență la Pre-imagine</strong>
+              <p class="text-slate-400">Dat fiind <em>y = H(x)</em>, este computațional imposibil să găsești <em>x</em>. Complexitate: <strong>O(2<sup>n</sup>)</strong>.</p>
+            </div>
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-1">
+              <strong class="text-cyan-400 font-mono">2. A Doua Pre-imagine</strong>
+              <p class="text-slate-400">Dat fiind <em>x<sub>1</sub></em>, este imposibil să găsești <em>x<sub>2</sub> &ne; x<sub>1</sub></em> a.î. <em>H(x<sub>1</sub>) = H(x<sub>2</sub>)</em>. Complexitate: <strong>O(2<sup>n</sup>)</strong>.</p>
+            </div>
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-1">
+              <strong class="text-rose-400 font-mono">3. Rezistență la Coliziuni</strong>
+              <p class="text-slate-400">Imposibil să găsești o pereche arbitrară <em>(x<sub>1</sub>, x<sub>2</sub>)</em> cu <em>H(x<sub>1</sub>) = H(x<sub>2</sub>)</em>. Complexitate: <strong>O(2<sup>n/2</sup>)</strong>!</p>
+            </div>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2 text-xs">
+            <strong class="text-rose-400">De ce complexitatea la coliziuni este 2<sup>n/2</sup> (Paradoxul Zilelor de Naștere)?</strong>
+            <p class="text-slate-400 leading-relaxed">
+              Dacă vrem ca o persoană specifică să aibă ziua de naștere într-o anumită zi, probabilitatea este 1/365 (cere ~365 încercări). Dar dacă vrem ca <em>oricare două persoane dintr-o încăpere</em> să aibă aceeași zi de naștere, conform combinatoricii numărul de perechi posibile este <em>C(k, 2) = k(k-1)/2</em>. Pentru un hash de <em>n</em> biți (spațiu de <em>N = 2<sup>n</sup></em> valori), o coliziune apare cu probabilitate de 50% după doar <strong>k &approx; 1.177 &times; 2<sup>n/2</sup></strong> evaluări! De aceea, MD5 (128 biți) are o securitate de coliziune de doar 2<sup>64</sup> și a fost complet spart.
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2 text-xs">
+            <strong class="text-cyan-400">HMAC (Hash-based Message Authentication Code — RFC 2104):</strong>
+            <p class="text-slate-400 leading-relaxed">
+              Construcțiile Merkle-Damgård (MD5, SHA-1, SHA-2) sunt vulnerabile la <em>Length Extension Attacks</em> dacă se folosește naiv <code>H(Key || Mesaj)</code>. Standardul HMAC rezolvă problema prin imbricare duală cu două constante fixe (<em>ipad = 0x36</em> și <em>opad = 0x5C</em>):
+              <br /><code class="text-emerald-400 font-bold">HMAC(K, M) = H( (K &oplus; opad) || H( (K &oplus; ipad) || M ) )</code>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 6: Protocoale de Securitate Kerberos & TLS 1.3 -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono text-sm border border-emerald-500/30">6</span>
+          Protocoale de Securitate în Rețele: Kerberos & TLS 1.3
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Protocoalele combină criptografia simetrică și asimetrică pentru a rezolva probleme de autentificare, autorizare și canale sigure peste rețele ostile:
+          </p>
+
+          <div class="space-y-3">
+            <div class="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl space-y-2">
+              <span class="font-bold text-emerald-400 font-mono text-xs uppercase tracking-wide">A. Protocolul Kerberos (Port 88)</span>
+              <p class="text-xs text-slate-400 leading-relaxed">
+                Autentificare single-sign-on (SSO) bazată pe un <strong>Key Distribution Center (KDC)</strong> de încredere, format din două componente: <em>Authentication Server (AS)</em> și <em>Ticket Granting Server (TGS)</em>.
+              </p>
+              <ol class="list-decimal pl-5 text-xs text-slate-400 space-y-1 font-mono">
+                <li><strong>AS-REQ / AS-REP:</strong> Utilizatorul trimite identitatea sa către AS. AS răspunde cu cheia de sesiune <em>K<sub>C,TGS</sub></em> și cu tichetul <strong>TGT (Ticket Granting Ticket)</strong> cifrat cu cheia secretă a TGS (pe care utilizatorul nu o poate decripta).</li>
+                <li><strong>TGS-REQ / TGS-REP:</strong> Pentru a accesa un serviciu server (ex: fileserver), clientul trimite TGT-ul și un <em>Authenticator</em> (timestamp cifrat cu <em>K<sub>C,TGS</sub></em>). TGS validează tichetul și returnează un <strong>Service Ticket</strong> cifrat cu cheia serverului țintă.</li>
+                <li><strong>AP-REQ / AP-REP:</strong> Clientul prezintă Service Ticket-ul către serverul final pentru acces.</li>
+              </ol>
+              <div class="p-2.5 bg-emerald-950/30 border border-emerald-500/30 rounded-xl text-[11px] text-emerald-300">
+                🛡️ <strong>Apărare împotriva Rejucării (Replay Attack):</strong> Fiecare Authenticator conține un timestamp. Serverul respinge orice cerere a cărei oră diferă cu mai mult de <strong>&plusmn;5 minute</strong> față de ceasul local. De aceea, Kerberos impune sincronizarea strictă prin NTP!
+              </div>
+            </div>
+
+            <div class="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl space-y-2">
+              <span class="font-bold text-indigo-400 font-mono text-xs uppercase tracking-wide">B. TLS 1.2 vs TLS 1.3 (Schimbările Majore de Protocol)</span>
+              <ul class="list-disc pl-5 text-xs text-slate-400 space-y-1">
+                <li><strong>Eliminarea Schimbului de Chei RSA Static:</strong> În TLS 1.2, dacă cheia privată a serverului era compromisă ulterior, atacatorul putea decripta retroactiv tot traficul înregistrat în trecut. TLS 1.3 impune <strong>Perfect Forward Secrecy (PFS)</strong> prin folosirea obligatorie a <strong>ECDHE (Elliptic Curve Diffie-Hellman Ephemeral)</strong>.</li>
+                <li><strong>Handshake mai rapid (1-RTT):</strong> Redus de la 2 călătorii dus-întors (2-RTT) în TLS 1.2 la o singură călătorie (1-RTT) în TLS 1.3.</li>
+                <li><strong>Modul 0-RTT (Early Data):</strong> Permite trimiterea datelor de la prima cerere pentru clienții care s-au conectat anterior. <strong class="text-rose-400">Atenție:</strong> 0-RTT este vulnerabil la atacuri de rejucare (replay attacks), fiind recomandat strict pentru cereri idempotente (GET), niciodată pentru tranzacții financiare POST!</li>
+                <li><strong>Curățarea Cifrelor Învechite:</strong> S-au eliminat complet RC4, DES, 3DES, MD5, SHA-1 și modul CBC. TLS 1.3 permite doar cifruri autentificate moderne (AEAD): AES-GCM, AES-CCM și ChaCha20-Poly1305.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
 
     </article>
 

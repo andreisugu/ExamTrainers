@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workbench Interactiv: Cifrul AES & Moduri de Operare - Exam Trainers</title>
+  <meta name="description" content="Workbench interactiv AES: Matricea de Stare 4x4, transformările SubBytes, ShiftRows, MixColumns, AddRoundKey, și simulator de scurgere tipare ECB vs CBC.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code/Math) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-rose': '0 0 25px -5px rgba(244, 63, 94, 0.4)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- React 18 & ReactDOM UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <!-- Babel Standalone -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 15%, rgba(244, 63, 94, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 85%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-rose-500 selection:text-white">
+
+  <div id="root" class="min-h-screen flex flex-col"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    // Standard AES S-Box table (256 bytes)
+    const AES_SBOX = [
+      0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
+      0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
+      0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15,
+      0x04, 0xc7, 0x23, 0xc3, 0x18, 0x96, 0x05, 0x9a, 0x07, 0x12, 0x80, 0xe2, 0xeb, 0x27, 0xb2, 0x75,
+      0x09, 0x83, 0x2c, 0x1a, 0x1b, 0x6e, 0x5a, 0xa0, 0x52, 0x3b, 0xd6, 0xb3, 0x29, 0xe3, 0x2f, 0x84,
+      0x53, 0xd1, 0x00, 0xed, 0x20, 0xfc, 0xb1, 0x5b, 0x6a, 0xcb, 0xbe, 0x39, 0x4a, 0x4c, 0x58, 0xcf,
+      0xd0, 0xef, 0xaa, 0xfb, 0x43, 0x4d, 0x33, 0x85, 0x45, 0xf9, 0x02, 0x7f, 0x50, 0x3c, 0x9f, 0xa8,
+      0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5, 0xbc, 0xb6, 0xda, 0x21, 0x10, 0xff, 0xf3, 0xd2,
+      0xcd, 0x0c, 0x13, 0xec, 0x5f, 0x97, 0x44, 0x17, 0xc4, 0xa7, 0x7e, 0x3d, 0x64, 0x5d, 0x19, 0x73,
+      0x60, 0x81, 0x4f, 0xdc, 0x22, 0x2a, 0x90, 0x88, 0x46, 0xee, 0xb8, 0x14, 0xde, 0x5e, 0x0b, 0xdb,
+      0xe0, 0x32, 0x3a, 0x0a, 0x49, 0x06, 0x24, 0x5e, 0xc2, 0xd3, 0xac, 0x62, 0x91, 0x95, 0xe4, 0x79,
+      0xe7, 0xc8, 0x37, 0x6d, 0x8d, 0xd5, 0x4e, 0xa9, 0x6c, 0x56, 0xf4, 0xea, 0x65, 0x7a, 0xae, 0x08,
+      0xba, 0x78, 0x25, 0x2e, 0x1c, 0xa6, 0xb4, 0xc6, 0xe8, 0xdd, 0x74, 0x1f, 0x4b, 0xbd, 0x8b, 0x8a,
+      0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e,
+      0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
+      0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
+    ];
+
+    // Galois Field GF(2^8) multiplication by 2 with irreducible polynomial 0x11B
+    function xtime(b) {
+      return ((b << 1) ^ (((b >> 7) & 1) * 0x11b)) & 0xff;
+    }
+
+    // Multiply in GF(2^8)
+    function gfMul(a, b) {
+      let res = 0;
+      for (let i = 0; i < 8; i++) {
+        if ((b & 1) !== 0) res ^= a;
+        a = xtime(a);
+        b >>= 1;
+      }
+      return res;
+    }
+
+    // Convert string to 4x4 matrix (column-major order)
+    function textToStateMatrix(text) {
+      const padded = (text + "                ").slice(0, 16);
+      const matrix = Array.from({ length: 4 }, () => Array(4).fill(0));
+      for (let c = 0; c < 4; c++) {
+        for (let r = 0; r < 4; r++) {
+          matrix[r][c] = padded.charCodeAt(c * 4 + r);
+        }
+      }
+      return matrix;
+    }
+
+    // Transformation: SubBytes
+    function applySubBytes(mat) {
+      return mat.map(row => row.map(byte => AES_SBOX[byte]));
+    }
+
+    // Transformation: ShiftRows
+    function applyShiftRows(mat) {
+      const res = Array.from({ length: 4 }, () => Array(4).fill(0));
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          res[r][c] = mat[r][(c + r) % 4];
+        }
+      }
+      return res;
+    }
+
+    // Transformation: MixColumns (multiplication with MDS matrix)
+    function applyMixColumns(mat) {
+      const res = Array.from({ length: 4 }, () => Array(4).fill(0));
+      for (let c = 0; c < 4; c++) {
+        const s0 = mat[0][c], s1 = mat[1][c], s2 = mat[2][c], s3 = mat[3][c];
+        res[0][c] = gfMul(s0, 2) ^ gfMul(s1, 3) ^ s2 ^ s3;
+        res[1][c] = s0 ^ gfMul(s1, 2) ^ gfMul(s2, 3) ^ s3;
+        res[2][c] = s0 ^ s1 ^ gfMul(s2, 2) ^ gfMul(s3, 3);
+        res[3][c] = gfMul(s0, 3) ^ s1 ^ s2 ^ gfMul(s3, 2);
+      }
+      return res;
+    }
+
+    // Transformation: AddRoundKey (XOR with key)
+    function applyAddRoundKey(mat, keyMat) {
+      const res = Array.from({ length: 4 }, () => Array(4).fill(0));
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          res[r][c] = mat[r][c] ^ keyMat[r][c];
+        }
+      }
+      return res;
+    }
+
+    function toHex2(val) {
+      return val.toString(16).padStart(2, '0').toUpperCase();
+    }
+
+    function App() {
+      const [activeTab, setActiveTab] = useState("aes"); // "aes" or "modes"
+      const [inputMsg, setInputMsg] = useState("CONFIDENTIALITY!");
+      const [keyMsg, setKeyMsg] = useState("SECRET_KEY_128BI");
+      const [isFinalRound, setIsFinalRound] = useState(false);
+      const [currentStep, setCurrentStep] = useState("initial"); // initial, subbytes, shiftrows, mixcolumns, roundkey
+
+      // Demo mode for ECB vs CBC
+      const [ecbInput, setEcbInput] = useState("SECRET_DATA_1234SECRET_DATA_1234");
+      const [corruptedBit, setCorruptedBit] = useState(false);
+
+      const state0 = useMemo(() => textToStateMatrix(inputMsg), [inputMsg]);
+      const keyMat = useMemo(() => textToStateMatrix(keyMsg), [keyMsg]);
+
+      // Computed transformations
+      const stateSubBytes = useMemo(() => applySubBytes(state0), [state0]);
+      const stateShiftRows = useMemo(() => applyShiftRows(stateSubBytes), [stateSubBytes]);
+      const stateMixCols = useMemo(() => applyMixColumns(stateShiftRows), [stateShiftRows]);
+      
+      const displayedState = useMemo(() => {
+        if (currentStep === "initial") return state0;
+        if (currentStep === "subbytes") return stateSubBytes;
+        if (currentStep === "shiftrows") return stateShiftRows;
+        if (currentStep === "mixcolumns") {
+          return isFinalRound ? stateShiftRows : stateMixCols;
+        }
+        if (currentStep === "roundkey") {
+          const preKey = isFinalRound ? stateShiftRows : stateMixCols;
+          return applyAddRoundKey(preKey, keyMat);
+        }
+        return state0;
+      }, [currentStep, state0, stateSubBytes, stateShiftRows, stateMixCols, keyMat, isFinalRound]);
+
+      return (
+        <div className="flex-1 flex flex-col justify-between max-w-5xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8">
+          
+          {/* Header */}
+          <header className="mb-8 pb-4 border-b border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <nav className="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+              <a href="../../../index.html" className="hover:text-white transition-colors duration-150 py-1 px-2 rounded-md hover:bg-white/5">ExamTrainers</a>
+              <span class="text-slate-600 font-semibold">/</span>
+              <a href="../index.html" className="hover:text-white transition-colors duration-150 py-1 px-2 rounded-md hover:bg-white/5">Securitatea Datelor</a>
+              <span class="text-slate-600 font-semibold">/</span>
+              <span className="text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 font-mono">Simulator AES</span>
+            </nav>
+
+            <div className="flex items-center gap-2">
+              <a href="./theory.html" className="inline-flex items-center gap-1.5 rounded-xl border border-slate-800 hover:border-slate-700 bg-slate-900/60 hover:bg-slate-800/60 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white transition-all">
+                <svg className="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                Ghid Teoretic
+              </a>
+            </div>
+          </header>
+
+          {/* Navigation Tabs */}
+          <div className="flex space-x-2 mb-8 bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800 max-w-md">
+            <button
+              onClick={() => setActiveTab("aes")}
+              className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition-all ${activeTab === "aes" ? "bg-rose-600 text-white shadow-md shadow-rose-600/20" : "text-slate-400 hover:text-white"}`}
+            >
+              Matrice de Stare & Transformări AES
+            </button>
+            <button
+              onClick={() => setActiveTab("modes")}
+              className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition-all ${activeTab === "modes" ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20" : "text-slate-400 hover:text-white"}`}
+            >
+              Moduri de Operare (ECB vs. CBC)
+            </button>
+          </div>
+
+          {activeTab === "aes" ? (
+            <div className="space-y-8 animate-fade-in">
+              
+              {/* Controls */}
+              <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-400 flex items-center justify-between">
+                    <span>Text Clar (16 caractere = 128 biți)</span>
+                    <span className="font-mono text-rose-400">{inputMsg.length}/16 octeți</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={16}
+                    value={inputMsg}
+                    onChange={(e) => setInputMsg(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-rose-500 transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-400 flex items-center justify-between">
+                    <span>Cheie de Rundă (16 caractere)</span>
+                    <span className="font-mono text-indigo-400">{keyMsg.length}/16 octeți</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={16}
+                    value={keyMsg}
+                    onChange={(e) => setKeyMsg(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Transformation Stepper Buttons */}
+              <div className="flex flex-wrap gap-2.5 items-center justify-between p-4 bg-slate-950/70 border border-slate-800 rounded-2xl">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setCurrentStep("initial")}
+                    className={`px-3 py-2 text-xs font-mono font-bold rounded-xl border transition-all ${currentStep === "initial" ? "bg-slate-800 text-white border-slate-600" : "bg-slate-900 text-slate-400 border-slate-800 hover:text-white"}`}
+                  >
+                    0. Stare Inițială
+                  </button>
+                  <button
+                    onClick={() => setCurrentStep("subbytes")}
+                    className={`px-3 py-2 text-xs font-mono font-bold rounded-xl border transition-all ${currentStep === "subbytes" ? "bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/20" : "bg-slate-900 text-slate-400 border-slate-800 hover:text-white"}`}
+                  >
+                    1. SubBytes (S-Box)
+                  </button>
+                  <button
+                    onClick={() => setCurrentStep("shiftrows")}
+                    className={`px-3 py-2 text-xs font-mono font-bold rounded-xl border transition-all ${currentStep === "shiftrows" ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20" : "bg-slate-900 text-slate-400 border-slate-800 hover:text-white"}`}
+                  >
+                    2. ShiftRows (Permutare)
+                  </button>
+                  <button
+                    onClick={() => setCurrentStep("mixcolumns")}
+                    className={`px-3 py-2 text-xs font-mono font-bold rounded-xl border transition-all ${currentStep === "mixcolumns" ? "bg-amber-600 text-white border-amber-500 shadow-md shadow-amber-600/20" : "bg-slate-900 text-slate-400 border-slate-800 hover:text-white"}`}
+                  >
+                    3. MixColumns (GF 2^8)
+                  </button>
+                  <button
+                    onClick={() => setCurrentStep("roundkey")}
+                    className={`px-3 py-2 text-xs font-mono font-bold rounded-xl border transition-all ${currentStep === "roundkey" ? "bg-rose-600 text-white border-rose-500 shadow-md shadow-rose-600/20" : "bg-slate-900 text-slate-400 border-slate-800 hover:text-white"}`}
+                  >
+                    4. AddRoundKey (XOR)
+                  </button>
+                </div>
+
+                {/* Final Round Toggle */}
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-rose-400 bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/20 select-none">
+                  <input
+                    type="checkbox"
+                    checked={isFinalRound}
+                    onChange={(e) => setIsFinalRound(e.target.checked)}
+                    className="rounded border-rose-500 text-rose-600 focus:ring-0"
+                  />
+                  <span>Simulare Runda 10 (Fără MixColumns)</span>
+                </label>
+              </div>
+
+              {/* State Matrix Visualizer */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                
+                {/* 4x4 State Grid */}
+                <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono">
+                      State Matrix 4x4 (Hexadecimal / ASCII)
+                    </span>
+                    <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                      Ordonare pe Coloane (Column-Major)
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-2.5 p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono">
+                    {Array.from({ length: 4 }).map((_, r) => (
+                      <React.Fragment key={r}>
+                        {Array.from({ length: 4 }).map((__, c) => {
+                          const val = displayedState[r][c];
+                          const asciiChar = (val >= 32 && val <= 126) ? String.fromCharCode(val) : '.';
+                          return (
+                            <div
+                              key={`${r}-${c}`}
+                              className="p-3 bg-slate-900/90 border border-slate-800/80 rounded-xl flex flex-col items-center justify-center space-y-1 hover:border-rose-500/50 transition-colors"
+                            >
+                              <span className="text-base font-bold text-white tracking-wider">
+                                {toHex2(val)}
+                              </span>
+                              <span className="text-[10px] text-slate-500">
+                                '{asciiChar}' (r{r}, c{c})
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </React.Fragment>
+                    ))}
+                  </div>
+
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    * Notă: Octeții sunt plasați vertical pe coloane: Col 0 conține octeții 0..3, Col 1 conține octeții 4..7, etc.
+                  </p>
+                </div>
+
+                {/* Explanation Card */}
+                <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-4">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                    Semnificația Pasului Curent:
+                  </h3>
+
+                  {currentStep === "initial" && (
+                    <div className="text-xs text-slate-300 space-y-2 leading-relaxed">
+                      <p>Aceasta este starea inițială rezultată din încărcarea celor 16 octeți (128 biți) ai blocului de intrare în matricea de stare 4 &times; 4.</p>
+                      <p className="text-slate-400">Înaintea rundei 1, se execută o primă etapă numită <strong>Initial Round Key Addition</strong> (un simplu XOR între starea inițială și cheia secretă K<sub>0</sub>).</p>
+                    </div>
+                  )}
+
+                  {currentStep === "subbytes" && (
+                    <div className="text-xs text-slate-300 space-y-2 leading-relaxed">
+                      <p><strong className="text-emerald-400">SubBytes:</strong> Fiecare octet a fost substituit neliniar prin S-box-ul AES.</p>
+                      <p className="text-slate-400">Operația calculează inversul multiplicativ în <code>GF(2<sup>8</sup>)</code> modulo <code>m(x) = x<sup>8</sup> + x<sup>4</sup> + x<sup>3</sup> + x + 1</code> urmat de o transformare afină binară. Aceasta este singura operație neliniară din AES, oferind proprietatea de <strong>Confuzie</strong> a lui Shannon împotriva criptanalizei diferențiale și liniare.</p>
+                    </div>
+                  )}
+
+                  {currentStep === "shiftrows" && (
+                    <div className="text-xs text-slate-300 space-y-2 leading-relaxed">
+                      <p><strong className="text-indigo-400">ShiftRows:</strong> Liniile matricei au fost deplasate circular spre stânga:</p>
+                      <ul className="list-disc pl-4 text-slate-400 space-y-1">
+                        <li>Rândul 0: Deplasare 0 octeți (rămâne fix).</li>
+                        <li>Rândul 1: Deplasare 1 octet la stânga.</li>
+                        <li>Rândul 2: Deplasare 2 octeți la stânga.</li>
+                        <li>Rândul 3: Deplasare 3 octeți la stânga.</li>
+                      </ul>
+                      <p className="text-slate-400">Asigură că octeții unei coloane sunt redistribuiți în coloane diferite pentru difuzia următoare.</p>
+                    </div>
+                  )}
+
+                  {currentStep === "mixcolumns" && (
+                    <div className="text-xs text-slate-300 space-y-2 leading-relaxed">
+                      {isFinalRound ? (
+                        <div className="p-3 bg-rose-950/30 border border-rose-500/40 rounded-xl text-rose-300 space-y-1">
+                          <strong>🚨 Regula de Aur la Examen (Runda 10):</strong>
+                          <p>În runda finală, pasul <strong>MixColumns este OMIT!</strong> Matricea a rămas identică cu cea de la ShiftRows. Transformarea se sare pentru a asigura simetria inversării la decriptare.</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p><strong className="text-amber-400">MixColumns:</strong> Fiecare coloană de 4 octeți a fost multiplicată cu o matrice MDS (Maximum Distance Separable) peste <code>GF(2<sup>8</sup>)</code>.</p>
+                          <p className="text-slate-400 pt-1">Fiecare nou octet de ieșire este o combinație liniară a tuturor celor 4 octeți din coloana respectivă. Împreună cu ShiftRows, în doar 2 runde complete, orice bit de intrare afectează toți cei 128 de biți ai stării (difuzie completă / efect de avalanșă).</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {currentStep === "roundkey" && (
+                    <div className="text-xs text-slate-300 space-y-2 leading-relaxed">
+                      <p><strong className="text-rose-400">AddRoundKey:</strong> Matricea de stare a fost combinată prin operația logică <strong>XOR</strong> (&oplus;) cu subcheia de rundă generată prin algoritmul Key Schedule.</p>
+                      <p className="text-slate-400">Această transformare este reversibilă instantaneu prin aplicarea aceluiași XOR cu aceeași subcheie (proprietatea involutivă <code>A &oplus; B &oplus; B = A</code>).</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          ) : (
+            /* Tab 2: Block Modes Inspector */
+            <div className="space-y-8 animate-fade-in">
+              <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+                <div>
+                  <h2 className="text-xl font-bold text-white">Demonstrație Practică: Vulnerabilitatea Modului ECB vs. CBC</h2>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Observă ce se întâmplă atunci când textul clar conține două blocuri identice de 16 octeți.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-400">Text Clar cu Tipare Repetitive (32 caractere = 2 blocuri)</label>
+                  <input
+                    type="text"
+                    value={ecbInput}
+                    onChange={(e) => setEcbInput(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                {/* Side-by-side ECB vs CBC */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                  
+                  {/* ECB Card */}
+                  <div className="p-5 bg-rose-950/20 border border-rose-500/30 rounded-2xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-rose-400 font-mono">Modul ECB (Electronic Codebook)</span>
+                      <span className="text-[10px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded font-bold uppercase">Insecure</span>
+                    </div>
+
+                    <div className="font-mono text-xs space-y-3">
+                      <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                        <span className="text-slate-500">Bloc Clar 0: </span>
+                        <span className="text-slate-200">{ecbInput.slice(0, 16)}</span>
+                        <div className="text-rose-400 font-bold mt-1">C0 = 8A3F 10E5 9B2C 7D4A...</div>
+                      </div>
+
+                      <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                        <span className="text-slate-500">Bloc Clar 1: </span>
+                        <span className="text-slate-200">{ecbInput.slice(16, 32)}</span>
+                        <div className="text-rose-400 font-bold mt-1">C1 = 8A3F 10E5 9B2C 7D4A...</div>
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-rose-300 leading-relaxed bg-rose-950/40 p-3 rounded-xl border border-rose-500/20">
+                      🚨 <strong>Scurgere Statistică Gravă:</strong> Deoarece Bloc 0 == Bloc 1, criptotextul C0 este identic cu C1! Un atacator vede tiparele datelor fără să cunoască cheia (efectul pinguinului Tux).
+                    </div>
+                  </div>
+
+                  {/* CBC Card */}
+                  <div className="p-5 bg-indigo-950/20 border border-indigo-500/30 rounded-2xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-indigo-400 font-mono">Modul CBC (Cipher Block Chaining)</span>
+                      <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-bold uppercase">Securizat (IV Aleator)</span>
+                    </div>
+
+                    <div className="font-mono text-xs space-y-3">
+                      <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                        <span className="text-slate-500">Bloc 0 &oplus; IV: </span>
+                        <span className="text-slate-200">{ecbInput.slice(0, 16)}</span>
+                        <div className="text-indigo-400 font-bold mt-1">C0 = 4F82 BC91 3E7A 0D65...</div>
+                      </div>
+
+                      <div className="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                        <span className="text-slate-500">Bloc 1 &oplus; C0: </span>
+                        <span className="text-slate-200">{ecbInput.slice(16, 32)}</span>
+                        <div className="text-indigo-400 font-bold mt-1">C1 = D914 27FE 880B 4C19...</div>
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-indigo-300 leading-relaxed bg-indigo-950/40 p-3 rounded-xl border border-indigo-500/20">
+                      ✅ <strong>Protecție Completă:</strong> Deși blocurile de clar sunt identice, legarea prin XOR cu blocul anterior (sau IV la primul bloc) produce criptotexturi complet diferite și impredictibile.
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Bit Flip Propagation Demo */}
+                <div className="p-5 bg-slate-950 rounded-2xl border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono">
+                      Propagarea Erorilor în Modul CBC (Corupere de 1 Bit în Transmisie)
+                    </span>
+                    <button
+                      onClick={() => setCorruptedBit(!corruptedBit)}
+                      className={`px-3 py-1 text-xs font-mono font-bold rounded-lg border transition-all ${corruptedBit ? "bg-rose-600 text-white border-rose-500" : "bg-slate-800 text-slate-300 border-slate-700 hover:text-white"}`}
+                    >
+                      {corruptedBit ? "Inversat 1 Bit în C0 (Activ)" : "Inversează 1 Bit în C0"}
+                    </button>
+                  </div>
+
+                  <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-800 text-xs text-slate-400 font-mono space-y-1">
+                    <div>P<sub>0</sub> Decriptat: {corruptedBit ? <span className="text-rose-400 font-bold">[COMPLET DISTRUS / ZGOMOT TOTAL (16 octeți corupți)]</span> : <span className="text-emerald-400">SECRET_DATA_1234 (Integritate OK)</span>}</div>
+                    <div>P<sub>1</sub> Decriptat: {corruptedBit ? <span className="text-amber-400 font-bold">SECRET_DATA_1234 [EXACT 1 BIT INVERSAT LA POZIȚIA FLIPPED]</span> : <span className="text-emerald-400">SECRET_DATA_1234 (Integritate OK)</span>}</div>
+                    <div>P<sub>2</sub> Decriptat: <span className="text-emerald-400">RESTUL FIȘIERULUI RĂMÂNE INTACT ȘI PERFECT DECRIPTAT</span></div>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Întrebare clasică de examen: <em>„Dacă un bit din criptotextul C<sub>k</sub> se corupe pe canalul de comunicație, ce se întâmplă la decriptare în CBC?”</em> &rarr; Blocul <em>P<sub>k</sub></em> este complet distrus, blocul <em>P<sub>k+1</sub></em> suferă o eroare pe exact un singur bit, iar blocurile <em>P<sub>k+2</sub>...</em> sunt decriptate fără nicio eroare!
+                  </p>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <footer className="mt-auto py-6 border-t border-slate-900 text-center text-xs text-slate-600 font-semibold tracking-wide uppercase">
+            &copy; 2026 ExamTrainers. Securitatea Datelor &bull; Universitatea din Craiova.
+          </footer>
+
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
