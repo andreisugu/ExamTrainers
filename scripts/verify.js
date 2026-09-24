@@ -11,32 +11,12 @@
 
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const TRAINERS_DIR = path.join(REPO_ROOT, 'trainers');
 const CACHE_DIR = path.join(__dirname, '.cache');
 const BABEL_PATH = path.join(CACHE_DIR, 'babel.min.js');
 const BABEL_URL = 'https://unpkg.com/@babel/standalone/babel.min.js';
-
-function downloadFile(url, dest) {
-  return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        return downloadFile(res.headers.location, dest).then(resolve).catch(reject);
-      }
-      if (res.statusCode !== 200) {
-        return reject(new Error(`Failed to download ${url}: HTTP ${res.statusCode}`));
-      }
-      const fileStream = fs.createWriteStream(dest);
-      res.pipe(fileStream);
-      fileStream.on('finish', () => {
-        fileStream.close();
-        resolve();
-      });
-    }).on('error', reject);
-  });
-}
 
 async function ensureBabel() {
   if (fs.existsSync(BABEL_PATH) && fs.statSync(BABEL_PATH).size > 1000000) {
@@ -46,7 +26,12 @@ async function ensureBabel() {
     fs.mkdirSync(CACHE_DIR, { recursive: true });
   }
   process.stdout.write('Downloading @babel/standalone for syntax verification... ');
-  await downloadFile(BABEL_URL, BABEL_PATH);
+  const res = await fetch(BABEL_URL);
+  if (!res.ok) {
+    throw new Error(`Failed to download ${BABEL_URL}: HTTP ${res.status} ${res.statusText}`);
+  }
+  const buffer = Buffer.from(await res.arrayBuffer());
+  fs.writeFileSync(BABEL_PATH, buffer);
   console.log('Done.');
 }
 
