@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teorie: Criptanaliză Clasică (Caesar & Vigenère) - Exam Trainers</title>
+  <meta name="description" content="Ghid teoretic: Criptanaliză pe frecvențe, aritmetica modulară în Z26, indicele de coincidență și rezolvarea temelor de curs.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code/Math) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 45%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+
+  <main class="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-8 sm:px-6 lg:px-8 justify-between">
+    
+    <!-- Top Nav -->
+    <header class="mb-10 pb-6 border-b border-slate-800 flex items-center justify-between">
+      <nav class="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+        <a href="../../../index.html" class="hover:text-white transition-colors">ExamTrainers</a>
+        <span class="text-slate-600">/</span>
+        <a href="../index.html" class="hover:text-white transition-colors">Securitatea Datelor</a>
+        <span class="text-slate-600">/</span>
+        <a href="index.html" class="hover:text-white transition-colors">Caesar & Vigenère</a>
+        <span class="text-slate-600">/</span>
+        <span class="text-indigo-400 font-bold bg-indigo-500/10 px-2.5 py-0.5 rounded border border-indigo-500/20 font-mono">Teorie</span>
+      </nav>
+
+      <a href="index.html" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition-all shadow-md shadow-indigo-600/20">
+        <span>🎮</span>
+        <span>Deschide Laboratorul</span>
+      </a>
+    </header>
+
+    <article class="space-y-10">
+      <div>
+        <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-md border border-indigo-500/20">
+          Cursul Prof. Marius Marian • Fundamente
+        </span>
+        <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-white mt-3">
+          Criptanaliză: Caesar, ROT13 & Vigenère
+        </h1>
+        <p class="text-base text-slate-400 mt-2 leading-relaxed">
+          Metodologia de decodare a cifrurilor clasice, analiza statistică a frecvențelor literelor și spargerea cheilor polialfabetice prin aforisme înlănțuite.
+        </p>
+      </div>
+
+      <!-- Caesar & Modular Arithmetic -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-mono text-sm border border-indigo-500/30">1</span>
+          Aritmetica Modulară în &Zopf;<sub>26</sub> și Capcana Valorilor Negative
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Fie alfabetul englez standard indexat de la 0 la 25 (<em>A</em>=0, <em>B</em>=1, &hellip;, <em>Z</em>=25):
+          </p>
+          <ul class="list-disc pl-5 font-mono text-xs text-indigo-300 space-y-1">
+            <li>Criptare: C = (P + k) mod 26</li>
+            <li>Decriptare: P = (C - k) mod 26</li>
+          </ul>
+
+          <div class="p-4 bg-amber-950/20 border border-amber-500/30 rounded-2xl text-xs space-y-1 text-slate-300">
+            <strong class="text-amber-400">🚨 Capcana matematică de calcul manual:</strong>
+            <p>
+              Dacă <em>C</em> &lt; <em>k</em>, scăderea <em>C</em> - <em>k</em> produce un număr negativ. În inelul &Zopf;<sub>26</sub>, trebuie adunat 26: <br />
+              <code>P = ((C - k) % 26 + 26) % 26</code>. <br />
+              Exemplu: Dacă <em>C</em> = B (1) și cheia este <em>k</em> = 5: 1 - 5 = -4 &rArr; -4 + 26 = 22 &rArr; <strong>W</strong>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Solved Homeworks -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono text-sm border border-emerald-500/30">2</span>
+          Teme Oficiale Rezolvate (Arhiva cifru.pdf — Mirică Simona)
+        </h2>
+
+        <div class="space-y-4 font-mono text-xs">
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2">
+            <div class="text-emerald-400 font-bold text-sm">Exercițiul #A: Criptanaliză Frecvențială pe Mesaj Lung</div>
+            <p class="text-slate-400 leading-relaxed">
+              Frecvențele maxime din text sunt J, E, U, S. <br />
+              &bull; Test 1: S &rarr; E (18 - 4 = 14 &rArr; shift -14 &equiv; +12) produce "EK TQJ2F..." (fără sens). <br />
+              &bull; Test 2: U &rarr; E (20 - 4 = 16 &rArr; shift +10). <br />
+              &bull; <strong>Text decodat:</strong> <em>"IF YOU WANT TO SUCCEED YOU SHOULD STRIKE OUT ON NEW PATHS RATHER THAN TRAVEL THE WORN PATHS OF ACCEPTED SUCCESS"</em>.
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2">
+            <div class="text-indigo-400 font-bold text-sm">Exercițiul #2 & #F: "Don't Stop" Quotes</div>
+            <p class="text-slate-400 leading-relaxed">
+              &bull; Exercițiul #2: O &rarr; E (shift -10 / +16) <br />
+              &bull; Exercițiul #F: Algoritmul ROT13 (<em>k</em> = 13, R &rarr; E) <br />
+              &bull; <strong>Text decodat:</strong> <em>"DONT STOP WHEN YOU ARE TIRED STOP WHEN YOU ARE DONE"</em>.
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2">
+            <div class="text-amber-400 font-bold text-sm">Problema de Curs: Cheia din Inițiale</div>
+            <p class="text-slate-400 leading-relaxed">
+              Aforismul 1: <em>"DEFEAT IS NOT THE WORST OF FAILURES NOT TO HAVE TRIED IS THE TRUE FAILURE"</em> (Caesar shift 8). <br />
+              Cheia Vigenère din inițialele fiecărui cuvânt: <strong>D I N T W O F N T H T I T T F</strong> (15 litere). <br />
+              Text decodat final (154 caractere): <em>"PEOPLE OF MEDIOCRE ABILITY SOMETIMES ACHIEVE OUTSTANDING SUCCESS BECAUSE THEY DONT KNOW WHEN TO QUIT MOST MEN SUCCEED BECAUSE THEY ARE DETERMINED TO"</em>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Index of Coincidence -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-4">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-mono text-sm border border-amber-500/30">3</span>
+          Indicele de Coincidență (<em>I<sub>c</sub></em>) și Metoda Kasiski
+        </h2>
+
+        <p class="text-sm text-slate-300 leading-relaxed">
+          Indicele de coincidență măsoară probabilitatea ca două litere extrase aleatoriu din text să fie identice:
+        </p>
+
+        <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs text-center text-indigo-300">
+          I<sub>c</sub> = &sum; (f<sub>i</sub> &middot; (f<sub>i</sub> - 1)) / (N &middot; (N - 1))
+        </div>
+
+        <ul class="list-disc pl-5 text-xs text-slate-400 space-y-1">
+          <li>Pentru un text monoalfabetic (Caesar) în limba engleză: <em>I<sub>c</sub></em> &asymp; 0.067.</li>
+          <li>Pentru un text polialfabetic (Vigenère) cu cheie lungă sau aleatoriu: <em>I<sub>c</sub></em> &asymp; 0.0385.</li>
+          <li>Lungimea cheii Vigenère <em>m</em> se determină prin CMMDC al distanțelor dintre trigramele repetate (Testul Kasiski).</li>
+        </ul>
+      </section>
+
+    </article>
+
+    <footer class="mt-16 py-6 border-t border-slate-800 text-center text-xs text-slate-500 font-medium">
+      &copy; 2026 ExamTrainers • Securitatea Datelor CR4.1 (UCV)
+    </footer>
+  </main>
+</body>
+</html>

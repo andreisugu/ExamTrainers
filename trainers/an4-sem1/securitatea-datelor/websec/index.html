@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Securitate Web & Exploatări DVWA / HTB - Exam Trainers</title>
+  <meta name="description" content="Sandbox interactiv pentru securitate web: SQLi Low vs Medium POST, decriptare hash-uri MD5 DVWA, consola Hack The Box, Burp Intruder și XSS/CSRF.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code/Math) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-amber': '0 0 25px -5px rgba(245, 158, 11, 0.4)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- React 18 & ReactDOM UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <!-- Babel Standalone -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 15%, rgba(245, 158, 11, 0.10) 0%, transparent 40%),
+        radial-gradient(circle at 90% 85%, rgba(244, 63, 94, 0.08) 0%, transparent 45%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-amber-500 selection:text-white">
+
+  <div id="root" class="min-h-screen flex flex-col"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    function App() {
+      const [sqliLevel, setSqliLevel] = useState('low');
+      const [sqliInput, setSqliInput] = useState("' UNION SELECT user, password FROM users #");
+      const [htbConsoleCmd, setHtbConsoleCmd] = useState('');
+      const [htbLog, setHtbLog] = useState([
+        'Hack The Box Web Console v1.0. Inspecție pe /js/inviteapi.min.js...',
+        'Tastează comanda: makeInviteCode()'
+      ]);
+
+      const handleHtbSubmit = (e) => {
+        e.preventDefault();
+        const cmd = htbConsoleCmd.trim();
+        if (cmd === 'makeInviteCode()') {
+          setHtbLog(prev => [
+            ...prev,
+            `> ${cmd}`,
+            'Status: 200 OK',
+            'Data primit: { data: "Va bssre gb trarengr gur vaivgr pbqr, znxr n CBFG erdhrfg gb /ncv/vaivgr/trarengr", enctype: "ROT13" }',
+            '💡 Decodificare ROT13: "In order to generate the invite code, make a POST request to /api/invite/generate"',
+            'Pasul următor în terminal: curl -X POST https://www.hackthebox.eu/api/invite/generate'
+          ]);
+        } else if (cmd.includes('curl') && cmd.includes('/api/invite/generate')) {
+          setHtbLog(prev => [
+            ...prev,
+            `> ${cmd}`,
+            'HTTP/1.1 200 OK',
+            'Response: { "success": 1, "data": { "code": "U0tWVlgtSU1PSkUtV0pYTUgtWk1MVlItWVhCS1A=", "format": "encoded" } }',
+            '💡 Decodificare Base64: SKVVX-IMOJE-WJXMH-ZMLVR-YXBKP',
+            '🎉 Succes! Cod de invitație valid obținut!'
+          ]);
+        } else {
+          setHtbLog(prev => [...prev, `> ${cmd}`, 'Comandă necunoscută. Încearcă makeInviteCode()']);
+        }
+        setHtbConsoleCmd('');
+      };
+
+      return (
+        <div className="flex-1 flex flex-col justify-between max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          
+          <header className="mb-8 pb-6 border-b border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <nav className="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+                <a href="../../../index.html" className="hover:text-white transition-colors">ExamTrainers</a>
+                <span className="text-slate-600">/</span>
+                <a href="../index.html" className="hover:text-white transition-colors">Securitatea Datelor</a>
+                <span className="text-slate-600">/</span>
+                <span className="text-amber-400 font-bold bg-amber-500/10 px-2.5 py-0.5 rounded border border-amber-500/20 font-mono">
+                  DVWA & HTB Exploits
+                </span>
+              </nav>
+
+              <a href="theory.html" className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-amber-500/40 text-xs font-bold text-slate-300 transition-all">
+                <span>📖</span>
+                <span>Citește Teoria</span>
+              </a>
+            </div>
+
+            <div className="mt-6">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">
+                Capitolul 4 • Securitate Web & Laboratoare
+              </span>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white mt-2">
+                Sandbox Exploatări: DVWA & Hack The Box
+              </h1>
+              <p className="text-sm text-slate-400 mt-1 max-w-2xl font-medium">
+                Simulatoare interactive pentru SQL Injection Low/Medium, spargerea hash-urilor MD5, terminalul Hack The Box, Burp Intruder și XSS/CSRF.
+              </p>
+            </div>
+          </header>
+
+          <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-5 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                <span>💉</span>
+                1. SQL Injection Sandbox: Low vs. Medium (Burp Proxy Bypass)
+              </h3>
+              <div className="flex gap-1 p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs">
+                <button
+                  onClick={() => {
+                    setSqliLevel('low');
+                    setSqliInput("' UNION SELECT user, password FROM users #");
+                  }}
+                  className={`px-3 py-1 rounded-lg font-bold transition-all ${sqliLevel === 'low' ? 'bg-amber-600 text-white' : 'text-slate-400'}`}
+                >
+                  Nivel Low (cu ')
+                </button>
+                <button
+                  onClick={() => {
+                    setSqliLevel('medium');
+                    setSqliInput("1 OR 1=1 UNION SELECT user, password FROM users");
+                  }}
+                  className={`px-3 py-1 rounded-lg font-bold transition-all ${sqliLevel === 'medium' ? 'bg-amber-600 text-white' : 'text-slate-400'}`}
+                >
+                  Nivel Medium (Fără ')
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">
+                {sqliLevel === 'low' ? 'Input Formular GET (?id=...)' : 'Payload Interceptat în Burp Suite Proxy (POST body id=...)'}
+              </label>
+              <input
+                type="text"
+                value={sqliInput}
+                onChange={(e) => setSqliInput(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-white focus:border-amber-500 outline-none"
+              />
+            </div>
+
+            <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 text-xs space-y-2">
+              <div className="font-bold text-slate-300">Explicația Mecanismului de Server (PHP backend):</div>
+              {sqliLevel === 'low' ? (
+                <p className="text-slate-400 font-mono">
+                  $query = "SELECT first_name, last_name FROM users WHERE user_id = <strong className="text-rose-400">'$id'</strong>;"; <br />
+                  💡 Necesită ghilimea simplă (') pentru a ieși din string și comentariul diez (#) pentru a ignora ghilimea de închidere.
+                </p>
+              ) : (
+                <p className="text-slate-400 font-mono">
+                  $query = "SELECT first_name, last_name FROM users WHERE user_id = <strong className="text-amber-400">$id</strong>;"; <br />
+                  🚨 <strong>Capcana Nivelului Mediu:</strong> Nu există ghilimele în jurul lui $id! Dacă pui ghilimea simplă, SQL-ul crapă cu syntax error. Injectarea se face <strong>strict numeric fără ghilimele</strong>!
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Credential Vault */}
+          <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-4 mb-8">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+              <span>🗝️</span>
+              2. Baza de Date DVWA: Credențiale Extrase & Hash-uri MD5 Sparte (Tema Laborator 2 & 6)
+            </h3>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left font-mono text-xs border border-slate-800 rounded-2xl overflow-hidden">
+                <thead className="bg-slate-950 text-slate-400 uppercase text-[10px]">
+                  <tr>
+                    <th className="p-3">User</th>
+                    <th className="p-3">Nume Prenume</th>
+                    <th className="p-3">Hash MD5 Extras</th>
+                    <th className="p-3">Parolă Sparte (Plaintext)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/80 bg-slate-950/40">
+                  {[
+                    { user: 'admin', name: 'admin / admin', hash: '5f4dcc3b5aa765d61d8327deb882cf99', pass: 'password' },
+                    { user: 'gordonb', name: 'Gordon / Brown', hash: 'e99a18c428cb38d5f260853678922e03', pass: 'abc123' },
+                    { user: '1337', name: 'Hack / Me', hash: '8d3533d75ae2c3966d7e0d4fcc69216b', pass: 'charley' },
+                    { user: 'pablo', name: 'Pablo / Picasso', hash: '0d107d09f5bbe40cade3de5c71e9e9b7', pass: 'letmein' },
+                    { user: 'smithy', name: 'Bob / Smith', hash: '5f4dcc3b5aa765d61d8327deb882cf99', pass: 'password' }
+                  ].map((row, idx) => (
+                    <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
+                      <td className="p-3 font-bold text-white">{row.user}</td>
+                      <td className="p-3 text-slate-400">{row.name}</td>
+                      <td className="p-3 text-rose-300 font-mono text-[11px]">{row.hash}</td>
+                      <td className="p-3 font-bold text-emerald-400 bg-emerald-500/10 rounded">{row.pass}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* HTB Console */}
+          <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-4 mb-8">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
+              <span>💻</span>
+              3. Simulator Consola Hack The Box (Laboratorul 3)
+            </h3>
+
+            <div className="bg-black/90 border border-slate-800 rounded-2xl p-4 font-mono text-xs text-slate-300 space-y-2 h-48 overflow-y-auto">
+              {htbLog.map((line, idx) => (
+                <div key={idx} className={line.startsWith('>') ? 'text-amber-400 font-bold' : line.includes('💡') ? 'text-emerald-400' : 'text-slate-300'}>
+                  {line}
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={handleHtbSubmit} className="flex gap-2">
+              <input
+                type="text"
+                value={htbConsoleCmd}
+                onChange={(e) => setHtbConsoleCmd(e.target.value)}
+                placeholder="Tastează: makeInviteCode() sau curl -X POST https://www.hackthebox.eu/api/invite/generate"
+                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 font-mono text-xs text-white focus:border-indigo-500 outline-none"
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white rounded-xl transition-all"
+              >
+                Trimite
+              </button>
+            </form>
+          </div>
+
+          {/* Quick Rules */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="p-5 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-rose-400">Ocolire Filtre XSS pe Nivele:</h4>
+              <ul className="text-xs text-slate-400 space-y-1.5 font-mono">
+                <li>• <strong>Low:</strong> &lt;script&gt;alert(1)&lt;/script&gt;</li>
+                <li>• <strong>Medium:</strong> &lt;scRIpt&gt;alert(1)&lt;/script&gt; sau &lt;scr&lt;script&gt;ipt&gt;</li>
+                <li>• <strong>High:</strong> &lt;img src="x" onError="alert(1)"&gt; sau &lt;svg onload="alert(1)"&gt;</li>
+                <li>• <strong>Impossible:</strong> htmlspecialchars() blochează conversia.</li>
+              </ul>
+            </div>
+
+            <div className="p-5 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400">CSRF & Mecanisme Defensive:</h4>
+              <ul className="text-xs text-slate-400 space-y-1.5 leading-relaxed">
+                <li>• <strong>Atac PoC:</strong> Tag invizibil <code>&lt;img src=".../csrf/?password_new=hacked..."&gt;</code></li>
+                <li>• <strong>Synchronizer Token:</strong> Token pseudo-aleatoriu ascuns per sesiune.</li>
+                <li>• <strong>SameSite Cookie:</strong> <code>SameSite=Strict</code> blochează trimiterea cross-site.</li>
+                <li>• <strong>Confirmare:</strong> Solicitarea re-introducerii parolei vechi.</li>
+              </ul>
+            </div>
+          </div>
+
+          <footer className="mt-12 py-6 border-t border-slate-800 text-center text-xs text-slate-500">
+            &copy; 2026 ExamTrainers • Securitatea Datelor CR4.1 (UCV)
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cifrurile Delastelle (Bifid & Trifid) - Exam Trainers</title>
+  <meta name="description" content="Simulator și rezolvitor interactiv pentru cifrurile Bifid și Trifid: fracționare, blocuri parțiale și decriptare inversă.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code/Math) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-rose': '0 0 25px -5px rgba(244, 63, 94, 0.4)',
+            'glow-indigo': '0 0 25px -5px rgba(99, 102, 241, 0.4)',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.25s ease-out forwards',
+            'slide-up': 'slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(12px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- React 18 & ReactDOM UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <!-- Babel Standalone -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 15%, rgba(244, 63, 94, 0.10) 0%, transparent 40%),
+        radial-gradient(circle at 90% 85%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-rose-500 selection:text-white">
+
+  <div id="root" class="min-h-screen flex flex-col"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    function cleanKeywordBifid(keyword) {
+      const clean = keyword.toUpperCase().replace(/[^A-Z]/g, '').replace(/J/g, 'I');
+      const unique = [];
+      for (const ch of clean) {
+        if (!unique.includes(ch)) unique.push(ch);
+      }
+      const alphabet = "ABCDEFGHIKLMNOPQRSTUVWXYZ"; // 25 litere (fara J)
+      for (const ch of alphabet) {
+        if (!unique.includes(ch)) unique.push(ch);
+      }
+      return unique;
+    }
+
+    function cleanKeywordTrifid(keyword) {
+      const clean = keyword.toUpperCase().replace(/[^A-Z]/g, '');
+      const unique = [];
+      for (const ch of clean) {
+        if (!unique.includes(ch)) unique.push(ch);
+      }
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ."; // 27 caractere
+      for (const ch of alphabet) {
+        if (!unique.includes(ch)) unique.push(ch);
+      }
+      return unique;
+    }
+
+    function bifidEncrypt(text, keyword, period = 5) {
+      const grid = cleanKeywordBifid(keyword);
+      const cleanText = text.toUpperCase().replace(/[^A-Z]/g, '').replace(/J/g, 'I');
+      if (!cleanText) return { blocks: [], ciphertext: "" };
+
+      const blocks = [];
+      let fullCipher = "";
+
+      for (let i = 0; i < cleanText.length; i += period) {
+        const chunk = cleanText.slice(i, i + period);
+        const k = chunk.length;
+        const rows = [];
+        const cols = [];
+
+        for (const ch of chunk) {
+          const idx = grid.indexOf(ch);
+          const r = Math.floor(idx / 5) + 1;
+          const c = (idx % 5) + 1;
+          rows.push(r);
+          cols.push(c);
+        }
+
+        const stream = [...rows, ...cols];
+        const cipherChunk = [];
+        const pairs = [];
+
+        for (let p = 0; p < stream.length; p += 2) {
+          const r = stream[p];
+          const c = stream[p + 1];
+          pairs.push([r, c]);
+          const ch = grid[(r - 1) * 5 + (c - 1)];
+          cipherChunk.push(ch);
+        }
+
+        const cipherStr = cipherChunk.join("");
+        fullCipher += cipherStr + " ";
+
+        blocks.push({
+          chunk,
+          k,
+          isPartial: k < period,
+          rows,
+          cols,
+          stream,
+          pairs,
+          cipherStr
+        });
+      }
+
+      return { blocks, ciphertext: fullCipher.trim() };
+    }
+
+    function bifidDecrypt(cipherText, keyword, period = 5) {
+      const grid = cleanKeywordBifid(keyword);
+      const cleanCipher = cipherText.toUpperCase().replace(/[^A-Z]/g, '').replace(/J/g, 'I');
+      if (!cleanCipher) return { blocks: [], plaintext: "" };
+
+      const blocks = [];
+      let fullPlain = "";
+
+      for (let i = 0; i < cleanCipher.length; i += period) {
+        const chunk = cleanCipher.slice(i, i + period);
+        const k = chunk.length;
+        const stream = [];
+
+        for (const ch of chunk) {
+          const idx = grid.indexOf(ch);
+          const r = Math.floor(idx / 5) + 1;
+          const c = (idx % 5) + 1;
+          stream.push(r, c);
+        }
+
+        const rows = stream.slice(0, k);
+        const cols = stream.slice(k, 2 * k);
+        const plainChunk = [];
+
+        for (let j = 0; j < k; j++) {
+          const r = rows[j];
+          const c = cols[j];
+          const ch = grid[(r - 1) * 5 + (c - 1)];
+          plainChunk.push(ch);
+        }
+
+        const plainStr = plainChunk.join("");
+        fullPlain += plainStr + " ";
+
+        blocks.push({
+          chunk,
+          k,
+          isPartial: k < period,
+          stream,
+          rows,
+          cols,
+          plainStr
+        });
+      }
+
+      return { blocks, plaintext: fullPlain.trim() };
+    }
+
+    function trifidEncrypt(text, keyword, period = 5) {
+      const grid = cleanKeywordTrifid(keyword);
+      const cleanText = text.toUpperCase().replace(/[^A-Z.]/g, '');
+      if (!cleanText) return { blocks: [], ciphertext: "" };
+
+      const blocks = [];
+      let fullCipher = "";
+
+      for (let i = 0; i < cleanText.length; i += period) {
+        const chunk = cleanText.slice(i, i + period);
+        const k = chunk.length;
+        const squares = [];
+        const rows = [];
+        const cols = [];
+
+        for (const ch of chunk) {
+          const idx = grid.indexOf(ch);
+          const s = Math.floor(idx / 9) + 1;
+          const rem = idx % 9;
+          const r = Math.floor(rem / 3) + 1;
+          const c = (rem % 3) + 1;
+          squares.push(s);
+          rows.push(r);
+          cols.push(c);
+        }
+
+        const stream = [...squares, ...rows, ...cols];
+        const cipherChunk = [];
+        const triplets = [];
+
+        for (let p = 0; p < stream.length; p += 3) {
+          const s = stream[p];
+          const r = stream[p + 1];
+          const c = stream[p + 2];
+          triplets.push([s, r, c]);
+          const ch = grid[(s - 1) * 9 + (r - 1) * 3 + (c - 1)];
+          cipherChunk.push(ch);
+        }
+
+        const cipherStr = cipherChunk.join("");
+        fullCipher += cipherStr + " ";
+
+        blocks.push({
+          chunk,
+          k,
+          isPartial: k < period,
+          squares,
+          rows,
+          cols,
+          stream,
+          triplets,
+          cipherStr
+        });
+      }
+
+      return { blocks, ciphertext: fullCipher.trim() };
+    }
+
+    function trifidDecrypt(cipherText, keyword, period = 5) {
+      const grid = cleanKeywordTrifid(keyword);
+      const cleanCipher = cipherText.toUpperCase().replace(/[^A-Z.]/g, '');
+      if (!cleanCipher) return { blocks: [], plaintext: "" };
+
+      const blocks = [];
+      let fullPlain = "";
+
+      for (let i = 0; i < cleanCipher.length; i += period) {
+        const chunk = cleanCipher.slice(i, i + period);
+        const k = chunk.length;
+        const stream = [];
+
+        for (const ch of chunk) {
+          const idx = grid.indexOf(ch);
+          const s = Math.floor(idx / 9) + 1;
+          const rem = idx % 9;
+          const r = Math.floor(rem / 3) + 1;
+          const c = (rem % 3) + 1;
+          stream.push(s, r, c);
+        }
+
+        const squares = stream.slice(0, k);
+        const rows = stream.slice(k, 2 * k);
+        const cols = stream.slice(2 * k, 3 * k);
+        const plainChunk = [];
+
+        for (let j = 0; j < k; j++) {
+          const s = squares[j];
+          const r = rows[j];
+          const c = cols[j];
+          const ch = grid[(s - 1) * 9 + (r - 1) * 3 + (c - 1)];
+          plainChunk.push(ch);
+        }
+
+        const plainStr = plainChunk.join("");
+        fullPlain += plainStr + " ";
+
+        blocks.push({
+          chunk,
+          k,
+          isPartial: k < period,
+          stream,
+          squares,
+          rows,
+          cols,
+          plainStr
+        });
+      }
+
+      return { blocks, plaintext: fullPlain.trim() };
+    }
+
+    function App() {
+      const [cipherType, setCipherType] = useState('bifid');
+      const [mode, setMode] = useState('encrypt');
+      const [keyword, setKeyword] = useState('FELIXDELASTELLE');
+      const [period, setPeriod] = useState(5);
+      const [inputText, setInputText] = useState('ANA ARE MERE SI GUTUI');
+
+      const bifidGrid = useMemo(() => cleanKeywordBifid(keyword), [keyword]);
+      const trifidGrid = useMemo(() => cleanKeywordTrifid(keyword), [keyword]);
+
+      const bifidEnc = useMemo(() => bifidEncrypt(inputText, keyword, period), [inputText, keyword, period]);
+      const bifidDec = useMemo(() => bifidDecrypt(inputText, keyword, period), [inputText, keyword, period]);
+
+      const trifidEnc = useMemo(() => trifidEncrypt(inputText, keyword, period), [inputText, keyword, period]);
+      const trifidDec = useMemo(() => trifidDecrypt(inputText, keyword, period), [inputText, keyword, period]);
+
+      return (
+        <div className="flex-1 flex flex-col justify-between max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8 animate-fade-in">
+          
+          {/* Header */}
+          <header className="mb-8 pb-6 border-b border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <nav className="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+                <a href="../../../index.html" className="hover:text-white transition-colors">ExamTrainers</a>
+                <span className="text-slate-600">/</span>
+                <a href="../index.html" className="hover:text-white transition-colors">Securitatea Datelor</a>
+                <span className="text-slate-600">/</span>
+                <span className="text-rose-400 font-bold bg-rose-500/10 px-2.5 py-0.5 rounded border border-rose-500/20 font-mono">
+                  Delastelle (Bifid & Trifid)
+                </span>
+              </nav>
+
+              <div className="flex items-center gap-3">
+                <a href="theory.html" className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-rose-500/40 text-xs font-bold text-slate-300 transition-all">
+                  <span>📖</span>
+                  <span>Citește Teoria</span>
+                </a>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-md border border-rose-500/20">
+                  Capitolul 1 • Cifruri Fracționate
+                </span>
+                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white mt-2">
+                  Simulatorul Delastelle: Bifid & Trifid
+                </h1>
+                <p className="text-sm text-slate-400 mt-1 max-w-2xl font-medium">
+                  Criptează și decriptează pas cu pas. Învață tratarea corectă a blocurilor parțiale și reconstituirea coordonatelor pe verticală.
+                </p>
+              </div>
+            </div>
+          </header>
+
+          {/* Controls Bar */}
+          <div className="grid gap-4 md:grid-cols-4 p-5 bg-slate-900/70 border border-slate-800 rounded-3xl backdrop-blur-xl mb-8">
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Algoritm</label>
+              <div className="grid grid-cols-2 gap-1 p-1 bg-slate-950 rounded-xl border border-slate-800">
+                <button
+                  onClick={() => setCipherType('bifid')}
+                  className={`py-1.5 text-xs font-bold rounded-lg transition-all ${cipherType === 'bifid' ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                >
+                  Bifid (5x5)
+                </button>
+                <button
+                  onClick={() => setCipherType('trifid')}
+                  className={`py-1.5 text-xs font-bold rounded-lg transition-all ${cipherType === 'trifid' ? 'bg-rose-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                >
+                  Trifid (3x3x3)
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Operație</label>
+              <div className="grid grid-cols-2 gap-1 p-1 bg-slate-950 rounded-xl border border-slate-800">
+                <button
+                  onClick={() => setMode('encrypt')}
+                  className={`py-1.5 text-xs font-bold rounded-lg transition-all ${mode === 'encrypt' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                >
+                  Criptare 🔒
+                </button>
+                <button
+                  onClick={() => setMode('decrypt')}
+                  className={`py-1.5 text-xs font-bold rounded-lg transition-all ${mode === 'decrypt' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                >
+                  Decriptare 🔓
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Cuvânt Cheie</label>
+              <input
+                type="text"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white uppercase focus:border-rose-500 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Perioadă (p)</label>
+              <input
+                type="number"
+                min="2"
+                max="10"
+                value={period}
+                onChange={(e) => setPeriod(parseInt(e.target.value) || 5)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:border-rose-500 outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Quick Presets */}
+          <div className="flex flex-wrap items-center gap-2 text-xs mb-8">
+            <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px]">Exemple Oficiale de Curs:</span>
+            <button
+              onClick={() => {
+                setKeyword('FELIXDELASTELLE');
+                setPeriod(5);
+                setInputText('ANA ARE MERE SI GUTUI');
+                setMode('encrypt');
+              }}
+              className="bg-slate-900 border border-slate-800 hover:border-rose-500/50 px-3 py-1 rounded-lg text-slate-300 font-mono transition-all"
+            >
+              "ANA ARE MERE SI GUTUI" (Exemplul Cursului)
+            </button>
+            <button
+              onClick={() => {
+                setKeyword('FELIXDELASTELLE');
+                setPeriod(5);
+                if (cipherType === 'bifid') setInputText('TAOEB LJEVV DMSOJ UJ');
+                else setInputText('IT.EL IPPIN ERCUR QB');
+                setMode('decrypt');
+              }}
+              className="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 px-3 py-1 rounded-lg text-emerald-400 font-mono transition-all"
+            >
+              Reconstituie Criptotextul Oficial (Decriptare Inversă)
+            </button>
+          </div>
+
+          {/* Main Grid */}
+          <div className="grid gap-6 lg:grid-cols-3">
+            
+            {/* Matrix View */}
+            <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-rose-400">
+                  {cipherType === 'bifid' ? 'Pătratul Polybius (5x5)' : 'Cubul Trifid (3x3x3)'}
+                </h3>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+                  {cipherType === 'bifid' ? '25 Celule (I=J)' : '27 Celule'}
+                </span>
+              </div>
+
+              {cipherType === 'bifid' ? (
+                <div className="grid grid-cols-6 gap-1 text-center font-mono text-xs">
+                  <div className="p-2 text-slate-600 font-bold"></div>
+                  {[1, 2, 3, 4, 5].map(c => <div key={c} className="p-2 text-rose-400 font-bold bg-slate-950/60 rounded">{c}</div>)}
+                  {[1, 2, 3, 4, 5].map(r => (
+                    <React.Fragment key={r}>
+                      <div className="p-2 text-rose-400 font-bold bg-slate-950/60 rounded">{r}</div>
+                      {[1, 2, 3, 4, 5].map(c => {
+                        const ch = bifidGrid[(r - 1) * 5 + (c - 1)];
+                        return (
+                          <div key={c} className="p-2 bg-slate-950 border border-slate-800/80 rounded font-bold text-white">
+                            {ch === 'I' ? 'I/J' : ch}
+                          </div>
+                        );
+                      })}
+                    </React.Fragment>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {[1, 2, 3].map(s => (
+                    <div key={s} className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-2xl">
+                      <div className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider mb-2 text-center">Pătratul {s}</div>
+                      <div className="grid grid-cols-4 gap-1 text-center font-mono text-xs">
+                        <div></div>
+                        {[1, 2, 3].map(c => <div key={c} className="text-slate-500 font-bold">{c}</div>)}
+                        {[1, 2, 3].map(r => (
+                          <React.Fragment key={r}>
+                            <div className="text-slate-500 font-bold">{r}</div>
+                            {[1, 2, 3].map(c => {
+                              const ch = trifidGrid[(s - 1) * 9 + (r - 1) * 3 + (c - 1)];
+                              return (
+                                <div key={c} className="p-1.5 bg-slate-900 border border-slate-800 rounded font-bold text-white">
+                                  {ch}
+                                </div>
+                              );
+                            })}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Calculations View */}
+            <div className="lg:col-span-2 space-y-6">
+              
+              <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  {mode === 'encrypt' ? 'Text în Clar (Plaintext)' : 'Text Criptat (Ciphertext)'}
+                </label>
+                <textarea
+                  rows="2"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 font-mono text-sm font-bold text-white focus:border-rose-500 outline-none uppercase"
+                />
+
+                <div className="mt-4 flex items-center justify-between p-4 bg-slate-950/80 border border-slate-800 rounded-2xl">
+                  <div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      {mode === 'encrypt' ? 'Rezultat Criptotext Final' : 'Rezultat Text Clar Reconstituit'}
+                    </div>
+                    <div className="text-lg font-mono font-black text-rose-400 mt-0.5">
+                      {cipherType === 'bifid' 
+                        ? (mode === 'encrypt' ? bifidEnc.ciphertext : bifidDec.plaintext)
+                        : (mode === 'encrypt' ? trifidEnc.ciphertext : trifidDec.plaintext)}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const text = cipherType === 'bifid' 
+                        ? (mode === 'encrypt' ? bifidEnc.ciphertext : bifidDec.plaintext)
+                        : (mode === 'encrypt' ? trifidEnc.ciphertext : trifidDec.plaintext);
+                      navigator.clipboard.writeText(text);
+                    }}
+                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 rounded-xl transition-all"
+                  >
+                    Copiază
+                  </button>
+                </div>
+              </div>
+
+              {/* Step-by-step blocks */}
+              <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+                  Descompunerea Matematică pe Blocuri
+                </h3>
+
+                {cipherType === 'bifid' && mode === 'encrypt' && (
+                  <div className="space-y-4 font-mono text-xs">
+                    {bifidEnc.blocks.map((b, idx) => (
+                      <div key={idx} className={`p-4 rounded-2xl border ${b.isPartial ? 'bg-amber-950/20 border-amber-500/40' : 'bg-slate-950 border-slate-800'}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-bold text-slate-400">Blocul {idx + 1}: <strong className="text-white text-sm">{b.chunk}</strong> (k = {b.k})</span>
+                          {b.isPartial && (
+                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                              🚨 Capcană: Bloc Parțial (k &lt; p)
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-300">
+                          <div className="space-y-1">
+                            <div>Linie: <span className="text-indigo-400 font-bold">{b.rows.join(' ')}</span></div>
+                            <div>Coloană: <span className="text-indigo-400 font-bold">{b.cols.join(' ')}</span></div>
+                            <div>Șir concatenat (2k={b.k*2} cifre): <span className="text-emerald-400 font-bold">{b.stream.join(' ')}</span></div>
+                          </div>
+                          <div className="space-y-1">
+                            <div>Perechi (L, C): <span className="text-rose-400 font-bold">{b.pairs.map(p => `(${p[0]},${p[1]})`).join(' ')}</span></div>
+                            <div>Criptotext bloc: <span className="text-white text-sm font-black bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/30">{b.cipherStr}</span></div>
+                          </div>
+                        </div>
+
+                        {b.isPartial && (
+                          <div className="mt-3 p-3 bg-amber-950/40 rounded-xl text-slate-300 text-[11px] leading-relaxed">
+                            💡 <strong>Secret Examen:</strong> Pentru blocul parțial <code>UI</code> (k=2), coordonatele sunt Linia <code>5 1</code> și Coloana <code>1 4</code>. Șirul are 2k = 4 cifre: <code>5 1 1 4</code>. Formăm 2 perechi: (5, 1) -&gt; <strong>U</strong> și (1, 4) -&gt; <strong>J</strong> =&gt; <strong>UJ</strong>!
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {cipherType === 'trifid' && mode === 'encrypt' && (
+                  <div className="space-y-4 font-mono text-xs">
+                    {trifidEnc.blocks.map((b, idx) => (
+                      <div key={idx} className={`p-4 rounded-2xl border ${b.isPartial ? 'bg-amber-950/20 border-amber-500/40' : 'bg-slate-950 border-slate-800'}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-bold text-slate-400">Blocul {idx + 1}: <strong className="text-white text-sm">{b.chunk}</strong> (k = {b.k})</span>
+                          {b.isPartial && (
+                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                              🚨 Capcană: Bloc Parțial Trifid
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-slate-300">
+                          <div className="space-y-1">
+                            <div>Pătrat (P): <span className="text-indigo-400 font-bold">{b.squares.join(' ')}</span></div>
+                            <div>Linie (L): <span className="text-indigo-400 font-bold">{b.rows.join(' ')}</span></div>
+                            <div>Coloană (C): <span className="text-indigo-400 font-bold">{b.cols.join(' ')}</span></div>
+                            <div>Șir (3k={b.k*3} cifre): <span className="text-emerald-400 font-bold">{b.stream.join(' ')}</span></div>
+                          </div>
+                          <div className="space-y-1">
+                            <div>Triplete (P, L, C): <span className="text-rose-400 font-bold">{b.triplets.map(t => `(${t[0]},${t[1]},${t[2]})`).join(' ')}</span></div>
+                            <div>Criptotext bloc: <span className="text-white text-sm font-black bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/30">{b.cipherStr}</span></div>
+                          </div>
+                        </div>
+
+                        {b.isPartial && (
+                          <div className="mt-3 p-3 bg-amber-950/40 rounded-xl text-slate-300 text-[11px] leading-relaxed">
+                            💡 <strong>Demonstrația Oficială Trifid pentru UI (k=2):</strong> Coordonate P: <code>3 1</code>, L: <code>2 2</code>, C: <code>1 1</code>. Șirul concatenat de 6 cifre este <code>3 1 2 2 1 1</code>. Grupăm în 2 triplete: (3, 1, 2) -&gt; <strong>Q</strong> și (2, 1, 1) -&gt; <strong>B</strong> =&gt; <strong>QB</strong>!
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {mode === 'decrypt' && (
+                  <div className="p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-2xl font-mono text-xs space-y-2 text-slate-300">
+                    <div className="font-bold text-emerald-400">Procedura de Decriptare Inversă:</div>
+                    <p>1. Se extrag coordonatele literelor din cifru într-un flux liniar continuu.</p>
+                    <p>2. Se împarte fluxul fiecărui bloc în {cipherType === 'bifid' ? '2 jumătăți egale (Linii, Coloane)' : '3 treimi egale (Pătrat, Linie, Coloană)'}.</p>
+                    <p>3. Se citesc coordonatele originale pe verticală pentru a regenera textul în clar!</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <footer className="mt-12 py-6 border-t border-slate-800 text-center text-xs text-slate-500">
+            &copy; 2026 ExamTrainers • Securitatea Datelor CR4.1 (UCV)
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

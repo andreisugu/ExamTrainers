@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teorie: Criptografie Asimetrică & Schimb de Chei - Exam Trainers</title>
+  <meta name="description" content="Ghid teoretic: Algoritmul RSA, calculul lui d prin algoritmul lui Euclid extins, atacul Wiener, Diffie-Hellman MitM și moduri de operare bloc (ECB vs CBC).">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code/Math) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.06) 0%, transparent 45%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-emerald-500 selection:text-white">
+
+  <main class="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-8 sm:px-6 lg:px-8 justify-between">
+    
+    <!-- Top Nav -->
+    <header class="mb-10 pb-6 border-b border-slate-800 flex items-center justify-between">
+      <nav class="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+        <a href="../../../index.html" class="hover:text-white transition-colors">ExamTrainers</a>
+        <span class="text-slate-600">/</span>
+        <a href="../index.html" class="hover:text-white transition-colors">Securitatea Datelor</a>
+        <span class="text-slate-600">/</span>
+        <a href="index.html" class="hover:text-white transition-colors">RSA & Diffie-Hellman</a>
+        <span class="text-slate-600">/</span>
+        <span class="text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20 font-mono">Teorie</span>
+      </nav>
+
+      <a href="index.html" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition-all shadow-md shadow-emerald-600/20">
+        <span>🎮</span>
+        <span>Deschide Workbench</span>
+      </a>
+    </header>
+
+    <article class="space-y-10">
+      <div>
+        <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+          Cursul Prof. Marius Marian • Criptografie Asimetrică
+        </span>
+        <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-white mt-3">
+          RSA, Diffie-Hellman & Moduri de Operare Bloc
+        </h1>
+        <p class="text-base text-slate-400 mt-2 leading-relaxed">
+          Fundamentele matematice ale criptării cu cheie publică, problema logaritmului discret, vulnerabilitatea MitM și de ce modul ECB este interzis.
+        </p>
+      </div>
+
+      <!-- RSA Section -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono text-sm border border-emerald-500/30">1</span>
+          Algoritmul RSA (Rivest-Shamir-Adleman)
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Securitatea RSA se bazează pe dificultatea factorizării numerelor compuse mari rezultate din produsul a două numere prime <em>n</em> = <em>p</em> &times; <em>q</em>.
+          </p>
+
+          <ol class="list-decimal pl-5 space-y-2 font-mono text-xs">
+            <li>Se aleg două numere prime mari <em>p</em> și <em>q</em> (<em>p</em> &ne; <em>q</em>).</li>
+            <li>Se calculează modulul public: <em>n</em> = <em>p</em> &times; <em>q</em>.</li>
+            <li>Se calculează funcția totient (Euler): &phi;(<em>n</em>) = (<em>p</em> - 1)(<em>q</em> - 1).</li>
+            <li>Se alege exponentul public <em>e</em> astfel încât 1 &lt; <em>e</em> &lt; &phi;(<em>n</em>) și cmmdc(<em>e</em>, &phi;(<em>n</em>)) = 1.</li>
+            <li>Se determină exponentul secret <em>d</em> ca inversul modular al lui <em>e</em> modulo &phi;(<em>n</em>):
+              <br /><strong class="text-emerald-400">d &middot; e &equiv; 1 mod &phi;(n)</strong> (folosind Algoritmul Extins al lui Euclid).
+            </li>
+            <li>Criptare: <em>C</em> = <em>M</em><sup><em>e</em></sup> mod <em>n</em> (unde 0 &le; <em>M</em> &lt; <em>n</em>).</li>
+            <li>Decriptare: <em>M</em> = <em>C</em><sup><em>d</em></sup> mod <em>n</em>.</li>
+          </ol>
+
+          <div class="p-4 bg-rose-950/20 border border-rose-500/30 rounded-2xl text-xs space-y-1 text-slate-300">
+            <strong class="text-rose-400">🚨 Capcana Numărul 1 la Examen:</strong>
+            <p>
+              Exponentul secret <em>d</em> se calculează <strong>strict modulo &phi;(n)</strong>, NICIODATĂ modulo <em>n</em>! <br />
+              Dacă în algoritmul lui Euclid coeficientul Bezout <em>t</em> este negativ, se adună &phi;(<em>n</em>): <code>d = t + &phi;(n)</code>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diffie-Hellman -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-mono text-sm border border-indigo-500/30">2</span>
+          Protocolul Diffie-Hellman & Atacul Man-in-the-Middle (Mallory)
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Permite stabilirea unei chei secrete partajate peste un canal public nesigur:
+          </p>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs space-y-2">
+            <div>1. Parametri publici: un număr prim mare <em>p</em> și un generator <em>g</em>.</div>
+            <div>2. Alice alege secretul <em>a</em> și trimite <em>A</em> = <em>g</em><sup><em>a</em></sup> mod <em>p</em>.</div>
+            <div>3. Bob alege secretul <em>b</em> și trimite <em>B</em> = <em>g</em><sup><em>b</em></sup> mod <em>p</em>.</div>
+            <div>4. Cheia comună calculată: <em>K</em> = <em>B</em><sup><em>a</em></sup> mod <em>p</em> = <em>A</em><sup><em>b</em></sup> mod <em>p</em> = <em>g</em><sup><em>ab</em></sup> mod <em>p</em>.</div>
+          </div>
+
+          <div class="p-4 bg-amber-950/20 border border-amber-500/30 rounded-2xl text-xs space-y-2 text-slate-300">
+            <strong class="text-amber-400">De ce este vulnerabil la MitM?</strong>
+            <p>
+              Diffie-Hellman nu oferă autenticitate. Un atacator Mallory se interpune între Alice și Bob: interceptează valorile <em>A</em> și <em>B</em>, transmite în loc propriile valori <em>g</em><sup><em>m</em><sub>1</sub></sup> și <em>g</em><sup><em>m</em><sub>2</sub></sup>, negociind două chei paralele (<em>K<sub>AM</sub></em> și <em>K<sub>MB</sub></em>). Mallory decriptează și re-criptează fiecare pachet fără ca părțile să bănuiască nimic. <br />
+              <strong>Soluție de examen:</strong> Utilizarea certificatelor digitale și semnăturilor electronice (ex: TLS cu ECDHE și semnături RSA/ECDSA).
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Block Modes -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-4">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-mono text-sm border border-amber-500/30">3</span>
+          Moduri de Operare Cifruri Bloc (ECB vs. CBC & CTR)
+        </h2>
+
+        <p class="text-sm text-slate-300 leading-relaxed">
+          În modul <strong>ECB (Electronic Codebook)</strong>, fiecare bloc este cifrat separat cu aceeași cheie. Dacă două blocuri din textul clar sunt identice, blocurile cifrate vor fi de asemenea identice. Acest lucru dezvăluie complet structura datelor (faimosul exemplu cu silueta pinguinului Tux).
+        </p>
+
+        <ul class="list-disc pl-5 text-xs text-slate-400 space-y-1">
+          <li><strong>CBC (Cipher Block Chaining):</strong> Fiecare bloc este xorat cu blocul cifrat anterior înainte de criptare. Primul bloc necesită un <em>Vector de Inițializare (IV)</em> aleatoriu și imprevizibil.</li>
+          <li><strong>CTR (Counter Mode) / GCM (Galois/Counter Mode):</strong> Transformă cifrul bloc într-un cifru pe flux (stream cipher), asigurând confidențialitate și integritate (Authenticated Encryption).</li>
+        </ul>
+      </section>
+
+    </article>
+
+    <footer class="mt-16 py-6 border-t border-slate-800 text-center text-xs text-slate-500 font-medium">
+      &copy; 2026 ExamTrainers • Securitatea Datelor CR4.1 (UCV)
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Criptanaliză: Caesar & Vigenère - Exam Trainers</title>
+  <meta name="description" content="Laborator interactiv de criptanaliză: analiză frecvențială, decodor Caesar cu slider, Vigenère studio și Indicele de Coincidență.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code/Math) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-indigo': '0 0 25px -5px rgba(99, 102, 241, 0.4)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- React 18 & ReactDOM UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <!-- Babel Standalone -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 15%, rgba(99, 102, 241, 0.10) 0%, transparent 40%),
+        radial-gradient(circle at 90% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 45%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+
+  <div id="root" class="min-h-screen flex flex-col"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    const ENGLISH_FREQS = {
+      'E': 12.70, 'T': 9.06, 'A': 8.17, 'O': 7.51, 'I': 6.97, 'N': 6.75,
+      'S': 6.33, 'H': 6.09, 'R': 5.99, 'D': 4.25, 'L': 4.03, 'C': 2.78,
+      'U': 2.76, 'M': 2.41, 'W': 2.36, 'F': 2.23, 'G': 2.02, 'Y': 1.97,
+      'P': 1.93, 'B': 1.29, 'V': 0.98, 'K': 0.77, 'X': 0.15, 'J': 0.15,
+      'Q': 0.10, 'Z': 0.07
+    };
+
+    function calculateFreqs(text) {
+      const counts = {};
+      let total = 0;
+      for (const ch of text.toUpperCase()) {
+        if (ch >= 'A' && ch <= 'Z') {
+          counts[ch] = (counts[ch] || 0) + 1;
+          total++;
+        }
+      }
+      const freqs = {};
+      for (let code = 65; code <= 90; code++) {
+        const ch = String.fromCharCode(code);
+        freqs[ch] = total > 0 ? ((counts[ch] || 0) / total) * 100 : 0;
+      }
+      return { counts, freqs, total };
+    }
+
+    function calculateIC(text) {
+      const { counts, total } = calculateFreqs(text);
+      if (total <= 1) return 0;
+      let sum = 0;
+      for (const ch in counts) {
+        sum += counts[ch] * (counts[ch] - 1);
+      }
+      return sum / (total * (total - 1));
+    }
+
+    function App() {
+      const [caesarInput, setCaesarInput] = useState("NOE R MGDJS EiKSS UUTOE KIXEK BT SEDDU HQSX UHXQBJH LUBJXUMEHDF MFQJX QIE VassUF J UT SU");
+      const [shift, setShift] = useState(10);
+      const [vigenereText, setVigenereText] = useState("PEOPLE OF MEDIOCRE ABILITY SOMETIMES ACHIEVE OUTSTANDING SUCCESS");
+      const [vigenereKey, setVigenereKey] = useState("DINTWOFNTHTITTF");
+
+      const caesarDecrypted = useMemo(() => {
+        return caesarInput.toUpperCase().split('').map(ch => {
+          if (ch >= 'A' && ch <= 'Z') {
+            const code = ch.charCodeAt(0) - 65;
+            const dec = ((code - shift) % 26 + 26) % 26;
+            return String.fromCharCode(dec + 65);
+          }
+          return ch;
+        }).join('');
+      }, [caesarInput, shift]);
+
+      const freqData = useMemo(() => calculateFreqs(caesarInput), [caesarInput]);
+      const icValue = useMemo(() => calculateIC(caesarInput), [caesarInput]);
+
+      const vigenereResult = useMemo(() => {
+        const cleanKey = vigenereKey.toUpperCase().replace(/[^A-Z]/g, '');
+        if (!cleanKey) return "";
+        let kIdx = 0;
+        return vigenereText.toUpperCase().split('').map(ch => {
+          if (ch >= 'A' && ch <= 'Z') {
+            const cCode = ch.charCodeAt(0) - 65;
+            const kCode = cleanKey[kIdx % cleanKey.length].charCodeAt(0) - 65;
+            kIdx++;
+            const res = (cCode + kCode) % 26;
+            return String.fromCharCode(res + 65);
+          }
+          return ch;
+        }).join('');
+      }, [vigenereText, vigenereKey]);
+
+      return (
+        <div className="flex-1 flex flex-col justify-between max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          
+          {/* Header */}
+          <header className="mb-8 pb-6 border-b border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <nav className="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+                <a href="../../../index.html" className="hover:text-white transition-colors">ExamTrainers</a>
+                <span className="text-slate-600">/</span>
+                <a href="../index.html" className="hover:text-white transition-colors">Securitatea Datelor</a>
+                <span className="text-slate-600">/</span>
+                <span className="text-indigo-400 font-bold bg-indigo-500/10 px-2.5 py-0.5 rounded border border-indigo-500/20 font-mono">
+                  Caesar & Vigenère
+                </span>
+              </nav>
+
+              <a href="theory.html" className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-indigo-500/40 text-xs font-bold text-slate-300 transition-all">
+                <span>📖</span>
+                <span>Citește Teoria</span>
+              </a>
+            </div>
+
+            <div className="mt-6">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-md border border-indigo-500/20">
+                Capitolul 2 • Criptanaliză Clasică
+              </span>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white mt-2">
+                Laborator Criptanaliză: Caesar, ROT13 & Vigenère
+              </h1>
+              <p className="text-sm text-slate-400 mt-1 max-w-2xl font-medium">
+                Spargerea cifrurilor monoalfabetice prin histogramă de frecvență și analiza indicelui de coincidență (I<sub>c</sub>).
+              </p>
+            </div>
+          </header>
+
+          {/* Quick Presets */}
+          <div className="p-5 bg-slate-900/70 border border-slate-800 rounded-3xl backdrop-blur-xl mb-8">
+            <div className="text-xs font-bold uppercase tracking-wider text-indigo-400 mb-3 flex items-center gap-2">
+              <span>🎯</span> Încarcă Teme Oficiale din Arhivă (Mirică Simona & Foaia de Curs):
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <button
+                onClick={() => {
+                  setCaesarInput("NOE R MGDJS EiKSS UUTOE KIXEK BT SEDDU HQSX UHXQBJH LUBJXUMEHDF MFQJX QIE VassUF J UT SU");
+                  setShift(10);
+                }}
+                className="text-left p-3 rounded-2xl bg-slate-950 border border-slate-800 hover:border-indigo-500/50 transition-all"
+              >
+                <div className="text-xs font-bold text-white">Tema #A: Frecvențe</div>
+                <div className="text-[10px] text-slate-400 font-mono mt-1">U -&gt; E (shift +10) • Rockefeller</div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setCaesarInput("NJo DN26R oXíNE FBcts BoNC Y26RoXiNEk BoN YX O");
+                  setShift(16);
+                }}
+                className="text-left p-3 rounded-2xl bg-slate-950 border border-slate-800 hover:border-indigo-500/50 transition-all"
+              >
+                <div className="text-xs font-bold text-white">Tema #2: Detectare Caesar</div>
+                <div className="text-[10px] text-slate-400 font-mono mt-1">O -&gt; E (shift -10 / +16) • Don't Stop</div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setCaesarInput("QBAGF Gheiu PALBH NEPGVERQFG BCJUR ALBHN ERGAR");
+                  setShift(13);
+                }}
+                className="text-left p-3 rounded-2xl bg-slate-950 border border-slate-800 hover:border-indigo-500/50 transition-all"
+              >
+                <div className="text-xs font-bold text-white">Tema #F: ROT13</div>
+                <div className="text-[10px] text-slate-400 font-mono mt-1">R -&gt; E (shift +13) • Don't Stop</div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setCaesarInput("LM NMI BQA VW B BP ME WZA B W N N IQT C Z M A VW B B W P I DM B ZQ ML QA B PM B ZC M N IQT C Z M");
+                  setShift(8);
+                  setVigenereKey("DINTWOFNTHTITTF");
+                }}
+                className="text-left p-3 rounded-2xl bg-slate-950 border border-slate-800 hover:border-indigo-500/50 transition-all"
+              >
+                <div className="text-xs font-bold text-white">Problema de Curs: 2 înlănțuite</div>
+                <div className="text-[10px] text-slate-400 font-mono mt-1">Caesar shift 8 -&gt; Cheie DINTWOFNTHTITTF</div>
+              </button>
+            </div>
+          </div>
+
+          {/* Main Grid */}
+          <div className="grid gap-6 lg:grid-cols-2 mb-8">
+            
+            {/* Left: Caesar Slider */}
+            <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-400">1. Analizator & Slider Caesar</h3>
+                <span className="text-xs font-mono font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2.5 py-1 rounded-lg">
+                  Deplasament k = {shift}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Criptotext</label>
+                <textarea
+                  rows="3"
+                  value={caesarInput}
+                  onChange={(e) => setCaesarInput(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3 font-mono text-xs text-white focus:border-indigo-500 outline-none uppercase"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between text-xs font-bold text-slate-300 mb-2">
+                  <span>Ajustare Deplasament (0 - 25):</span>
+                  <span className="font-mono text-indigo-400 font-bold">Shift: {shift}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="25"
+                  value={shift}
+                  onChange={(e) => setShift(parseInt(e.target.value))}
+                  className="w-full h-2 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                />
+              </div>
+
+              <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800">
+                <div className="text-[10px] font-bold uppercase text-slate-500 mb-1">Text Decriptat cu k = {shift}</div>
+                <div className="text-sm font-mono font-bold text-emerald-400 break-words">
+                  {caesarDecrypted}
+                </div>
+              </div>
+
+              <div className="p-4 bg-slate-950/80 rounded-2xl border border-slate-800/80 flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-bold text-white">Indicele de Coincidență (Ic)</div>
+                  <div className="text-[11px] text-slate-400">Monoalfabetic ~0.067 • Polialfabetic ~0.038</div>
+                </div>
+                <div className="text-right font-mono">
+                  <div className="text-base font-black text-indigo-400">{icValue.toFixed(4)}</div>
+                  <div className="text-[10px] font-bold text-slate-400">
+                    {icValue > 0.055 ? 'Probabil Monoalfabetic (Caesar)' : 'Probabil Polialfabetic (Vigenère)'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Frequency Histogram */}
+            <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-400">2. Histograma Frecvențelor</h3>
+                <span className="text-[10px] text-slate-400">Comparat cu engleza standard (E ~12.7%)</span>
+              </div>
+
+              <div className="h-64 flex items-end gap-1 p-3 bg-slate-950 rounded-2xl border border-slate-800 overflow-x-auto">
+                {Object.keys(ENGLISH_FREQS).sort().map(ch => {
+                  const actual = freqData.freqs[ch] || 0;
+                  const standard = ENGLISH_FREQS[ch];
+                  const heightActual = Math.min(100, actual * 6);
+                  const heightStd = Math.min(100, standard * 6);
+
+                  return (
+                    <div key={ch} className="flex-1 min-w-[14px] flex flex-col items-center gap-1">
+                      <div className="w-full flex items-end gap-0.5 h-44">
+                        <div
+                          style={{ height: `${heightActual}%` }}
+                          className="w-1/2 bg-indigo-500 rounded-t"
+                          title={`${ch} (Text): ${actual.toFixed(1)}%`}
+                        ></div>
+                        <div
+                          style={{ height: `${heightStd}%` }}
+                          className="w-1/2 bg-slate-700/60 rounded-t"
+                          title={`${ch} (Standard): ${standard}%`}
+                        ></div>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold text-slate-400">{ch}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-center gap-6 text-xs font-semibold text-slate-400">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded bg-indigo-500"></span>
+                  <span>Frecvență Text Curent</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded bg-slate-700"></span>
+                  <span>Frecvență Standard Engleză</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Vigenère Studio */}
+          <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
+              <span>🗝️</span>
+              3. Vigenère Studio (Substituție Polialfabetică cu Cheie)
+            </h3>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="md:col-span-2">
+                <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Text</label>
+                <input
+                  type="text"
+                  value={vigenereText}
+                  onChange={(e) => setVigenereText(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white uppercase focus:border-amber-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Cheie Vigenère</label>
+                <input
+                  type="text"
+                  value={vigenereKey}
+                  onChange={(e) => setVigenereKey(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-amber-400 uppercase focus:border-amber-500 outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800">
+              <div className="text-[10px] font-bold uppercase text-slate-500 mb-1">Rezultat Criptat Vigenère:</div>
+              <div className="text-sm font-mono font-bold text-amber-400 break-words">
+                {vigenereResult}
+              </div>
+            </div>
+          </div>
+
+          <footer className="mt-12 py-6 border-t border-slate-800 text-center text-xs text-slate-500">
+            &copy; 2026 ExamTrainers • Securitatea Datelor CR4.1 (UCV)
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

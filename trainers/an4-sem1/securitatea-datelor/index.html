@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Securitatea Datelor - Exam Trainers (UCV CR4.1)</title>
+  <meta name="description" content="Dashboard pentru pregătirea examenului la disciplina Securitatea Datelor (SD): Cifruri Delastelle, Criptanaliză Clasică, RSA, Diffie-Hellman, DVWA și Hack The Box.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code/Math) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-rose': '0 0 25px -5px rgba(244, 63, 94, 0.4)',
+            'glow-indigo': '0 0 25px -5px rgba(99, 102, 241, 0.4)',
+            'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.4)',
+            'glow-amber': '0 0 25px -5px rgba(245, 158, 11, 0.4)',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-out forwards',
+            'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'pulse-slow': 'pulseSlow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(14px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            pulseSlow: {
+              '0%, 100%': { opacity: '0.4' },
+              '50%': { opacity: '0.8' },
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(244, 63, 94, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 50%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-rose-500 selection:text-white">
+
+  <!-- Main Container -->
+  <main class="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-8 sm:px-6 lg:px-8 justify-between animate-fade-in">
+    
+    <!-- Top Nav / Breadcrumbs -->
+    <header class="flex items-center justify-between mb-10">
+      <nav class="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+        <a href="../../index.html" class="flex items-center hover:text-white transition-colors duration-150 py-1 px-2 rounded-md hover:bg-white/5">
+          <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+          </svg>
+          ExamTrainers
+        </a>
+        <span class="text-slate-600 font-semibold">/</span>
+        <span class="text-slate-500 cursor-default px-1">AN4-Sem1</span>
+        <span class="text-slate-600 font-semibold">/</span>
+        <span class="text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 font-mono">Securitatea Datelor</span>
+      </nav>
+
+      <div class="hidden sm:flex items-center space-x-2 text-xs text-slate-400 bg-slate-900/60 border border-slate-800 rounded-full px-3 py-1.5 backdrop-blur-md">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="font-semibold uppercase tracking-wider font-mono">Curs & Laborator: Prof. Marius Marian</span>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="text-center sm:text-left mb-12 space-y-4">
+      <div class="inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-rose-400 animate-pulse-slow">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+        </svg>
+        Hub Criptanaliză & Securitate Web
+      </div>
+      <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl bg-gradient-to-r from-white via-slate-100 to-rose-200 bg-clip-text text-transparent">
+        Securitatea Datelor (SD)
+      </h1>
+      <p class="max-w-3xl text-base text-slate-400 leading-relaxed font-medium">
+        Antrenează-te intensiv pentru examenul scris și proba practică de laborator. Criptanaliză Delastelle, inversare pas cu pas, calcul modular RSA, atacuri MitM pe Diffie-Hellman și exploatări web OWASP în DVWA și Hack The Box.
+      </p>
+    </section>
+
+    <!-- Subsections Grid (5 Capitole) -->
+    <section class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-16 animate-slide-up">
+      
+      <!-- Card 1: Cifrurile Delastelle (Bifid & Trifid) -->
+      <article class="group relative flex flex-col justify-between rounded-3xl border border-rose-500/25 bg-slate-900/65 p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-rose-500/45 hover:bg-slate-900/80 hover:shadow-glow-rose">
+        <div class="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-rose-500/5 to-purple-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 uppercase tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              Disponibil
+            </span>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">CAPITOLUL 1</span>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center space-x-3 text-white">
+              <div class="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-all duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25A2.25 2.25 0 0113.5 8.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold tracking-tight">Cifrurile Delastelle (Bifid & Trifid)</h3>
+            </div>
+            <p class="text-xs leading-relaxed text-slate-400 font-medium">
+              Substituție și transpunere fracționată pe perioadă (<em>p</em> = 5). Înțelege regula vitală a blocurilor parțiale (<em>k</em> &lt; <em>p</em>) și decriptarea inversă la examen.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap gap-1.5 pt-2">
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Polybius 5x5</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Trifid 3D (27 Caractere)</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Blocuri Parțiale (UI -&gt; QB)</span>
+          </div>
+        </div>
+
+        <div class="mt-8 flex flex-col gap-2">
+          <a href="./delastelle/theory.html" class="flex items-center justify-center gap-2 rounded-2xl bg-rose-600 hover:bg-rose-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-rose-600/10 hover:shadow-rose-500/20 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Învață Teorie & Demonstrație
+          </a>
+          <a href="./delastelle/index.html" class="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40 px-4 py-3 text-xs font-bold text-slate-300 hover:text-white transition-all duration-150 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+            </svg>
+            Simulator & Solver Interactiv
+          </a>
+        </div>
+      </article>
+
+      <!-- Card 2: Criptanaliză Clasică (Caesar, ROT13, Vigenère) -->
+      <article class="group relative flex flex-col justify-between rounded-3xl border border-indigo-500/25 bg-slate-900/65 p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-indigo-500/45 hover:bg-slate-900/80 hover:shadow-glow-indigo">
+        <div class="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-indigo-500/5 to-purple-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 uppercase tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              Disponibil
+            </span>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">CAPITOLUL 2</span>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center space-x-3 text-white">
+              <div class="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold tracking-tight">Criptanaliză: Caesar, ROT13 & Vigenère</h3>
+            </div>
+            <p class="text-xs leading-relaxed text-slate-400 font-medium">
+              Analiză frecvențială pe alfabetul englez, scăderi modulare negative în &Zopf;<sub>26</sub>, metoda Kasiski, Indicele de Coincidență (<em>I<sub>c</sub></em>) și temele scrise de mână.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap gap-1.5 pt-2">
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Frecvențe E, T, A, O</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Indice Coincidență (0.067 vs 0.038)</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Cheie Inițiale Vigenère</span>
+          </div>
+        </div>
+
+        <div class="mt-8 flex flex-col gap-2">
+          <a href="./classical/theory.html" class="flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-indigo-600/10 hover:shadow-indigo-500/20 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Învață Teorie & Teme Rezolvate
+          </a>
+          <a href="./classical/index.html" class="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40 px-4 py-3 text-xs font-bold text-slate-300 hover:text-white transition-all duration-150 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+            </svg>
+            Histogramă & Slider Caesar
+          </a>
+        </div>
+      </article>
+
+      <!-- Card 3: Criptografie Asimetrică (RSA & Diffie-Hellman) -->
+      <article class="group relative flex flex-col justify-between rounded-3xl border border-emerald-500/25 bg-slate-900/65 p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-emerald-500/45 hover:bg-slate-900/80 hover:shadow-glow-emerald">
+        <div class="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-emerald-500/5 to-purple-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 uppercase tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              Disponibil
+            </span>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">CAPITOLUL 3</span>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center space-x-3 text-white">
+              <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold tracking-tight">Criptografie Asimetrică: RSA & Diffie-Hellman</h3>
+            </div>
+            <p class="text-xs leading-relaxed text-slate-400 font-medium">
+              Calculul riguros al exponentului secret <code>d = e<sup>-1</sup> mod &phi;(n)</code> prin Algoritmul Extins al lui Euclid, exponențiere modulară și atacul Man-in-the-Middle.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap gap-1.5 pt-2">
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Tabel Bezout (Euclid)</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Diffie-Hellman MitM (Mallory)</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Capcana Modului ECB (Tux)</span>
+          </div>
+        </div>
+
+        <div class="mt-8 flex flex-col gap-2">
+          <a href="./asymmetric/theory.html" class="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-emerald-600/10 hover:shadow-emerald-500/20 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Învață Teorie & Atacuri
+          </a>
+          <a href="./asymmetric/index.html" class="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40 px-4 py-3 text-xs font-bold text-slate-300 hover:text-white transition-all duration-150 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+            </svg>
+            Workbench RSA & Euclid Calculator
+          </a>
+        </div>
+      </article>
+
+      <!-- Card 4: Securitate Web & Exploatări DVWA / HTB -->
+      <article class="group relative flex flex-col justify-between rounded-3xl border border-amber-500/25 bg-slate-900/65 p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-500/45 hover:bg-slate-900/80 hover:shadow-glow-amber">
+        <div class="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-amber-500/5 to-purple-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 uppercase tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              Disponibil
+            </span>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">CAPITOLUL 4</span>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center space-x-3 text-white">
+              <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-all duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold tracking-tight">Securitate Web: Laboratoarele DVWA & HTB</h3>
+            </div>
+            <p class="text-xs leading-relaxed text-slate-400 font-medium">
+              SQL Injection (Low vs. Medium POST fără ghilimele), Blind cu sqlmap, Burp Intruder Cluster Bomb (Length 4738), ocolire XSS și CSRF.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap gap-1.5 pt-2">
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">SQLi Medium (Fără ')</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Burp Length (4738 vs 4554)</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">HTB makeInviteCode()</span>
+          </div>
+        </div>
+
+        <div class="mt-8 flex flex-col gap-2">
+          <a href="./websec/theory.html" class="flex items-center justify-center gap-2 rounded-2xl bg-amber-600 hover:bg-amber-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-amber-600/10 hover:shadow-amber-500/20 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Ghid Laboratoare & Credențiale
+          </a>
+          <a href="./websec/index.html" class="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40 px-4 py-3 text-xs font-bold text-slate-300 hover:text-white transition-all duration-150 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+            </svg>
+            Sandbox Exploatări & HTB Console
+          </a>
+        </div>
+      </article>
+
+      <!-- Card 5: Mock Exam Simulator -->
+      <article class="group relative flex flex-col justify-between rounded-3xl border border-purple-500/25 bg-slate-900/65 p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-purple-500/45 hover:bg-slate-900/80 hover:shadow-glow-indigo">
+        <div class="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-purple-500/5 to-rose-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 uppercase tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              Disponibil
+            </span>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">CAPITOLUL 5</span>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center space-x-3 text-white">
+              <div class="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-all duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold tracking-tight">Mock Exam: Simulator de Test cu Notă</h3>
+            </div>
+            <p class="text-xs leading-relaxed text-slate-400 font-medium">
+              Simulează examenul real de 45 de minute sub presiunea cronometrului. Test grilă cu întrebări alese aleatoriu, calcul notă 1-10 și feedback detaliat.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap gap-1.5 pt-2">
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Cronometru 45 Min</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Evaluare Automată</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Cele 10 Porunci (Cheat Sheet)</span>
+          </div>
+        </div>
+
+        <div class="mt-8 flex flex-col gap-2">
+          <a href="./mock-exam/theory.html" class="flex items-center justify-center gap-2 rounded-2xl bg-purple-600 hover:bg-purple-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-purple-600/10 hover:shadow-purple-500/20 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+            </svg>
+            Cheat Sheet de Buzunar (Cele 10 Porunci)
+          </a>
+          <a href="./mock-exam/index.html" class="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40 px-4 py-3 text-xs font-bold text-slate-300 hover:text-white transition-all duration-150 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Pornește Simulatorul de Examen
+          </a>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- Footer -->
+    <footer class="mt-auto py-6 border-t border-slate-900 text-center text-xs text-slate-600 font-semibold tracking-wide uppercase">
+      &copy; 2026 ExamTrainers. Construit pentru Calculatoare (Română) Anul IV Semestrul I — Universitatea din Craiova.
+    </footer>
+  </main>
+</body>
+</html>

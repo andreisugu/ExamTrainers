@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cheat Sheet: Cele 10 Porunci ale Examenului SD - Exam Trainers</title>
+  <meta name="description" content="Cele 10 reguli și capcane fundamentale pentru a trece examenul de Securitatea Datelor cu nota 10.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code/Math) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-purple': '0 0 25px -5px rgba(168, 85, 247, 0.4)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(244, 63, 94, 0.06) 0%, transparent 45%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-purple-500 selection:text-white">
+
+  <main class="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-8 sm:px-6 lg:px-8 justify-between">
+    
+    <header class="mb-10 pb-6 border-b border-slate-800 flex items-center justify-between">
+      <nav class="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+        <a href="../../../index.html" class="hover:text-white transition-colors">ExamTrainers</a>
+        <span class="text-slate-600">/</span>
+        <a href="../index.html" class="hover:text-white transition-colors">Securitatea Datelor</a>
+        <span class="text-slate-600">/</span>
+        <a href="index.html" class="hover:text-white transition-colors">Mock Exam</a>
+        <span class="text-slate-600">/</span>
+        <span class="text-purple-400 font-bold bg-purple-500/10 px-2.5 py-0.5 rounded border border-purple-500/20 font-mono">Cheat Sheet</span>
+      </nav>
+
+      <a href="index.html" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white transition-all shadow-md shadow-purple-600/20">
+        <span>⏱️</span>
+        <span>Pornește Examenul</span>
+      </a>
+    </header>
+
+    <article class="space-y-10">
+      <div>
+        <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-md border border-purple-500/20">
+          Manual de Supraviețuire Rapidă
+        </span>
+        <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-white mt-3">
+          Cele 10 Porunci ale Examenului de Securitatea Datelor
+        </h1>
+        <p class="text-base text-slate-400 mt-2 leading-relaxed">
+          Sinteza ultra-concentrată a capcanelor de calcul și a detaliilor tehnice unde se pierd puncte la examenul prof. Marius Marian.
+        </p>
+      </div>
+
+      <div class="space-y-4 font-mono text-xs">
+        <div class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-1.5">
+          <div class="flex items-center gap-2.5 font-bold text-white text-sm">
+            <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs border border-purple-500/30">1</span>
+            <span>Decriptarea Bifid / Trifid se face prin tăiere la jumătate / treimi</span>
+          </div>
+          <p class="text-slate-400 pl-8 leading-relaxed font-sans text-xs">
+            La decriptare, înșiri coordonatele cifrului pe orizontală. La Bifid, împarți șirul în 2 jumătăți (Linii clar, Coloane clar). La Trifid, împarți în 3 treimi (Pătrat, Linie, Coloană). Citirea se face PE VERTICALĂ!
+          </p>
+        </div>
+
+        <div class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-1.5">
+          <div class="flex items-center gap-2.5 font-bold text-white text-sm">
+            <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs border border-purple-500/30">2</span>
+            <span>Blocul parțial (k &lt; p) NU se completează cu X</span>
+          </div>
+          <p class="text-slate-400 pl-8 leading-relaxed font-sans text-xs">
+            Pentru UI (k=2), scrii coordonatele pe 2 sau 3 linii de câte 2 cifre. La Bifid: 4 cifre &rarr; 2 perechi &rarr; <strong>UJ</strong>. La Trifid: 6 cifre &rarr; 2 triplete &rarr; <strong>QB</strong>.
+          </p>
+        </div>
+
+        <div class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-1.5">
+          <div class="flex items-center gap-2.5 font-bold text-white text-sm">
+            <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs border border-purple-500/30">3</span>
+            <span>În &Zopf;<sub>26</sub>, rezultatele negative se adună cu 26</span>
+          </div>
+          <p class="text-slate-400 pl-8 leading-relaxed font-sans text-xs">
+            Dacă C &lt; k la Caesar (ex: B - 5 = 1 - 5 = -4), rezultatul este -4 + 26 = 22, adică litera <strong>W</strong>.
+          </p>
+        </div>
+
+        <div class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-1.5">
+          <div class="flex items-center gap-2.5 font-bold text-white text-sm">
+            <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs border border-purple-500/30">4</span>
+            <span>Exponentul secret RSA d se calculează STRICT modulo &phi;(n)</span>
+          </div>
+          <p class="text-slate-400 pl-8 leading-relaxed font-sans text-xs">
+            NICIODATĂ modulo n! d &middot; e &equiv; 1 mod &phi;(n), unde &phi;(n) = (p - 1)(q - 1). Dacă Bezout t &lt; 0, se adună &phi;(n).
+          </p>
+        </div>
+
+        <div class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-1.5">
+          <div class="flex items-center gap-2.5 font-bold text-white text-sm">
+            <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs border border-purple-500/30">5</span>
+            <span>Diffie-Hellman simplu nu oferă autentificare (Mallory MitM)</span>
+          </div>
+          <p class="text-slate-400 pl-8 leading-relaxed font-sans text-xs">
+            Mallory interceptează g<sup>a</sup> și g<sup>b</sup> și negociază 2 chei separate. Remediere obligatorie: semnături digitale (ECDHE).
+          </p>
+        </div>
+
+        <div class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-1.5">
+          <div class="flex items-center gap-2.5 font-bold text-white text-sm">
+            <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs border border-purple-500/30">6</span>
+            <span>SQL Injection Medium în DVWA este fără ghilimele</span>
+          </div>
+          <p class="text-slate-400 pl-8 leading-relaxed font-sans text-xs">
+            Formularul trimite POST prin dropdown, iar PHP are <code>WHERE user_id = $id</code>. Injectezi direct numeric: <code>id=1 OR 1=1</code> (fără apostrof!).
+          </p>
+        </div>
+
+        <div class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-1.5">
+          <div class="flex items-center gap-2.5 font-bold text-white text-sm">
+            <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs border border-purple-500/30">7</span>
+            <span>Succesul Burp Intruder se vede în coloana Length</span>
+          </div>
+          <p class="text-slate-400 pl-8 leading-relaxed font-sans text-xs">
+            Eșecul are Length = 4554 octeți. Succesul (admin:password) are Length = 4738 sau 4597 octeți.
+          </p>
+        </div>
+
+        <div class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-1.5">
+          <div class="flex items-center gap-2.5 font-bold text-white text-sm">
+            <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs border border-purple-500/30">8</span>
+            <span>Ocolirea XSS Medium vs High în DVWA</span>
+          </div>
+          <p class="text-slate-400 pl-8 leading-relaxed font-sans text-xs">
+            La Medium: <code>&lt;scRIpt&gt;</code> sau <code>&lt;scr&lt;script&gt;ipt&gt;</code>. La High: tag-uri alternative cu event handlers: <code>&lt;img src=x onerror=alert(1)&gt;</code> sau <code>&lt;svg onload=alert(1)&gt;</code>.
+          </p>
+        </div>
+
+        <div class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-1.5">
+          <div class="flex items-center gap-2.5 font-bold text-white text-sm">
+            <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs border border-purple-500/30">9</span>
+            <span>Atacul CSRF se execută silențios prin tag-ul &lt;img&gt;</span>
+          </div>
+          <p class="text-slate-400 pl-8 leading-relaxed font-sans text-xs">
+            Browserul trimite automat cookie-ul PHPSESSID la încărcarea imaginii. Apărare: Token anti-CSRF per sesiune și SameSite=Strict.
+          </p>
+        </div>
+
+        <div class="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl space-y-1.5">
+          <div class="flex items-center gap-2.5 font-bold text-white text-sm">
+            <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs border border-purple-500/30">10</span>
+            <span>De ce este interzis modul ECB (Electronic Codebook)</span>
+          </div>
+          <p class="text-slate-400 pl-8 leading-relaxed font-sans text-xs">
+            Criptează fiecare bloc identic cu aceeași cheie, păstrând forma și silueta datelor (exemplul Tux).
+          </p>
+        </div>
+      </div>
+
+    </article>
+
+    <footer class="mt-16 py-6 border-t border-slate-800 text-center text-xs text-slate-500 font-medium">
+      &copy; 2026 ExamTrainers • Securitatea Datelor CR4.1 (UCV)
+    </footer>
+  </main>
+</body>
+</html>

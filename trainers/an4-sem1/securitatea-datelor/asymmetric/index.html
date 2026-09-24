@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Criptografie Asimetrică: RSA & Diffie-Hellman - Exam Trainers</title>
+  <meta name="description" content="Workbench interactiv RSA: Algoritmul Extins al lui Euclid, coeficienții Bezout, exponențiere modulară și simularea atacului MitM pe Diffie-Hellman.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code/Math) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.4)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- React 18 & ReactDOM UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <!-- Babel Standalone -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 15%, rgba(16, 185, 129, 0.10) 0%, transparent 40%),
+        radial-gradient(circle at 90% 85%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-emerald-500 selection:text-white">
+
+  <div id="root" class="min-h-screen flex flex-col"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    function extendedEuclidean(e, phi) {
+      let r0 = phi, r1 = e;
+      let t0 = 0, t1 = 1;
+      const steps = [];
+
+      steps.push({ step: 0, q: "-", r: r0, t: t0 });
+      steps.push({ step: 1, q: "-", r: r1, t: t1 });
+
+      let stepNum = 2;
+      while (r1 > 0) {
+        const q = Math.floor(r0 / r1);
+        const r2 = r0 - q * r1;
+        const t2 = t0 - q * t1;
+
+        steps.push({
+          step: stepNum++,
+          q,
+          r: r2,
+          t: t2
+        });
+
+        r0 = r1;
+        r1 = r2;
+        t0 = t1;
+        t1 = t2;
+      }
+
+      let d = t0;
+      if (d < 0) d = ((d % phi) + phi) % phi;
+
+      return { gcd: r0, d, steps };
+    }
+
+    function modPow(base, exp, mod) {
+      base = BigInt(base);
+      exp = BigInt(exp);
+      mod = BigInt(mod);
+      if (mod === 0n) return 0;
+      let res = 1n;
+      base = base % mod;
+      while (exp > 0n) {
+        if (exp % 2n === 1n) res = (res * base) % mod;
+        exp = exp / 2n;
+        base = (base * base) % mod;
+      }
+      return Number(res);
+    }
+
+    function App() {
+      const [p, setP] = useState(61);
+      const [q, setQ] = useState(53);
+      const [e, setE] = useState(17);
+      const [message, setMessage] = useState(65);
+
+      const n = p * q;
+      const phi = (p - 1) * (q - 1);
+      const euclid = useMemo(() => extendedEuclidean(e, phi), [e, phi]);
+      const cipher = useMemo(() => modPow(message, e, n), [message, e, n]);
+      const decrypted = useMemo(() => modPow(cipher, euclid.d, n), [cipher, euclid.d, n]);
+
+      return (
+        <div className="flex-1 flex flex-col justify-between max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          
+          <header className="mb-8 pb-6 border-b border-slate-800">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <nav className="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+                <a href="../../../index.html" className="hover:text-white transition-colors">ExamTrainers</a>
+                <span className="text-slate-600">/</span>
+                <a href="../index.html" className="hover:text-white transition-colors">Securitatea Datelor</a>
+                <span className="text-slate-600">/</span>
+                <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20 font-mono">
+                  RSA & Diffie-Hellman
+                </span>
+              </nav>
+
+              <a href="theory.html" className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-emerald-500/40 text-xs font-bold text-slate-300 transition-all">
+                <span>📖</span>
+                <span>Citește Teoria</span>
+              </a>
+            </div>
+
+            <div className="mt-6">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+                Capitolul 3 • Criptografie Asimetrică
+              </span>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white mt-2">
+                Workbench RSA & Simulator Diffie-Hellman
+              </h1>
+              <p className="text-sm text-slate-400 mt-1 max-w-2xl font-medium">
+                Calculul coeficienților Bezout prin Algoritmul Extins al lui Euclid și demonstrarea atacului Man-in-the-Middle.
+              </p>
+            </div>
+          </header>
+
+          <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6 mb-8">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                <span>🔐</span>
+                Generator RSA Pas cu Pas (Exemplul Oficial UCV: p=61, q=53, e=17)
+              </h3>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-4">
+              <div>
+                <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Număr Prim p</label>
+                <input
+                  type="number"
+                  value={p}
+                  onChange={(e) => setP(parseInt(e.target.value) || 0)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:border-emerald-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Număr Prim q</label>
+                <input
+                  type="number"
+                  value={q}
+                  onChange={(e) => setQ(parseInt(e.target.value) || 0)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:border-emerald-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Exponent Public e</label>
+                <input
+                  type="number"
+                  value={e}
+                  onChange={(e) => setE(parseInt(e.target.value) || 0)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:border-emerald-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Mesaj Clar M (&lt; n)</label>
+                <input
+                  type="number"
+                  value={message}
+                  onChange={(e) => setMessage(parseInt(e.target.value) || 0)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white focus:border-emerald-500 outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-4 font-mono text-xs">
+              <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800">
+                <div className="text-slate-500 text-[10px]">Modul Public (n = p * q)</div>
+                <div className="text-base font-black text-white mt-1">{n}</div>
+              </div>
+              <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800">
+                <div className="text-slate-500 text-[10px]">Euler Totient φ(n)</div>
+                <div className="text-base font-black text-indigo-400 mt-1">{phi}</div>
+              </div>
+              <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800">
+                <div className="text-slate-500 text-[10px]">Exponent Secret (d)</div>
+                <div className="text-base font-black text-emerald-400 mt-1">{euclid.d}</div>
+              </div>
+              <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800">
+                <div className="text-slate-500 text-[10px]">Criptotext C = M^e mod n</div>
+                <div className="text-base font-black text-rose-400 mt-1">{cipher}</div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                Tabelul Coeficienților Bezout (Algoritmul Extins al lui Euclid):
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left font-mono text-xs border border-slate-800 rounded-2xl overflow-hidden">
+                  <thead className="bg-slate-950 text-slate-400 uppercase text-[10px]">
+                    <tr>
+                      <th className="p-3">Pas (i)</th>
+                      <th className="p-3">Cât (q_i)</th>
+                      <th className="p-3">Rest (r_i)</th>
+                      <th className="p-3">Coeficient t_i (Bezout)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/80 bg-slate-950/40">
+                    {euclid.steps.map((s, idx) => (
+                      <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
+                        <td className="p-3 font-bold text-slate-400">{s.step}</td>
+                        <td className="p-3 text-slate-300">{s.q}</td>
+                        <td className="p-3 font-bold text-indigo-300">{s.r}</td>
+                        <td className="p-3 text-emerald-300 font-bold">{s.t}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed font-mono">
+                Decriptare verificată: M = C^d mod n = {cipher}^{euclid.d} mod {n} = <strong className="text-emerald-400">{decrypted}</strong> (identic cu M = {message}).
+              </p>
+            </div>
+          </div>
+
+          <div className="p-6 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-4 mb-8">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
+              <span>⚠️</span>
+              Diffie-Hellman & Atacul Man-in-the-Middle (Mallory)
+            </h3>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl">
+                <div className="text-xs font-bold text-indigo-400">1. Alice (Secret a)</div>
+                <div className="text-[11px] text-slate-400 mt-1">Calculează A = g^a mod p și îl transmite pe fir. Crede că vorbește direct cu Bob.</div>
+              </div>
+              <div className="p-4 bg-rose-950/30 border border-rose-500/40 rounded-2xl">
+                <div className="text-xs font-bold text-rose-400">2. Mallory (MitM Activ)</div>
+                <div className="text-[11px] text-slate-400 mt-1">Interceptează A și B. Transmite A' spre Bob și B' spre Alice. Stabilește cheia K1 cu Alice și K2 cu Bob!</div>
+              </div>
+              <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl">
+                <div className="text-xs font-bold text-indigo-400">3. Bob (Secret b)</div>
+                <div className="text-[11px] text-slate-400 mt-1">Calculează B = g^b mod p. Recepționează A' de la Mallory crezând că este de la Alice.</div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-950/80 rounded-2xl border border-slate-800 text-xs text-slate-300 space-y-2">
+              <div className="font-bold text-white">Cum se previne acest atac la examen?</div>
+              <p>Diffie-Hellman asigură doar confidențialitate, <strong>NU și autentificare</strong>. Soluția este semnarea digitală a parametrilor (ex: protocolul Station-to-Station sau ECDHE cu certificate X.509 în TLS).</p>
+            </div>
+          </div>
+
+          <footer className="mt-12 py-6 border-t border-slate-800 text-center text-xs text-slate-500">
+            &copy; 2026 ExamTrainers • Securitatea Datelor CR4.1 (UCV)
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulator de Examen (Mock Exam) - Securitatea Datelor</title>
+  <meta name="description" content="Simulare de examen grilă și calcul matematic pentru Securitatea Datelor (CR4.1): cronometru 45 minute, calcul notă automată și diagnoză detaliată.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code/Math) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-purple': '0 0 25px -5px rgba(168, 85, 247, 0.4)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- React 18 & ReactDOM UMD -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <!-- Babel Standalone -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 15%, rgba(168, 85, 247, 0.10) 0%, transparent 40%),
+        radial-gradient(circle at 90% 85%, rgba(244, 63, 94, 0.08) 0%, transparent 45%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-purple-500 selection:text-white">
+
+  <div id="root" class="min-h-screen flex flex-col"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const EXAM_QUESTIONS = [
+      {
+        id: 1,
+        category: "Cifruri Clasice - Delastelle",
+        question: "La cifrul Trifid cu perioada p=5, cum se criptează ultimul bloc dacă acesta are doar 2 litere (ex: 'UI')?",
+        options: [
+          "Se completează obligatoriu cu 3 caractere X până la perioada 5.",
+          "Cele 6 cifre de coordonate (3k) se grupează în 2 triplete de câte 3 cifre (P, L, C).",
+          "Se renunță la transpunere și se aplică substituție monoalfabetică simplă.",
+          "Cifrul Trifid generează o eroare matematică dacă lungimea nu este multiplu de p."
+        ],
+        correct: 1,
+        explanation: "Regula blocului parțial la Trifid dictează scrierea coordonatelor celor k litere pe verticală (3 linii de câte k cifre). Șirul concatenat de 3k cifre se grupează direct în k triplete (P, L, C). Pentru 'UI' (k=2) rezultă 6 cifre -> 2 triplete -> 'QB'."
+      },
+      {
+        id: 2,
+        category: "Criptografie Asimetrică - RSA",
+        question: "În algoritmul RSA, modulo ce valoare se calculează exponentul secret d?",
+        options: [
+          "Modulo n (modulul public n = p * q)",
+          "Modulo phi(n) = (p - 1)(q - 1)",
+          "Modulo (p + q)",
+          "Modulo 2^256"
+        ],
+        correct: 1,
+        explanation: "Capcană frecventă la examen! Exponentul secret d este inversul modular al lui e modulo phi(n): d * e = 1 mod phi(n). NICIODATĂ nu se calculează modulo n!"
+      },
+      {
+        id: 3,
+        category: "Securitate Web - DVWA SQLi",
+        question: "La nivelul Medium în DVWA la SQL Injection, de ce payload-ul \"1' OR 1=1 #\" produce o eroare de sintaxă?",
+        options: [
+          "Pentru că serverul a activat prepared statements automate.",
+          "Pentru că interogarea din backend este \"WHERE user_id = $id;\" (câmp numeric fără ghilimele).",
+          "Pentru că ghilimeaua simplă este convertită automat în majusculă.",
+          "Pentru că metoda POST blochează comentariul diez (#)."
+        ],
+        correct: 1,
+        explanation: "La nivel Medium în DVWA, interogarea PHP concatenează variabila direct ca întreg: WHERE user_id = $id. Introducerea unei ghilimele strică sintaxa SQL. Payload-ul corect este FĂRĂ ghilimele: 1 OR 1=1."
+      },
+      {
+        id: 4,
+        category: "Securitate Web - Burp Suite",
+        question: "Cum identifici credentialele corecte (admin:password) într-un atac Brute Force cu Burp Intruder (Cluster Bomb)?",
+        options: [
+          "Serverul returnează întotdeauna codul de stare 404.",
+          "Răspunsul HTTP corect are o valoare numerică diferită în coloana Length (ex: 4738 vs 4554).",
+          "Burp Intruder colorează automat rândul în roșu.",
+          "Cererile corecte au timpul de răspuns exact 0 ms."
+        ],
+        correct: 1,
+        explanation: "Toate cererile eșuate afișează pagina de eroare standard (Length = 4554 octeți). Cererea autentificată cu succes afișează zona privată sau redirect, având Length = 4738 (sau 4597)."
+      },
+      {
+        id: 5,
+        category: "Web Security - XSS vs CSRF",
+        question: "Care este diferența conceptuală fundamentală între un atac XSS și unul CSRF?",
+        options: [
+          "XSS este pe server, CSRF este doar pe rețea.",
+          "XSS exploatează încrederea utilizatorului în site (execută script); CSRF exploatează încrederea site-ului în browserul autentificat.",
+          "CSRF fură cookie-urile prin JavaScript, XSS trimite doar formulare.",
+          "XSS funcționează exclusiv prin POST, CSRF doar prin GET."
+        ],
+        correct: 1,
+        explanation: "XSS injectează script malițios în contextul aplicației legitime (fură cookie-uri, DOM). CSRF păcălește browserul victimei să trimită cereri nesolicitate atașând automat cookie-ul de sesiune valid."
+      },
+      {
+        id: 6,
+        category: "Cifruri Clasice - Caesar",
+        question: "Ce valoare are rezultatul decriptării Caesar pentru caracterul 'B' (index 1) cu cheia k = 5 în inelul Z_26?",
+        options: [
+          "-4 (caracter invalid)",
+          "W (index 22)",
+          "X (index 23)",
+          "V (index 21)"
+        ],
+        correct: 1,
+        explanation: "În Z_26, dacă rezultatul scăderii este negativ (1 - 5 = -4), se adună modulul: -4 + 26 = 22, care corespunde literei 'W'."
+      },
+      {
+        id: 7,
+        category: "Diffie-Hellman",
+        question: "De ce protocolul clasic Diffie-Hellman este vulnerabil la atacul Man-in-the-Middle (Mallory)?",
+        options: [
+          "Pentru că problema logaritmului discret este ușor de rezolvat pe numere mici.",
+          "Pentru că valorile publice g^a și g^b nu sunt autentificate digital.",
+          "Pentru că Alice și Bob folosesc chei simetrice diferite.",
+          "Pentru că numărul prim p este trimis în clar și poate fi modificat."
+        ],
+        correct: 1,
+        explanation: "Lipsa autentificării permite atacatorului Mallory să negocieze o cheie separată K1 cu Alice și o cheie K2 cu Bob, decriptând și re-criptând tot traficul fără ca aceștia să știe."
+      },
+      {
+        id: 8,
+        category: "Hack The Box",
+        question: "Care era primul pas în rezolvarea challenge-ului de înregistrare pe Hack The Box (Laboratorul 3)?",
+        options: [
+          "Scanarea porturilor cu Nmap.",
+          "Apelarea funcției makeInviteCode() în consola Chrome DevTools.",
+          "Descărcarea bazei de date prin SQLmap.",
+          "Injecție CSRF pe pagina de login."
+        ],
+        correct: 1,
+        explanation: "În fișierul /js/inviteapi.min.js era definită funcția makeInviteCode(), care la executare în consola browserului returna instrucțiunea criptată în ROT13/Base64 de a face un POST la /api/invite/generate."
+      },
+      {
+        id: 9,
+        category: "Criptografie Simetrică",
+        question: "De ce este complet interzis modul de operare ECB (Electronic Codebook) pentru criptarea datelor structurate?",
+        options: [
+          "Pentru că necesită un Vector de Inițializare (IV) prea mare.",
+          "Pentru că blocuri identice de clar produc blocuri identice de cifru, conservând tiparele statistice (exemplul Tux).",
+          "Pentru că nu poate fi paralelizat pe procesoare moderne.",
+          "Pentru că funcționează doar cu chei de 56 biți."
+        ],
+        correct: 1,
+        explanation: "În modul ECB, fiecare bloc este criptat independent cu aceeași cheie. Dacă două blocuri de clar sunt identice, criptotextul rezultat este identic, păstrând forma imaginilor sau a structurilor de fișiere."
+      },
+      {
+        id: 10,
+        category: "Stocare Parole",
+        question: "De ce funcția simplă SHA-256 este considerată nesigură pentru stocarea parolelor utilizatorilor?",
+        options: [
+          "Pentru că are coliziuni matematice cunoscute de tip MD5.",
+          "Pentru că este optimizată hardware și un atacator poate testa miliarde de hash-uri/secundă pe GPU.",
+          "Pentru că lungimea hash-ului este prea mică (doar 32 biți).",
+          "Pentru că nu poate folosi caractere speciale."
+        ],
+        correct: 1,
+        explanation: "SHA-256 este o funcție rapidă. Parolele cer funcții special concepute să fie lente și consumatoare de memorie (KDF: Argon2id, bcrypt, PBKDF2) însoțite de un salt unic."
+      }
+    ];
+
+    function App() {
+      const [currentQIdx, setCurrentQIdx] = useState(0);
+      const [selectedAnswers, setSelectedAnswers] = useState({});
+      const [isFinished, setIsFinished] = useState(false);
+      const [timeLeft, setTimeLeft] = useState(45 * 60);
+
+      useEffect(() => {
+        if (isFinished || timeLeft <= 0) return;
+        const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
+        return () => clearInterval(timer);
+      }, [isFinished, timeLeft]);
+
+      const q = EXAM_QUESTIONS[currentQIdx];
+      const answeredCount = Object.keys(selectedAnswers).length;
+
+      const handleSelect = (idx) => {
+        if (isFinished) return;
+        setSelectedAnswers({ ...selectedAnswers, [currentQIdx]: idx });
+      };
+
+      const calculateScore = () => {
+        let correct = 0;
+        EXAM_QUESTIONS.forEach((quest, idx) => {
+          if (selectedAnswers[idx] === quest.correct) correct++;
+        });
+        return correct;
+      };
+
+      const score = calculateScore();
+
+      return (
+        <div className="flex-1 flex flex-col justify-between max-w-5xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8">
+          
+          <header className="mb-8 pb-6 border-b border-slate-800 flex items-center justify-between">
+            <nav className="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+              <a href="../../../index.html" className="hover:text-white transition-colors">ExamTrainers</a>
+              <span className="text-slate-600">/</span>
+              <a href="../index.html" className="hover:text-white transition-colors">Securitatea Datelor</a>
+              <span className="text-slate-600">/</span>
+              <span className="text-purple-400 font-bold bg-purple-500/10 px-2.5 py-0.5 rounded border border-purple-500/20 font-mono">
+                Mock Exam
+              </span>
+            </nav>
+
+            <a href="theory.html" className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-purple-500/40 text-xs font-bold text-slate-300 transition-all">
+              <span>📋</span>
+              <span>Cheat Sheet Examen</span>
+            </a>
+          </header>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 bg-slate-900/70 border border-slate-800 rounded-3xl backdrop-blur-xl mb-6">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-purple-400 font-mono">
+                Întrebarea {currentQIdx + 1} din {EXAM_QUESTIONS.length}
+              </span>
+              <span className="text-xs text-slate-500 font-mono">
+                ({answeredCount} rezolvate)
+              </span>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 font-mono text-xs font-bold text-white bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+                <span className="text-purple-400">⏱️</span>
+                <span>{Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</span>
+              </div>
+              {!isFinished && (
+                <button
+                  onClick={() => setIsFinished(true)}
+                  className="px-4 py-1.5 bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white rounded-xl transition-all shadow-md shadow-purple-600/20"
+                >
+                  Finalizează Examenul
+                </button>
+              )}
+            </div>
+          </div>
+
+          {!isFinished ? (
+            <div className="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+              <div>
+                <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-md border border-purple-500/20 mb-3">
+                  {q.category}
+                </span>
+                <h3 className="text-lg sm:text-xl font-bold text-white leading-relaxed">
+                  {q.question}
+                </h3>
+              </div>
+
+              <div className="space-y-3">
+                {q.options.map((opt, optIdx) => {
+                  const isSelected = selectedAnswers[currentQIdx] === optIdx;
+                  return (
+                    <button
+                      key={optIdx}
+                      onClick={() => handleSelect(optIdx)}
+                      className={`w-full text-left p-4 rounded-2xl border text-xs sm:text-sm font-medium transition-all duration-150 flex items-start gap-3 ${
+                        isSelected
+                          ? 'bg-purple-500/15 border-purple-500 text-white shadow-lg shadow-purple-500/10'
+                          : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-950'
+                      }`}
+                    >
+                      <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
+                        isSelected ? 'bg-purple-500 text-white' : 'bg-slate-800 text-slate-400'
+                      }`}>
+                        {String.fromCharCode(65 + optIdx)}
+                      </span>
+                      <span className="pt-0.5">{opt}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-slate-800/80">
+                <button
+                  disabled={currentQIdx === 0}
+                  onClick={() => setCurrentQIdx(c => c - 1)}
+                  className="px-4 py-2 bg-slate-950 hover:bg-slate-800 disabled:opacity-30 text-xs font-bold text-slate-300 rounded-xl transition-all"
+                >
+                  ← Anterioara
+                </button>
+                <button
+                  disabled={currentQIdx === EXAM_QUESTIONS.length - 1}
+                  onClick={() => setCurrentQIdx(c => c + 1)}
+                  className="px-4 py-2 bg-slate-950 hover:bg-slate-800 disabled:opacity-30 text-xs font-bold text-slate-300 rounded-xl transition-all"
+                >
+                  Următoarea →
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-8">
+              <div className="text-center space-y-2">
+                <div className="text-xs font-bold uppercase tracking-widest text-slate-400">Raport de Evaluare Examen SD</div>
+                <h2 className="text-3xl sm:text-4xl font-black text-white">
+                  Ai obținut nota {((score / EXAM_QUESTIONS.length) * 10).toFixed(1)} / 10
+                </h2>
+                <p className="text-sm font-medium text-slate-400">
+                  Ai răspuns corect la <strong className="text-emerald-400">{score}</strong> din {EXAM_QUESTIONS.length} întrebări.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">Revizuirea Răspunsurilor & Explicații de Curs:</h3>
+                {EXAM_QUESTIONS.map((quest, idx) => {
+                  const userAns = selectedAnswers[idx];
+                  const isCorrect = userAns === quest.correct;
+
+                  return (
+                    <div key={idx} className={`p-5 rounded-2xl border text-xs space-y-2 ${
+                      isCorrect ? 'bg-emerald-950/20 border-emerald-500/40' : 'bg-rose-950/20 border-rose-500/40'
+                    }`}>
+                      <div className="flex items-center justify-between font-bold">
+                        <span className="text-slate-300">#{idx + 1}: {quest.question}</span>
+                        <span className={isCorrect ? 'text-emerald-400' : 'text-rose-400'}>
+                          {isCorrect ? '✓ Corect' : '✗ Greșit'}
+                        </span>
+                      </div>
+                      <div className="text-slate-400">
+                        Răspunsul tău: <strong className={isCorrect ? 'text-emerald-300' : 'text-rose-300'}>
+                          {userAns !== undefined ? quest.options[userAns] : 'Niciun răspuns'}
+                        </strong>
+                      </div>
+                      {!isCorrect && (
+                        <div className="text-emerald-400">
+                          Răspuns corect: <strong>{quest.options[quest.correct]}</strong>
+                        </div>
+                      )}
+                      <div className="p-3 bg-slate-950 rounded-xl text-slate-300 leading-relaxed font-mono text-[11px]">
+                        💡 <strong>Explicație:</strong> {quest.explanation}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="text-center pt-4">
+                <button
+                  onClick={() => {
+                    setSelectedAnswers({});
+                    setIsFinished(false);
+                    setCurrentQIdx(0);
+                    setTimeLeft(45 * 60);
+                  }}
+                  className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white rounded-2xl transition-all shadow-lg shadow-purple-600/30"
+                >
+                  Reia Examenul cu Întrebări Resetate
+                </button>
+              </div>
+            </div>
+          )}
+
+          <footer className="mt-12 py-6 border-t border-slate-800 text-center text-xs text-slate-500">
+            &copy; 2026 ExamTrainers • Securitatea Datelor CR4.1 (UCV)
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

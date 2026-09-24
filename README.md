@@ -5,7 +5,8 @@ Open source exam training web apps, published as a static GitHub Pages site.
 ## Structure
 
 - `trainers/index.html` is the landing page used to select a trainer.
-- `trainers/an3-sem2/micro/` contains the current AVR trainer.
+- `trainers/an3-sem2/micro/` contains the AVR microcontroller trainer.
+- `trainers/an4-sem1/securitatea-datelor/` contains the Securitatea Datelor (SD) exam trainer.
 - `.github/workflows/pages.yml` deploys the `trainers/` folder to GitHub Pages on pushes to `main`.
 
 ## Adding a trainer
@@ -16,4 +17,6 @@ Open source exam training web apps, published as a static GitHub Pages site.
 
 ## Current status
 
-Right now the collection contains one trainer for AN3 semester 2, nested under `trainers/an3-sem2/micro/`.
+The collection currently contains:
+1. **AN3 Semester 2**: Microprocesoare (`trainers/an3-sem2/micro/`)
+2. **AN4 Semester 1**: Securitatea Datelor (`trainers/an4-sem1/securitatea-datelor/`)
