@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teorie: Analiză Lexicală, Automate & Flex - Exam Trainers</title>
+  <meta name="description" content="Ghid teoretic complet: Tokeni, NFA, DFA, Algoritmul lui Thompson, Subset Construction, Minimizarea Hopcroft, Flex, Maximal Munch și Diagrame în T.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code/Math) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-cyan': '0 0 25px -5px rgba(6, 182, 212, 0.4)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.06) 0%, transparent 45%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-cyan-500 selection:text-white">
+
+  <main class="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-8 sm:px-6 lg:px-8 justify-between">
+    
+    <!-- Top Nav -->
+    <header class="mb-10 pb-6 border-b border-slate-800 flex items-center justify-between">
+      <nav class="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+        <a href="../../../index.html" class="hover:text-white transition-colors">ExamTrainers</a>
+        <span class="text-slate-600">/</span>
+        <a href="../index.html" class="hover:text-white transition-colors">Proiectarea Translatoarelor</a>
+        <span class="text-slate-600">/</span>
+        <a href="index.html" class="hover:text-white transition-colors">Lexer & Automata</a>
+        <span class="text-slate-600">/</span>
+        <span class="text-cyan-400 font-bold bg-cyan-500/10 px-2.5 py-0.5 rounded border border-cyan-500/20 font-mono">Teorie</span>
+      </nav>
+
+      <a href="index.html" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-xs font-bold text-white transition-all shadow-md shadow-cyan-600/20">
+        <span>🎮</span>
+        <span>Deschide Simulatorul</span>
+      </a>
+    </header>
+
+    <!-- Main Content -->
+    <article class="space-y-10">
+      
+      <div>
+        <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-md border border-cyan-500/20">
+          Cursul Prof. Marius Brezovan • Modulul 1 & 2
+        </span>
+        <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-white mt-3">
+          Analiză Lexicală, Automate Finite & Flex
+        </h1>
+        <p class="text-base text-slate-400 mt-2 leading-relaxed">
+          Ghid teoretic exhaustiv pentru recunoașterea vocabularului limbajelor de programare: conversia expresiilor regulate în NFA prin algoritmul lui Thompson, determinizarea Subset Construction, minimizarea DFA Hopcroft, funcționarea internă a scanerului Flex și diagramele de compilare în T.
+        </p>
+      </div>
+
+      <!-- Section 1: Token, Lexem, Tipar & Valori Semantice -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-mono text-sm border border-cyan-500/30">1</span>
+          Token, Lexem, Tipar & Valori Semantice
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Analizorul lexical (<strong>Scanner</strong>) citește fluxul brut de caractere sursă, elimină spațiile albe și comentariile și grupează caracterele în unități atomice numite <strong>tokeni</strong>.
+          </p>
+
+          <div class="grid sm:grid-cols-3 gap-4 font-mono text-xs">
+            <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800">
+              <span class="text-cyan-400 font-bold block mb-1">Token (Categorie)</span>
+              <span class="text-slate-400">Simbol abstract reprezentând clasa lexicală:</span>
+              <p class="mt-2 text-white font-semibold"><code>ID</code>, <code>NUM</code>, <code>WHILE</code>, <code>ASSIGN</code></p>
+            </div>
+            <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800">
+              <span class="text-indigo-400 font-bold block mb-1">Lexem (Instanță)</span>
+              <span class="text-slate-400">Secvența concretă de caractere din codul sursă:</span>
+              <p class="mt-2 text-white font-semibold"><code>"contor"</code>, <code>"3.14"</code>, <code>":="</code></p>
+            </div>
+            <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800">
+              <span class="text-emerald-400 font-bold block mb-1">Tipar (Pattern)</span>
+              <span class="text-slate-400">Expresia regulată descriptivă a categoriei:</span>
+              <p class="mt-2 text-white font-semibold"><code>[a-zA-Z_][a-zA-Z0-9_]*</code></p>
+            </div>
+          </div>
+
+          <p>
+            <strong>Valoarea Semantică (<code>yylval</code>):</strong> Când analizorul sintactic (parserul) primește un token, el are nevoie de informația semantică exactă pentru a construi arborele AST (ex: valoarea numerică binară pentru un <code>NUM</code> sau adresa din tabela de simboluri pentru un <code>ID</code>):
+          </p>
+          <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 font-mono text-xs text-slate-300">
+            &lang;ID, "total"&rang; &nbsp;&bull;&nbsp; &lang;NUM, 42&rang; &nbsp;&bull;&nbsp; &lang;ASSIGN, ":="&rang; &nbsp;&bull;&nbsp; &lang;WHILE, &mdash;&rang;
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Automate Finite: NFA vs. DFA -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-mono text-sm border border-cyan-500/30">2</span>
+          Automate Finite Nedeterministe (NFA) vs. Deterministe (DFA)
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Un automat finit este definit matematic ca un 5-tuplu: <strong>M = (S, &Sigma;, &delta;, s<sub>0</sub>, F)</strong>, unde:
+          </p>
+          <ul class="list-disc list-inside space-y-1 text-slate-400 font-mono text-xs pl-2">
+            <li><strong>S:</strong> Mulțimea finită a stărilor automatului.</li>
+            <li><strong>&Sigma;:</strong> Alfabetul de intrare (mulțime finită de simboluri).</li>
+            <li><strong>&delta;:</strong> Funcția de tranziție între stări.</li>
+            <li><strong>s<sub>0</sub> &isin; S:</strong> Starea inițială.</li>
+            <li><strong>F &sube; S:</strong> Mulțimea stărilor finale (de acceptare).</li>
+          </ul>
+
+          <div class="grid md:grid-cols-2 gap-4 mt-4 text-xs font-mono">
+            <div class="p-4 bg-slate-950 rounded-2xl border border-cyan-500/30">
+              <span class="text-cyan-400 font-bold text-sm block mb-2">NFA (Nedeterminist)</span>
+              <p class="text-slate-300 mb-2">Tranziția: <code>&delta;: S &times; (&Sigma; &cup; {&epsilon;}) &rarr; P(S)</code></p>
+              <ul class="list-disc list-inside space-y-1 text-slate-400">
+                <li>Permite tranziții spontane <strong>&epsilon;</strong> (fără consum de caracter).</li>
+                <li>Dintr-o stare pot pleca mai multe arce cu același simbol.</li>
+                <li>Simplu de construit din RE (algoritmul lui Thompson).</li>
+                <li>Lent la execuție directă pe șir (necesită simulare de mulțimi).</li>
+              </ul>
+            </div>
+
+            <div class="p-4 bg-slate-950 rounded-2xl border border-emerald-500/30">
+              <span class="text-emerald-400 font-bold text-sm block mb-2">DFA (Determinist)</span>
+              <p class="text-slate-300 mb-2">Tranziția: <code>&delta;: S &times; &Sigma; &rarr; S</code></p>
+              <ul class="list-disc list-inside space-y-1 text-slate-400">
+                <li><strong>Fără tranziții &epsilon;</strong>.</li>
+                <li>Exact o singură stare următoare pentru orice pereche (stare, caracter).</li>
+                <li>Execuție ultra-rapidă &Omicron;(n) prin simplă căutare în tabel matriceal.</li>
+                <li>Reprezintă forma finală compilată de generatoare precum Flex.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Algoritmul lui Thompson (RE -> NFA) -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-mono text-sm border border-cyan-500/30">3</span>
+          Algoritmul lui Thompson (Construcția Inductivă RE &rarr; NFA)
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Algoritmul lui Ken Thompson descompune recursiv expresia regulată în sub-expresii atomice și asamblează un NFA echivalent. 
+          </p>
+
+          <div class="p-4 bg-cyan-950/30 border border-cyan-500/30 rounded-2xl text-xs text-cyan-200 space-y-2">
+            <strong class="text-cyan-400 block font-mono">Proprietățile Structurale Garantate ale NFA-ului lui Thompson:</strong>
+            <p>1. Are <strong>exact o stare inițială</strong> (fără tranziții care intră în ea) și <strong>exact o stare finală</strong> (fără tranziții care pleacă din ea).</p>
+            <p>2. Din orice stare pleacă <strong>cel mult două tranziții &epsilon;</strong>.</p>
+            <p>3. Numărul total de stări al NFA-ului compus este de cel mult <code>2 &times; lungimea(RE)</code>.</p>
+          </div>
+
+          <div class="space-y-3 font-mono text-xs">
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <span class="text-cyan-400 font-bold">1. Simbolul de Bază 'a':</span>
+              <p class="text-slate-400 mt-1"><code>(start) &rarr; [s_init] &mdash; a &rarr; ((s_final))</code></p>
+            </div>
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <span class="text-cyan-400 font-bold">2. Concatenarea (r1 r2):</span>
+              <p class="text-slate-400 mt-1">Starea finală a automatului N(r1) fuzionează cu starea inițială a lui N(r2).</p>
+            </div>
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <span class="text-cyan-400 font-bold">3. Reuniunea / Alternanța (r1 | r2):</span>
+              <p class="text-slate-400 mt-1">Se creează o nouă stare inițială cu ramificații &epsilon; către N(r1) și N(r2), iar ieșirile converg prin &epsilon; într-o nouă stare finală unică.</p>
+            </div>
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <span class="text-cyan-400 font-bold">4. Închiderea Kleene (r*):</span>
+              <p class="text-slate-400 mt-1">Nouă stare de start cu arc &epsilon; direct către noua stare finală (pentru cuvântul vid) și arc &epsilon; către N(r). Ieșirea din N(r) are arc de buclă &epsilon; înapoi către intrare și arc &epsilon; către noua stare finală.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: Subset Construction (NFA -> DFA) -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-mono text-sm border border-cyan-500/30">4</span>
+          Determinizarea prin Algoritmul Subset Construction
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Determinizarea transformă un NFA cu tranziții &epsilon; într-un DFA echivalent, unde fiecare stare DFA corespunde unei <em>mulțimi de stări NFA</em>.
+          </p>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-3 font-mono text-xs">
+            <div class="text-cyan-400 font-bold">Cele Două Operații Fundamentale:</div>
+            <p class="text-slate-300">
+              <strong>1. &epsilon;-closure(s):</strong> Mulțimea stărilor NFA accesibile din starea <code>s</code> urmând exclusiv tranziții &epsilon; (inclusiv starea <code>s</code> însăși).
+            </p>
+            <p class="text-slate-300">
+              <strong>2. move(T, a):</strong> Mulțimea stărilor NFA în care se poate ajunge din oricare stare <code>s &isin; T</code> consumând simbolul terminal <code>a</code>:
+              <br>
+              <code>move(T, a) = &cup;<sub>s &isin; T</sub> &delta;(s, a)</code>
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2 text-xs">
+            <span class="text-indigo-400 font-mono font-bold block mb-1">Studiu de Caz Clasic de Examen: RE = (a | b)* a b b</span>
+            <p class="text-slate-400 leading-relaxed">
+              Starea inițială a DFA-ului este <code>S<sub>0</sub> = &epsilon;-closure(s<sub>0</sub>)</code>. La fiecare iterație, pentru fiecare simbol de intrare <code>a &isin; &Sigma;</code>, se calculează:
+              <br>
+              <code class="text-cyan-300">U = &epsilon;-closure(move(S_curent, a))</code>
+              <br>
+              Dacă <code>U</code> nu există încă în tabela DFA, se adaugă ca stare nouă. O stare DFA este <strong>stare finală</strong> dacă conține starea finală din NFA-ul original!
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5: Minimizarea Hopcroft a DFA -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-mono text-sm border border-cyan-500/30">5</span>
+          Minimizarea Hopcroft a Stărilor DFA
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Un DFA determinizat poate conține stări redundante (echivalente). Algoritmul Hopcroft găsește <strong>DFA-ul minimal unic</strong> în timp &Omicron;(n log n).
+          </p>
+
+          <div class="space-y-3 font-mono text-xs">
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <span class="text-cyan-400 font-bold">Pasul 1 (Partiția Inițială):</span>
+              <p class="text-slate-400 mt-1">Se separă stările în două grupe disjuncte: stări finale (F) și stări nefinale (S \ F): <code>P = {F, S \ F}</code>.</p>
+            </div>
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <span class="text-cyan-400 font-bold">Pasul 2 (Rafinarea prin Split):</span>
+              <p class="text-slate-400 mt-1">Pentru fiecare grup G și fiecare simbol 'a', dacă tranzițiile pe 'a' din stările lui G aterizează în grupuri diferite, grupul G este divizat.</p>
+            </div>
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <span class="text-cyan-400 font-bold">Pasul 3 (Punctul Fix):</span>
+              <p class="text-slate-400 mt-1">Repetă pasul 2 până când nicio grupă nu mai poate fi divizată. Fiecare grupă rămasă devine o singură stare în DFA-ul minimizat.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 6: Scanerul Flex & Rezolvarea Ambiguității -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-mono text-sm border border-cyan-500/30">6</span>
+          Scanerul Flex & Regulile de Ambiguitate
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Un fișier Flex (<code>.l</code>) are trei secțiuni delimitate de <code>%%</code>:
+          </p>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs">
+            <span class="text-cyan-400 font-bold">Structura Canonică a unui fișier Flex (.l):</span>
+            <pre class="text-slate-300 mt-2">
+%{
+/* 1. Secțiunea de Declarații C (include-uri, variabile globale) */
+#include "parser.tab.h"
+%}
+%option noyywrap yylineno
+
+%%
+/* 2. Secțiunea Regulilor de Translatare (Tipar { Acțiune C }) */
+"while"          { return WHILE; }
+[a-zA-Z_][a-zA-Z0-9_]* { yylval.str = strdup(yytext); return ID; }
+[0-9]+           { yylval.num = atoi(yytext); return INT_CONST; }
+":="             { return ASSIGN; }
+[ \t\r\n]+       { /* ignoră spațiile albe */ }
+.                { fprintf(stderr, "Eroare lexicală: %s\n", yytext); }
+
+%%
+/* 3. Secțiunea Rutinelor Utilizator C */
+int main() { yylex(); return 0; }
+            </pre>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 mt-4 font-mono text-xs">
+            <div class="p-4 bg-slate-950 rounded-2xl border border-cyan-500/30">
+              <span class="text-cyan-400 font-bold text-sm block mb-1">1. Longest Match (Maximal Munch)</span>
+              <p class="text-slate-300 leading-relaxed">
+                Scanerul consumă întotdeauna <strong>cel mai lung prefix</strong> care se potrivește cu un tipar valid.
+                <br><br>
+                <em>Exemplu:</em> Pentru șirul <code>while2</code>, deși prefixul <code>while</code> se potrivește cu cuvântul cheie WHILE, Flex consumă întreg șirul de lungime 6 și returnează <code>ID</code>!
+              </p>
+            </div>
+
+            <div class="p-4 bg-slate-950 rounded-2xl border border-indigo-500/30">
+              <span class="text-indigo-400 font-bold text-sm block mb-1">2. First Rule Wins (Prioritate)</span>
+              <p class="text-slate-300 leading-relaxed">
+                Dacă două reguli potrivesc exact aceeași lungime de caractere, <strong>prima regulă declarată în fișier câștigă</strong>.
+                <br><br>
+                <em>Regulă vitală:</em> Cuvintele cheie (<code>while</code>, <code>if</code>) trebuie declarate <strong>înaintea</strong> tiparului generic de identificator (<code>[a-z]+</code>)!
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 7: Diagramele în T & Bootstrapping -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-mono text-sm border border-cyan-500/30">7</span>
+          Diagramele în T (Bratman, 1961) & Bootstrapping
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Diagramele în T descriu formal relația dintre limbajul <strong>Sursă (S)</strong>, limbajul <strong>Țintă (T)</strong> și limbajul de <strong>Implementare (I)</strong>:
+          </p>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs text-center">
+            <pre class="inline-block text-cyan-300 text-left">
++---------+---------+
+| Sursa S | Tinta T |
++---------+---------+
+          |    I    |
+          +---------+
+            (Impl)
+            </pre>
+            <p class="text-slate-400 mt-2 text-xs">Un compilator S &rarr; T scris în limbajul I</p>
+          </div>
+
+          <div class="space-y-3 text-xs leading-relaxed">
+            <p>
+              <strong>Compilarea Încrucișată (Cross-Compilation):</strong> Un compilator care rulează pe o mașină gazdă (Host, ex: x86) dar generează cod pentru o arhitectură țintă diferită (Target, ex: microcontroler ARM / RISC-V).
+            </p>
+            <p>
+              <strong>Procesul de Bootstrapping (Auto-Găzduire în 3 Pași):</strong>
+            </p>
+            <ol class="list-decimal list-inside space-y-1 font-mono text-slate-400 pl-2">
+              <li>Se scrie un compilator minimal pentru un nucleu restrâns L<sub>0</sub> într-un limbaj existent (ex: C sau Asamblor).</li>
+              <li>Se scrie compilatorul complet pentru limbajul L în subsetul L<sub>0</sub> și se compilează cu compilatorul din pasul 1.</li>
+              <li>Se rescrie compilatorul complet pentru L chiar în limbajul L și se auto-compilează. Din acel moment, compilatorul devine complet <strong>self-hosting</strong>!</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 8: Capcane Frecvente la Examen -->
+      <section class="p-8 bg-rose-950/20 border border-rose-500/30 rounded-3xl backdrop-blur-xl space-y-4">
+        <h2 class="text-xl font-bold text-rose-400 flex items-center gap-2">
+          <span>⚠️</span>
+          Capcane Frecvente de Examen la Analiză Lexicală
+        </h2>
+
+        <ul class="space-y-2 text-xs text-slate-300 leading-relaxed">
+          <li class="flex items-start gap-2">
+            <span class="text-rose-400 font-bold">&bull;</span>
+            <span><strong>Uitarea stării curente în &epsilon;-closure:</strong> În orice calcul <code>&epsilon;-closure(s)</code>, starea <code>s</code> însăși aparține întotdeauna mulțimii sale de închidere (distanța 0 tranziții &epsilon;)!</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-rose-400 font-bold">&bull;</span>
+            <span><strong>Proprietatea Thompson:</strong> NFA-ul lui Thompson are <em>întotdeauna exact o stare inițială și exact o stare finală</em>, indiferent de complexitatea expresiei regulate.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-rose-400 font-bold">&bull;</span>
+            <span><strong>Efectul Maximal Munch pe identificatori ce conțin cuvinte cheie:</strong> Șirul <code>while1</code> este întotdeauna returnat ca <code>ID</code>, NICIODATĂ ca <code>WHILE</code> urmat de cifra <code>1</code>.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-rose-400 font-bold">&bull;</span>
+            <span><strong>Numărarea liniilor în Flex:</strong> Pentru ca variabila globală <code>yylineno</code> să funcționeze corect, în fișierul <code>.l</code> trebuie adăugată obligatoriu directiva <code>%option yylineno</code>.</span>
+          </li>
+        </ul>
+      </section>
+
+    </article>
+
+    <!-- Footer -->
+    <footer class="mt-12 py-6 border-t border-slate-900 text-center text-xs text-slate-600 font-semibold tracking-wide uppercase">
+      &copy; 2026 ExamTrainers. Modulul de Analiză Lexicală & Automate — Universitatea din Craiova.
+    </footer>
+  </main>
+</body>
+</html>

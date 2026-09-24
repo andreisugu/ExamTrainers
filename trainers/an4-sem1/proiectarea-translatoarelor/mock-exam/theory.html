@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cheat Sheet: Cele 10 Porunci ale Examenului de PT - Exam Trainers</title>
+  <meta name="description" content="Cheat sheet de buzunar pentru examenul online la Proiectarea Translatoarelor: Cele 10 Porunci, arbori de decizie rapidă și sinteza capcanelor frecvente.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-amber': '0 0 25px -5px rgba(245, 158, 11, 0.4)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.06) 0%, transparent 45%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-amber-500 selection:text-white">
+
+  <main class="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-8 sm:px-6 lg:px-8 justify-between">
+    
+    <!-- Top Nav -->
+    <header class="mb-10 pb-6 border-b border-slate-800 flex items-center justify-between">
+      <nav class="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+        <a href="../../../index.html" class="hover:text-white transition-colors">ExamTrainers</a>
+        <span class="text-slate-600">/</span>
+        <a href="../index.html" class="hover:text-white transition-colors">Proiectarea Translatoarelor</a>
+        <span class="text-slate-600">/</span>
+        <a href="index.html" class="hover:text-white transition-colors">Mock Exam</a>
+        <span class="text-slate-600">/</span>
+        <span class="text-amber-400 font-bold bg-amber-500/10 px-2.5 py-0.5 rounded border border-amber-500/20 font-mono">Cele 10 Porunci</span>
+      </nav>
+
+      <a href="index.html" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-xs font-bold text-white transition-all shadow-md shadow-amber-600/20">
+        <span>⏱️</span>
+        <span>Pornește Testul Simulat</span>
+      </a>
+    </header>
+
+    <!-- Main Content -->
+    <article class="space-y-10">
+      
+      <div>
+        <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">
+          Sinteză Rapidă • Cursul Prof. Marius Brezovan & Conf. Eugen Ganea
+        </span>
+        <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-white mt-3">
+          Cele 10 Porunci ale Examenului de PT
+        </h1>
+        <p class="text-base text-slate-400 mt-2 leading-relaxed">
+          Ghidul de supraviețuire și decizie rapidă pentru testul online tip grilă: reguli de aur, proprietăți inviolabile, diferențieri critice și eliminarea instantanee a capcanelor frecvente.
+        </p>
+      </div>
+
+      <!-- The 10 Commandments Box -->
+      <section class="p-8 bg-slate-900/60 border border-amber-500/30 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-amber-400 flex items-center gap-3">
+          <span>📜</span>
+          Cele 10 Reguli de Aur pentru Nota 10 la Examen
+        </h2>
+
+        <div class="space-y-4 font-mono text-xs">
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
+            <span class="text-amber-400 font-bold text-sm block">1. Simbolul &epsilon; NU intră NICIODATĂ în mulțimea FOLLOW(A)!</span>
+            <p class="text-slate-300">
+              FOLLOW conține strict caractere terminale reale și marcajul <code>$</code>. Dacă găsești <code>&epsilon;</code> într-o variantă de răspuns pentru FOLLOW, o elimini pe loc!
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
+            <span class="text-amber-400 font-bold text-sm block">2. Marcajul $ se pune DIN OFICIU în FOLLOW(S)!</span>
+            <p class="text-slate-300">
+              Pentru simbolul de start <code>S</code> al gramaticii, <code>$</code> este întotdeauna primul element din <code>FOLLOW(S)</code>.
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
+            <span class="text-amber-400 font-bold text-sm block">3. La A &rarr; &alpha; B &beta;, dacă &beta; &rArr;* &epsilon;, adaugi și FOLLOW(A) în FOLLOW(B)!</span>
+            <p class="text-slate-300">
+              Cea mai frecventă greșeală este adăugarea doar a lui <code>FIRST(&beta;) \ {&epsilon;}</code> și uitarea propagării elementelor din coadă provenite din <code>FOLLOW(A)</code>.
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
+            <span class="text-amber-400 font-bold text-sm block">4. O gramatică recursivă la stânga NU POATE FI NICIODATĂ LL(1)!</span>
+            <p class="text-slate-300">
+              Dacă observi o regulă de forma <code>A &rarr; A &alpha;</code>, gramatica este descalificată automat de la clasa LL(1). Necesită eliminarea recursivității înainte de parsare.
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
+            <span class="text-amber-400 font-bold text-sm block">5. Două alternative care încep cu același terminal distrug proprietatea LL(1)!</span>
+            <p class="text-slate-300">
+              Dacă <code>A &rarr; a &beta;<sub>1</sub> | a &beta;<sub>2</sub></code>, ambele reguli vor fi atribuite celulei <code>M[A, a]</code>, producând un conflict de parsare predictivă. Soluția: factorizarea la stânga.
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
+            <span class="text-amber-400 font-bold text-sm block">6. În NFA-ul lui Thompson, fiecare stare are cel mult două tranziții &epsilon; ieșite!</span>
+            <p class="text-slate-300">
+              Structura Thompson garantează: o singură stare inițială, o singură stare finală și cel mult 2 arce &epsilon; de ramificare per nod.
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
+            <span class="text-amber-400 font-bold text-sm block">7. În Flex, cuvintele cheie se declară ÎNAINTEA identificatorilor generici!</span>
+            <p class="text-slate-300">
+              Deoarece <code>"while"</code> se potrivește și cu tiparul <code>[a-z]+</code>, regula pentru <code>"while"</code> trebuie să apară mai sus în fișier pentru ca regula <em>First Rule Wins</em> să îi acorde prioritate.
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
+            <span class="text-amber-400 font-bold text-sm block">8. Fuziunea stărilor în LALR(1) poate crea DOAR conflicte Reduce/Reduce!</span>
+            <p class="text-slate-300">
+              Fuzionarea stărilor cu nucleu identic din LR(1) nu modifică tranzițiile de Shift. În schimb, reuniunea mulțimilor de lookahead poate genera noi conflicte Reduce/Reduce!
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
+            <span class="text-amber-400 font-bold text-sm block">9. În Bison, conflictul Shift/Reduce se rezolvă implicit prin SHIFT!</span>
+            <p class="text-slate-300">
+              Parserul consumă cât mai mult text posibil înainte de a reduce, ceea ce rezolvă automat ambiguitatea <em>dangling else</em> legând <code>else</code> de cel mai apropiat <code>if</code>.
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-1">
+            <span class="text-amber-400 font-bold text-sm block">10. Parse Tree reține sintaxa concretă; AST reține semantica operațională!</span>
+            <p class="text-slate-300">
+              Parse Tree include toate parantezele și neterminalele de trecere (E, T, F). AST elimină complet parantezele și păstrează doar nodurile operaționale (+, *, IF) și frunzele.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Decision Tree for Exam Grila -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-4">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+          <span>🧠</span>
+          Ghidul de Clasificare a Gramaticilor în 30 de Secunde
+        </h2>
+
+        <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs text-slate-300 space-y-2">
+          <p>1. <strong>Vezi recursivitate la stânga (A &rarr; A &alpha;)?</strong> &rArr; <span class="text-rose-400 font-bold">NU este LL(1)</span>. Poate fi SLR(1) sau LALR(1).</p>
+          <p>2. <strong>Vezi alternative cu prefix comun (A &rarr; a B | a C)?</strong> &rArr; <span class="text-rose-400 font-bold">NU este LL(1)</span> fără factorizare.</p>
+          <p>3. <strong>Are stări LR(0) cu conflict Shift/Reduce pe care FOLLOW nu le poate rezolva?</strong> &rArr; <span class="text-rose-400 font-bold">NU este SLR(1)</span>, dar poate fi LALR(1) cu lookahead-uri mai precise.</p>
+          <p>4. <strong>Fuziunea nucleelor comasează două reduceri cu lookahead comun?</strong> &rArr; <span class="text-rose-400 font-bold">NU este LALR(1)</span>, dar este LR(1) canonic.</p>
+        </div>
+      </section>
+
+    </article>
+
+    <!-- Footer -->
+    <footer class="mt-12 py-6 border-t border-slate-900 text-center text-xs text-slate-600 font-semibold tracking-wide uppercase">
+      &copy; 2026 ExamTrainers. Ghidul de Supraviețuire la Examen — Universitatea din Craiova.
+    </footer>
+  </main>
+</body>
+</html>

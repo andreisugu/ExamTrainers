@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proiectarea Translatoarelor - Exam Trainers (UCV CR4.1)</title>
+  <meta name="description" content="Dashboard pentru pregătirea examenului la disciplina Proiectarea Translatoarelor (PT): Automate finite, Flex & Bison, Gramatici LL(1) și LALR(1), Arbore AST, Tabela de Simboluri și proiectul M+-.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit (UI) & JetBrains Mono (Code/Math) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-cyan': '0 0 25px -5px rgba(6, 182, 212, 0.4)',
+            'glow-indigo': '0 0 25px -5px rgba(99, 102, 241, 0.4)',
+            'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.4)',
+            'glow-amber': '0 0 25px -5px rgba(245, 158, 11, 0.4)',
+            'glow-purple': '0 0 25px -5px rgba(168, 85, 247, 0.4)',
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-out forwards',
+            'slide-up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'pulse-slow': 'pulseSlow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(14px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+            pulseSlow: {
+              '0%, 100%': { opacity: '0.4' },
+              '50%': { opacity: '0.8' },
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.04) 0%, transparent 50%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-cyan-500 selection:text-white">
+
+  <!-- Main Container -->
+  <main class="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-8 sm:px-6 lg:px-8 justify-between animate-fade-in">
+    
+    <!-- Top Nav / Breadcrumbs -->
+    <header class="flex items-center justify-between mb-10">
+      <nav class="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+        <a href="../../index.html" class="flex items-center hover:text-white transition-colors duration-150 py-1 px-2 rounded-md hover:bg-white/5">
+          <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+          </svg>
+          ExamTrainers
+        </a>
+        <span class="text-slate-600 font-semibold">/</span>
+        <span class="text-slate-500 cursor-default px-1">AN4-Sem1</span>
+        <span class="text-slate-600 font-semibold">/</span>
+        <span class="text-cyan-400 font-bold bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20 font-mono">Proiectarea Translatoarelor</span>
+      </nav>
+
+      <div class="hidden sm:flex items-center space-x-2 text-xs text-slate-400 bg-slate-900/60 border border-slate-800 rounded-full px-3 py-1.5 backdrop-blur-md">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+        <span class="font-semibold uppercase tracking-wider font-mono">Curs & Laborator: Prof. Marius Brezovan & Conf. Eugen Ganea</span>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="text-center sm:text-left mb-12 space-y-4">
+      <div class="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-cyan-400 animate-pulse-slow">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Compilatoare, Parsere & Verificare Semantică
+      </div>
+      <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl bg-gradient-to-r from-white via-slate-100 to-cyan-200 bg-clip-text text-transparent">
+        Proiectarea Translatoarelor (PT)
+      </h1>
+      <p class="max-w-3xl text-base text-slate-400 leading-relaxed font-medium">
+        Pregătire intensivă pentru examenul online tip grilă (60%) și proba de laborator (40%). Determinizare NFA &rarr; DFA, simulare Flex cu Maximal Munch, calcul riguros FIRST/FOLLOW și tabel LL(1), fuziunea nucleelor LALR(1), disambiguare Bison, analiza de flux și compilatorul limbajului didactic <em>M<sup>+-</sup></em>.
+      </p>
+    </section>
+
+    <!-- Subsections Grid (5 Capitole) -->
+    <section class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-16 animate-slide-up">
+      
+      <!-- Card 1: Analiză Lexicală, Automate & Flex -->
+      <article class="group relative flex flex-col justify-between rounded-3xl border border-cyan-500/25 bg-slate-900/65 p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-cyan-500/45 hover:bg-slate-900/80 hover:shadow-glow-cyan">
+        <div class="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-cyan-500/5 to-blue-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 uppercase tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              Disponibil
+            </span>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">CAPITOLUL 1</span>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center space-x-3 text-white">
+              <div class="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition-all duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25A2.25 2.25 0 0113.5 8.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold tracking-tight">Analiză Lexicală, Automate & Flex</h3>
+            </div>
+            <p class="text-xs leading-relaxed text-slate-400 font-medium">
+              Thompson RE &rarr; NFA, determinizare Subset Construction cu calcul &epsilon;-closure, minimizare Hopcroft, simulare Flex cu Maximal Munch (Longest Match) și Diagrame în T cu Bootstrapping.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap gap-1.5 pt-2">
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Thompson NFA</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Subset Construction</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Maximal Munch Tracer</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Diagrame în T</span>
+          </div>
+        </div>
+
+        <div class="mt-8 flex flex-col gap-2">
+          <a href="./lexer-automata/theory.html" class="flex items-center justify-center gap-2 rounded-2xl bg-cyan-600 hover:bg-cyan-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-cyan-600/10 hover:shadow-cyan-500/20 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Învață Teorie & Automate
+          </a>
+          <a href="./lexer-automata/index.html" class="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40 px-4 py-3 text-xs font-bold text-slate-300 hover:text-white transition-all duration-150 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+            </svg>
+            Simulator Determinizare & Flex
+          </a>
+        </div>
+      </article>
+
+      <!-- Card 2: Analiză Top-Down, LL(1) & Recursive Descent -->
+      <article class="group relative flex flex-col justify-between rounded-3xl border border-indigo-500/25 bg-slate-900/65 p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-indigo-500/45 hover:bg-slate-900/80 hover:shadow-glow-indigo">
+        <div class="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-indigo-500/5 to-purple-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 uppercase tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              Disponibil
+            </span>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">CAPITOLUL 2</span>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center space-x-3 text-white">
+              <div class="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold tracking-tight">Analiză Top-Down, LL(1) & Coborâre Recursivă</h3>
+            </div>
+            <p class="text-xs leading-relaxed text-slate-400 font-medium">
+              Eliminare recursivitate la stânga și factorizare, calculul riguros FIRST și FOLLOW (fără &epsilon; în FOLLOW!), matricea M[A, a], simulator stivă LL(1) și generator C++ coborâre recursivă.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap gap-1.5 pt-2">
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">FIRST & FOLLOW</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Tabel LL(1) M[A, a]</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Simulator Stivă LL(1)</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Coborâre Recursivă</span>
+          </div>
+        </div>
+
+        <div class="mt-8 flex flex-col gap-2">
+          <a href="./top-down-ll1/theory.html" class="flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-indigo-600/10 hover:shadow-indigo-500/20 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Învață Teorie & Algoritmi LL(1)
+          </a>
+          <a href="./top-down-ll1/index.html" class="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40 px-4 py-3 text-xs font-bold text-slate-300 hover:text-white transition-all duration-150 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+            </svg>
+            Workbench FIRST/FOLLOW & LL(1)
+          </a>
+        </div>
+      </article>
+
+      <!-- Card 3: Analiză Bottom-Up (LR) & Bison -->
+      <article class="group relative flex flex-col justify-between rounded-3xl border border-purple-500/25 bg-slate-900/65 p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-purple-500/45 hover:bg-slate-900/80 hover:shadow-glow-purple">
+        <div class="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-purple-500/5 to-pink-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 uppercase tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              Disponibil
+            </span>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">CAPITOLUL 3</span>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center space-x-3 text-white">
+              <div class="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-all duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold tracking-tight">Analiză Bottom-Up (LR) & Generatorul Bison</h3>
+            </div>
+            <p class="text-xs leading-relaxed text-slate-400 font-medium">
+              Item-uri LR(0), closure și goto, SLR(1), LR(1) canonic cu lookahead-uri, fuziunea nucleelor LALR(1) pe gramatica Brezovan (I<sub>36</sub>, I<sub>47</sub>, I<sub>89</sub>), simulator Shift-Reduce și directive de precedență Bison.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap gap-1.5 pt-2">
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">LR(0) & SLR(1)</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Fuziune LALR(1)</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Shift-Reduce Simulator</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Bison Precedență</span>
+          </div>
+        </div>
+
+        <div class="mt-8 flex flex-col gap-2">
+          <a href="./bottom-up-lr/theory.html" class="flex items-center justify-center gap-2 rounded-2xl bg-purple-600 hover:bg-purple-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-purple-600/10 hover:shadow-purple-500/20 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Învață Teorie & Fuziune LALR
+          </a>
+          <a href="./bottom-up-lr/index.html" class="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40 px-4 py-3 text-xs font-bold text-slate-300 hover:text-white transition-all duration-150 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+            </svg>
+            Laborator LALR & Shift-Reduce
+          </a>
+        </div>
+      </article>
+
+      <!-- Card 4: Semantică Statică, AST & Proiectul M+- -->
+      <article class="group relative flex flex-col justify-between rounded-3xl border border-emerald-500/25 bg-slate-900/65 p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-emerald-500/45 hover:bg-slate-900/80 hover:shadow-glow-emerald">
+        <div class="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-emerald-500/5 to-cyan-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 uppercase tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              Disponibil
+            </span>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">CAPITOLUL 4</span>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center space-x-3 text-white">
+              <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold tracking-tight">Semantică Statică, AST & Proiectul M<sup>+-</sup></h3>
+            </div>
+            <p class="text-xs leading-relaxed text-slate-400 font-medium">
+              Tabela de simboluri scoped cu name shadowing, verificator de tipuri (condiții booleene stricte), AST vs Parse Tree, atribute S vs L (SDD), cod 3AC (cvadruple/triple) și analiză de flux (DEF/USE/GEN/KILL).
+            </p>
+          </div>
+
+          <div class="flex flex-wrap gap-1.5 pt-2">
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Scoped Symbol Table</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Type Checker M+-</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">3AC & Dataflow</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Chaitin Colorare</span>
+          </div>
+        </div>
+
+        <div class="mt-8 flex flex-col gap-2">
+          <a href="./semantics-mplusminus/theory.html" class="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-emerald-600/10 hover:shadow-emerald-500/20 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Manual EBNF & Teorie Semantică
+          </a>
+          <a href="./semantics-mplusminus/index.html" class="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40 px-4 py-3 text-xs font-bold text-slate-300 hover:text-white transition-all duration-150 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+            </svg>
+            Studio Simboluri, AST & 3AC
+          </a>
+        </div>
+      </article>
+
+      <!-- Card 5: Mock Exam Simulator & Cele 10 Porunci -->
+      <article class="group relative flex flex-col justify-between rounded-3xl border border-amber-500/25 bg-slate-900/65 p-6 backdrop-blur-xl shadow-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-amber-500/45 hover:bg-slate-900/80 hover:shadow-glow-amber">
+        <div class="absolute inset-0 -z-10 rounded-3xl bg-gradient-to-br from-amber-500/5 to-orange-500/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 uppercase tracking-wide">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              Disponibil
+            </span>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">CAPITOLUL 5</span>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center space-x-3 text-white">
+              <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-all duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold tracking-tight">Mock Exam: Simulator de Test Cronometrat</h3>
+            </div>
+            <p class="text-xs leading-relaxed text-slate-400 font-medium">
+              Simulare fidelă a examenului online UCV (60 minute, 15 întrebări aleatorii din banca de 40+ grile). Notare automată 1-10, diagnoză pe categorii, demontarea capcanelor și Cele 10 Porunci.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap gap-1.5 pt-2">
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Cronometru 60 Min</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">40+ Grile Examen</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Cele 10 Porunci (Cheat Sheet)</span>
+            <span class="rounded-lg bg-slate-800/80 px-2.5 py-1 text-[10px] font-semibold text-slate-400 border border-slate-700/40">Export Raport PDF/JSON</span>
+          </div>
+        </div>
+
+        <div class="mt-8 flex flex-col gap-2">
+          <a href="./mock-exam/theory.html" class="flex items-center justify-center gap-2 rounded-2xl bg-amber-600 hover:bg-amber-500 px-4 py-3 text-xs font-bold text-white transition-all duration-150 shadow-md shadow-amber-600/10 hover:shadow-amber-500/20 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+            </svg>
+            Cheat Sheet: Cele 10 Porunci
+          </a>
+          <a href="./mock-exam/index.html" class="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 hover:border-slate-700 bg-slate-950/40 hover:bg-slate-900/40 px-4 py-3 text-xs font-bold text-slate-300 hover:text-white transition-all duration-150 active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Pornește Simulatorul de Examen
+          </a>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- Footer -->
+    <footer class="mt-auto py-6 border-t border-slate-900 text-center text-xs text-slate-600 font-semibold tracking-wide uppercase">
+      &copy; 2026 ExamTrainers. Proiectat pentru Proiectarea Translatoarelor (CR4.1) — Universitatea din Craiova.
+    </footer>
+  </main>
+</body>
+</html>

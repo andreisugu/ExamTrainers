@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teorie: Semantică Statică, AST & Proiectul M+- - Exam Trainers</title>
+  <meta name="description" content="Ghid teoretic complet: Arbore AST, Tabela de Simboluri scoped, Atribute S vs L (SDD), Tipuri M+-, 3AC, Dataflow DEF/USE și manualul oficial EBNF M+-.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.4)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.06) 0%, transparent 45%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-emerald-500 selection:text-white">
+
+  <main class="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-8 sm:px-6 lg:px-8 justify-between">
+    
+    <!-- Top Nav -->
+    <header class="mb-10 pb-6 border-b border-slate-800 flex items-center justify-between">
+      <nav class="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+        <a href="../../../index.html" class="hover:text-white transition-colors">ExamTrainers</a>
+        <span class="text-slate-600">/</span>
+        <a href="../index.html" class="hover:text-white transition-colors">Proiectarea Translatoarelor</a>
+        <span class="text-slate-600">/</span>
+        <a href="index.html" class="hover:text-white transition-colors">Semantică & M+-</a>
+        <span class="text-slate-600">/</span>
+        <span class="text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20 font-mono">Teorie</span>
+      </nav>
+
+      <a href="index.html" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white transition-all shadow-md shadow-emerald-600/20">
+        <span>🎮</span>
+        <span>Deschide Studio</span>
+      </a>
+    </header>
+
+    <!-- Main Content -->
+    <article class="space-y-10">
+      
+      <div>
+        <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+          Laborator & Curs • Prof. Marius Brezovan & Conf. Eugen Ganea
+        </span>
+        <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-white mt-3">
+          Semantică Statică, AST & Proiectul M<sup>+-</sup>
+        </h1>
+        <p class="text-base text-slate-400 mt-2 leading-relaxed">
+          Ghid teoretic complet al etapei de analiză contextuală: construcția Arborelui Sintactic Abstract (AST), gestionarea Tabelei de Simboluri pe domenii de vizibilitate, verificarea strictă a tipurilor în limbajul didactic M<sup>+-</sup>, generarea codului intermediar 3AC, analiza de flux și manualul oficial EBNF.
+        </p>
+      </div>
+
+      <!-- Section 1: De ce este Necesară Analiza Semantică Statică? -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono text-sm border border-emerald-500/30">1</span>
+          Limitările Gramaticilor Independente de Context (CFG)
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Gramaticile CFG pot descrie doar structura sintactică ierarhică (imbricarea parantezelor, blocurilor etc.), dar sunt <strong>incapabile matematic</strong> să captureze dependențele contextuale ale limbajelor reale:
+          </p>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs space-y-2">
+            <span class="text-emerald-400 font-bold block mb-1">Constrângeri Semantice Ce NU Pot Fi Verificate de un Parser Sintactic:</span>
+            <ul class="list-disc list-inside space-y-1 text-slate-300 pl-2">
+              <li>O variabilă trebuie să fie declarată înainte de a fi utilizată.</li>
+              <li>O variabilă nu poate fi redeclarată în același domeniu de vizibilitate (același bloc).</li>
+              <li>Tipurile de date ale operanzilor unei operații trebuie să fie compatibile.</li>
+              <li>Condiția dintr-o buclă <code>WHILE expr DO</code> trebuie să se evalueze strict la tipul <code>BOOL</code>.</li>
+              <li>La apelul unei funcții, numărul și tipurile argumentelor trebuie să corespundă semnăturii declarate.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Gramatici cu Atribute (SDD / SDT) -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono text-sm border border-emerald-500/30">2</span>
+          Gramatici cu Atribute: Atribute Sintetizate (S) vs. Moștenite (L)
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Formalismul <strong>Definițiilor Dirijate de Sintaxă (Syntax-Directed Definitions — SDD)</strong> atașează fiecărui simbol gramatical o mulțime de atribute și fiecărei producții o mulțime de reguli semantice:
+          </p>
+
+          <div class="grid md:grid-cols-2 gap-4 font-mono text-xs">
+            <div class="p-4 bg-slate-950 rounded-2xl border border-emerald-500/30">
+              <span class="text-emerald-400 font-bold text-sm block mb-1">Atribute Sintetizate (S-Attributed)</span>
+              <p class="text-slate-400 mb-2">Valoarea atributului nodului părinte <code>A</code> depinde <strong>exclusiv de fiii săi</strong>:</p>
+              <div class="p-2.5 bg-slate-900 rounded-xl border border-slate-800 text-cyan-300">
+                E &rarr; E<sub>1</sub> + T &nbsp;&rArr;&nbsp; E.val = E<sub>1</sub>.val + T.val
+              </div>
+              <ul class="list-disc list-inside space-y-1 text-slate-400 mt-2 text-[11px]">
+                <li>Evaluate natural de jos în sus (bottom-up).</li>
+                <li>100% compatibile cu parserele LR / Bison (evaluate direct pe stivă prin <code>$$ = $1 + $3</code>).</li>
+              </ul>
+            </div>
+
+            <div class="p-4 bg-slate-950 rounded-2xl border border-cyan-500/30">
+              <span class="text-cyan-400 font-bold text-sm block mb-1">Atribute Moștenite (L-Attributed)</span>
+              <p class="text-slate-400 mb-2">Valoarea atributului nodului <code>X<sub>i</sub></code> depinde de <strong>părinte sau de frații din stânga</strong>:</p>
+              <div class="p-2.5 bg-slate-900 rounded-xl border border-slate-800 text-cyan-300">
+                D &rarr; T L &nbsp;&rArr;&nbsp; L.in_type = T.type
+              </div>
+              <ul class="list-disc list-inside space-y-1 text-slate-400 mt-2 text-[11px]">
+                <li>Evaluate de sus în jos (top-down, de la stânga la dreapta).</li>
+                <li>Compatibile cu parserele predictive LL(1) și coborârea recursivă.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs">
+            <strong class="text-emerald-400 block mb-1">Grafuri de Dependență & Sortare Topologică:</strong>
+            Pentru calculul atributelor, compilatorul construiește un graf orientat al dependențelor între instanțele de atribute. Dacă graful este aciclic (DAG), orice <strong>sortare topologică</strong> furnizează o ordine validă de evaluare. Dacă graful are cicluri, gramatica este circulară și invalidă!
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: AST vs Parse Tree -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono text-sm border border-emerald-500/30">3</span>
+          Arborele Sintactic Abstract (AST) vs. Parse Tree Concret
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Diferența dintre Arborele Concret (Parse Tree) și Arborele Abstract (AST) este un reper critic de arhitectură:
+          </p>
+
+          <div class="overflow-x-auto">
+            <table className="w-full text-left text-xs font-mono border-collapse">
+              <thead>
+                <tr className="border-b border-slate-800 bg-slate-950 text-slate-400">
+                  <th className="p-3">Criteriu</th>
+                  <th className="p-3 text-slate-300">Parse Tree Concret</th>
+                  <th className="p-3 text-emerald-400">Arbore Sintactic Abstract (AST)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                <tr>
+                  <td className="p-3 font-bold text-white">Noduri Interioare</td>
+                  <td className="p-3 text-slate-400">Conține neterminalele intermediare de precedență (E, E', T, T', F)</td>
+                  <td className="p-3 text-emerald-300 font-bold">Conține exclusiv operatorii semantici (+, *, IF, ASSIGN)</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-bold text-white">Punctuație & Paranteze</td>
+                  <td className="p-3 text-slate-400">Păstrează toate parantezele '(', ')', virgulele și ';'</td>
+                  <td className="p-3 text-emerald-300 font-bold">Elimină complet parantezele (ierarhia este stocată în arce)</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-bold text-white">Memorie & Eficiență</td>
+                  <td className="p-3 text-slate-400">Voluminos, dependent de gramatica specifică folosită</td>
+                  <td className="p-3 text-emerald-300 font-bold">Compact, dens semantic, optim pentru optimizări și cod 3AC</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs">
+            <span class="text-emerald-400 font-bold block mb-1">Structura Nodului C în Proiectul M+- (ast.h):</span>
+            <pre class="text-slate-300">
+typedef struct Node {
+    NodeType type;         // PROGRAM_NODE, IF_NODE, WHILE_NODE, ASSIGN_NODE etc.
+    char *name;            // Nume identificator sau operator
+    int intVal;            // Valoare dacă e constantă întreagă
+    double realVal;        // Valoare dacă e constantă reală
+    int boolVal;           // Valoare booleană (0 sau 1)
+    struct Node *child[4]; // Fiii nodului (ex: if are condiție, ramură then, ramură else)
+    struct Node *next;     // Pentru liste înlănțuite de instrucțiuni sau declarații
+} Node;
+            </pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: Scoped Symbol Table -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono text-sm border border-emerald-500/30">4</span>
+          Tabela de Simboluri pe Domenii de Vizibilitate (Scoped Symbol Table)
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Deoarece blocurile imbricate (<code>{ ... }</code>) și corpurile funcțiilor pot declara variabile locale cu același nume ca variabilele din blocurile exterioare (<strong>Name Shadowing</strong>), tabela de simboluri este organizată ca o <strong>stivă de tabele locale</strong>:
+          </p>
+
+          <div class="space-y-3 font-mono text-xs">
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <span class="text-emerald-400 font-bold">enter_scope():</span>
+              <p class="text-slate-400 mt-1">Apelat la intrarea într-un nou bloc sau funcție; împinge pe stivă o nouă tabelă de simboluri goală, având indicator către tabela părinte.</p>
+            </div>
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <span class="text-emerald-400 font-bold">exit_scope():</span>
+              <p class="text-slate-400 mt-1">Apelat la ieșirea din bloc sau funcție; eliberează toate variabilele locale declarate în acel bloc.</p>
+            </div>
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <span class="text-cyan-400 font-bold">lookup(name):</span>
+              <p class="text-slate-400 mt-1">Caută identificatorul începând din tabela curentă (cea mai profundă); dacă nu îl găsește, urcă pe lanțul părinților până la tabela globală. Dacă nu este găsit nici în tabela globală, emite <em>"Eroare: variabilă nedeclarată"</em>.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5: Sistemul de Tipuri M+- -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono text-sm border border-emerald-500/30">5</span>
+          Sistemul de Tipuri în Limbajul Didactic M<sup>+-</sup>
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Limbajul <em>M<sup>+-</sup></em> conține 3 tipuri de bază: <strong>INT</strong>, <strong>REAL</strong> și <strong>BOOL</strong>.
+          </p>
+
+          <div class="grid md:grid-cols-2 gap-4 font-mono text-xs">
+            <div class="p-4 bg-slate-950 rounded-2xl border border-emerald-500/30">
+              <span class="text-emerald-400 font-bold block mb-1">Operatori Aritmetici (+, -, *, /)</span>
+              <p class="text-slate-300">
+                INT + INT &rarr; INT
+                <br>
+                INT + REAL &rarr; REAL (coerciție implicită la REAL)
+                <br>
+                REAL + REAL &rarr; REAL
+              </p>
+            </div>
+
+            <div class="p-4 bg-slate-950 rounded-2xl border border-rose-500/30">
+              <span class="text-rose-400 font-bold block mb-1">Operatori Logici (&&, ||, not)</span>
+              <p class="text-slate-300">
+                Operanzii trebuie să fie <strong>strict BOOL</strong>!
+                <br>
+                Dacă un operand este INT, se raportează <strong>eroare de tip</strong> (fără conversie stil C)!
+              </p>
+            </div>
+          </div>
+
+          <div class="p-4 bg-rose-950/30 border border-rose-500/40 rounded-2xl text-xs text-rose-300 font-mono">
+            <strong class="text-rose-400 block mb-1">Capcană Clasică de Examen (WHILE / IF):</strong>
+            În <em>M<sup>+-</sup></em>, scrierea <code>WHILE 1 DO</code> este <strong>INVALIDĂ SEMANTIC</strong>, deoarece <code>1</code> este de tip <code>INT</code>, nu <code>BOOL</code>! O buclă corectă trebuie să folosească o expresie de comparație: <code>WHILE 1 = 1 DO</code> sau <code>WHILE true DO</code>.
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 6: Cod 3AC, Dataflow & Etape Back-End -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono text-sm border border-emerald-500/30">6</span>
+          Cod cu Trei Adrese (3AC), Dataflow & Back-End
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            În codul 3AC, fiecare instrucțiune are cel mult un operator în partea dreaptă: <code>x = y op z</code>. Expresiile complexe sunt descompuse prin variabile temporare <code>t1, t2, ...</code>.
+          </p>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs">
+            <span class="text-emerald-400 font-bold block mb-1">Traducerea Instrucțiunii: WHILE (a &lt; b) DO a := a + 1;</span>
+            <pre class="text-slate-300">
+L_start:
+    t1 = a &lt; b
+    ifFalse t1 goto L_end
+    a = a + 1
+    goto L_start
+L_end:
+            </pre>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs space-y-2">
+            <span class="text-cyan-400 font-bold block">Analiza Fluxului de Date (Dataflow Analysis, cf. sld1.pdf slide 19):</span>
+            <ul class="list-disc list-inside space-y-1 text-slate-300 pl-2">
+              <li><strong>DEF:</strong> Variabile cărora li se atribuie o valoare în bloc.</li>
+              <li><strong>USE:</strong> Variabile a căror valoare este citită/folosită în bloc.</li>
+              <li><strong>GEN:</strong> Definiții generate în bloc care ajung la ieșire.</li>
+              <li><strong>KILL:</strong> Definiții din program anulate prin reatribuiri locale.</li>
+            </ul>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs space-y-2">
+            <span class="text-indigo-400 font-bold block">Cele 4 Etape ale Sintezei Back-End (Virtual to Physical Binding, slide 22):</span>
+            <ol class="list-decimal list-inside space-y-1 text-slate-300 pl-2">
+              <li><strong>Instruction Selection:</strong> Maparea opcoadelor generice pe instrucțiuni native (ex: <code>lea</code> pe x86).</li>
+              <li><strong>Register Allocation (Chaitin):</strong> Maparea temporarilor pe N regiștri fizici prin colorarea grafului de interferență (cu spilling pe stivă).</li>
+              <li><strong>Instruction Scheduling:</strong> Reordonarea instrucțiunilor pentru prevenirea pauzelor de pipeline.</li>
+              <li><strong>Assembly Emission:</strong> Emiterea fișierului text de asamblare (<code>.s</code>).</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 7: Manualul de Referință EBNF M+- -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-mono text-sm border border-emerald-500/30">7</span>
+          Manualul Oficial EBNF al Limbajului M<sup>+-</sup> (Cd_ProjMPlusMinus.pdf)
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed font-mono text-xs">
+          <p class="text-slate-400">
+            Extrasul complet al regulilor de producție din caietul oficial de proiect:
+          </p>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 overflow-x-auto text-slate-300 leading-relaxed max-h-96 overflow-y-auto">
+            <pre>
+prog -> block
+block -> declarations program_body
+declarations -> declaration SEMICOLON declarations | /* epsilon */
+declaration -> var_declaration | fun_declaration
+var_declaration -> VAR ID array_dimensions COLON type
+type -> INT | REAL | BOOL
+array_dimensions -> SLPAR expr SRPAR array_dimensions | /* epsilon */
+fun_declaration -> FUN ID param_list COLON type CLPAR fun_block CRPAR
+fun_block -> declarations fun_body
+param_list -> LPAR parameters RPAR
+parameters -> basic_declaration more_parameters | /* epsilon */
+more_parameters -> COMMA basic_declaration more_parameters | /* epsilon */
+basic_declaration -> ID basic_array_dimensions COLON type
+basic_array_dimensions -> SLPAR SRPAR basic_array_dimensions | /* epsilon */
+program_body -> BEGIN prog_stmts END
+fun_body -> BEGIN prog_stmts RETURN expr SEMICOLON END
+prog_stmts -> prog_stmt SEMICOLON prog_stmts | /* epsilon */
+prog_stmt -> IF expr THEN prog_stmt ELSE prog_stmt
+           | WHILE expr DO prog_stmt
+           | READ identifier
+           | identifier ASSIGN expr
+           | PRINT expr
+           | CLPAR block CRPAR
+identifier -> ID array_dimensions
+expr -> expr OR bint_term | bint_term
+bint_term -> bint_term AND bint_factor | bint_factor
+bint_factor -> NOT bint_factor | int_expr compare_op int_expr | int_expr
+compare_op -> EQUAL | LT | GT | LE | GE
+int_expr -> int_expr addop int_term | int_term
+addop -> ADD | SUB
+int_term -> int_term mulop int_factor | int_factor
+mulop -> MUL | DIV
+int_factor -> LPAR expr RPAR
+            | SIZE LPAR ID basic_array_dimensions RPAR
+            | DIM LPAR ID basic_array_dimensions RPAR
+            | FLOAT LPAR expr RPAR
+            | FLOOR LPAR expr RPAR
+            | CEIL LPAR expr RPAR
+            | ID modifier_list
+            | IVAL | RVAL | BVAL | SUB int_factor
+modifier_list -> LPAR arguments RPAR | array_dimensions
+arguments -> expr more_arguments | /* epsilon */
+more_arguments -> COMMA expr more_arguments | /* epsilon */
+            </pre>
+          </div>
+        </div>
+      </section>
+
+    </article>
+
+    <!-- Footer -->
+    <footer class="mt-12 py-6 border-t border-slate-900 text-center text-xs text-slate-600 font-semibold tracking-wide uppercase">
+      &copy; 2026 ExamTrainers. Modulul Semantică & Proiectul M+- — Universitatea din Craiova.
+    </footer>
+  </main>
+</body>
+</html>

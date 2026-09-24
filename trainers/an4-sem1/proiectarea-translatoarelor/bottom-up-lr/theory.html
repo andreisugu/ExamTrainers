@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ro" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teorie: Analiză Bottom-Up, LR, LALR & Bison - Exam Trainers</title>
+  <meta name="description" content="Ghid teoretic complet: Parsare Shift-Reduce, Toarte (Handles), Colecția LR(0), SLR(1), LR(1) canonic, Fuziunea nucleelor LALR(1), Ierarhia gramaticilor și Bison.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'glow-purple': '0 0 25px -5px rgba(168, 85, 247, 0.4)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.06) 0%, transparent 45%),
+        #090d16;
+    }
+
+    .circuit-grid {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="circuit-grid min-h-full font-sans text-slate-200 overflow-x-hidden selection:bg-purple-500 selection:text-white">
+
+  <main class="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-8 sm:px-6 lg:px-8 justify-between">
+    
+    <!-- Top Nav -->
+    <header class="mb-10 pb-6 border-b border-slate-800 flex items-center justify-between">
+      <nav class="flex items-center space-x-2 text-sm text-slate-400 font-medium">
+        <a href="../../../index.html" class="hover:text-white transition-colors">ExamTrainers</a>
+        <span class="text-slate-600">/</span>
+        <a href="../index.html" class="hover:text-white transition-colors">Proiectarea Translatoarelor</a>
+        <span class="text-slate-600">/</span>
+        <a href="index.html" class="hover:text-white transition-colors">Bottom-Up LR</a>
+        <span class="text-slate-600">/</span>
+        <span class="text-purple-400 font-bold bg-purple-500/10 px-2.5 py-0.5 rounded border border-purple-500/20 font-mono">Teorie</span>
+      </nav>
+
+      <a href="index.html" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white transition-all shadow-md shadow-purple-600/20">
+        <span>🎮</span>
+        <span>Deschide Simulatorul</span>
+      </a>
+    </header>
+
+    <!-- Main Content -->
+    <article class="space-y-10">
+      
+      <div>
+        <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-md border border-purple-500/20">
+          Cursul Prof. Marius Brezovan • Modulul 4
+        </span>
+        <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-white mt-3">
+          Analiză Sintactică Bottom-Up (LR) & Bison
+        </h1>
+        <p class="text-base text-slate-400 mt-2 leading-relaxed">
+          Ghid teoretic complet al tehnicilor ascendente de parsare: identificarea toartelor (handles), automate Shift-Reduce, colecții canonice LR(0) și LR(1), fuziunea stărilor în LALR(1) și disambiguarea conflictelor în GNU Bison.
+        </p>
+      </div>
+
+      <!-- Section 1: Principiul Reducerilor și Toarte (Handles) -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-mono text-sm border border-purple-500/30">1</span>
+          Principiul Parsării Bottom-Up: Reduceri & Toarte (Handles)
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            În timp ce parserele top-down încearcă să anticipeze derivarea pornind de la simbolul de start <code>S</code>, un analizor <strong>Bottom-Up (Ascendent)</strong> pornește de la tokenii din fluxul de intrare și construiește arborele de jos în sus, de la frunze către rădăcină.
+          </p>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs space-y-2">
+            <span class="text-purple-400 font-bold block mb-1">Teoremă Cheie de Examen:</span>
+            <p class="text-slate-300">
+              O parsare ascendentă corectă reprezintă <strong>inversul exact al unei derivări canonice (cele mai din dreapta, S &rArr;<sub>rm</sub>* w)</strong>!
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs space-y-2">
+            <span class="text-cyan-400 font-bold block mb-1">Conceptul de Toartă (Handle) & Handle Pruning:</span>
+            <p class="text-slate-300">
+              O <strong>toartă</strong> a unei forme sentențiale drepte <code>&gamma; = &beta; &alpha; w</code> este o producție <code>A &rarr; &alpha;</code> și o poziție în <code>&gamma;</code> unde subșirul <code>&alpha;</code> poate fi redus la <code>A</code> pentru a obține forma sentențială anterioară în derivarea canonică.
+              <br><br>
+              Algoritmul constă în găsirea repetată a toartei și reducerea ei (<em>Handle Pruning</em>) până la atingerea simbolului de start <code>S</code>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Automatul Shift-Reduce -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-mono text-sm border border-purple-500/30">2</span>
+          Arhitectura unui Parser Shift-Reduce
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Un parser LR este un automat determinist cu stivă ghidat de două matrici: <strong>ACTION[stare, terminal]</strong> și <strong>GOTO[stare, neterminal]</strong>.
+          </p>
+
+          <div class="grid sm:grid-cols-2 gap-4 font-mono text-xs">
+            <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800">
+              <span class="text-cyan-400 font-bold block mb-1">1. SHIFT (s<sub>k</sub>)</span>
+              <p class="text-slate-400 leading-relaxed">
+                Consumă tokenul curent din intrare și împinge pe stivă simbolul și noua stare numerică <code>k</code>.
+              </p>
+            </div>
+            <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800">
+              <span class="text-purple-400 font-bold block mb-1">2. REDUCE (r<sub>j</sub>)</span>
+              <p class="text-slate-400 leading-relaxed">
+                Extrage de pe stivă <code>2 &times; |&alpha;|</code> elemente (simboluri și stări corespunzătoare membrului drept al producției <code>j</code>) și depune pe stivă neterminalul stâng <code>A</code> și starea din <code>GOTO[stare_anterioară, A]</code>.
+              </p>
+            </div>
+            <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800">
+              <span class="text-emerald-400 font-bold block mb-1">3. ACCEPT</span>
+              <p class="text-slate-400 leading-relaxed">
+                Execuția se termină cu succes când pe stivă rămâne simbolul de start și intrarea conține <code>$</code>.
+              </p>
+            </div>
+            <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800">
+              <span class="text-rose-400 font-bold block mb-1">4. ERROR</span>
+              <p class="text-slate-400 leading-relaxed">
+                Celulă vidă în tabel: declanșează apelul funcției utilizator <code>yyerror(msg)</code>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Colecțiile LR(0), SLR(1) și LR(1) -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-mono text-sm border border-purple-500/30">3</span>
+          Colecțiile Canonice de Item-uri: LR(0), SLR(1) & LR(1)
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Un <strong>item LR(0)</strong> este o producție gramaticală cu un punct indicator plasat undeva în membrul drept: <code>[A &rarr; &alpha; &bull; &beta;]</code> (indică faptul că am parcurs prefixul <code>&alpha;</code> și ne așteptăm să vedem <code>&beta;</code>).
+          </p>
+
+          <div class="space-y-3 font-mono text-xs">
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <span class="text-purple-400 font-bold">1. Parsarea SLR(1) (Simple LR):</span>
+              <p class="text-slate-400 mt-1">
+                Folosește item-uri LR(0). Pentru un item complet <code>[A &rarr; &alpha; &bull;]</code>, plasează acțiunea de reducere <strong>doar în coloanele corespunzătoare terminalilor din FOLLOW(A)</strong>.
+                <br>
+                <em>Limitare:</em> Dacă un terminal <code>a &isin; FOLLOW(A)</code> are și acțiune de Shift, apare un <strong>conflict Shift/Reduce</strong>!
+              </p>
+            </div>
+
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+              <span class="text-cyan-400 font-bold">2. Parsarea LR(1) Canonic:</span>
+              <p class="text-slate-400 mt-1">
+                Fiecare item reține explicit un simbol terminal de anticipare (lookahead): <code>[A &rarr; &alpha; &bull; &beta;, a]</code>.
+                <br>
+                La închiderea tranzitivă (<code>closure</code>): pentru <code>[A &rarr; &alpha; &bull; B &beta;, a]</code> și regula <code>B &rarr; &gamma;</code>, noul item este <code>[B &rarr; &bull; &gamma;, b]</code> pentru fiecare <code>b &isin; FIRST(&beta; a)</code>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: Fuziunea LALR(1) și Teorema Fundamentală -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-mono text-sm border border-purple-500/30">4</span>
+          Parserul LALR(1) & Demonstrația Fuziunii Nucleelor
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <p>
+            Tabelele LR(1) canonice au un număr imens de stări (sute sau mii). Parserul <strong>LALR(1) (Look-Ahead LR)</strong> fuzionează toate stările care au același <strong>nucleu (core)</strong> (aceleași producții cu punctul în aceleași poziții, ignorând simbolurile de anticipare).
+          </p>
+
+          <div class="p-4 bg-purple-950/30 border border-purple-500/30 rounded-2xl text-xs space-y-2">
+            <strong class="text-purple-400 block font-mono text-sm">Teorema de Fuziune LALR(1) (Întrebare Frecventă de Examen):</strong>
+            <p class="text-slate-200">
+              1. <strong>Fuziunea nucleelor NU POATE CREA NICIODATĂ conflicte Shift/Reduce!</strong>
+              <br>
+              <em>Demonstrație:</em> Tranziția de Shift pe un simbol <code>a</code> depinde exclusiv de existența unui item <code>[A &rarr; &alpha; &bull; a &beta;]</code> în nucleu. Deoarece stările fuzionate au nuclee identice, ambele stări aveau deja aceeași acțiune de Shift, deci nu poate apărea niciun conflict nou de Shift.
+            </p>
+            <p class="text-rose-300 mt-2">
+              2. <strong>Fuziunea nucleelor POATE CREA conflicte Reduce/Reduce!</strong>
+              <br>
+              <em>Demonstrație:</em> Dacă două stări aveau producții diferite de reducere valide pe lookahead-uri disjuncte (ex: în starea 1: <code>r1</code> pe <code>{a}</code>, iar în starea 2: <code>r2</code> pe <code>{b}</code>), prin comasarea stărilor mulțimile de lookahead devin <code>{a, b}</code> pentru ambele reguli, creând un nou conflict Reduce/Reduce!
+            </p>
+          </div>
+
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 font-mono text-xs space-y-2">
+            <span class="text-cyan-400 font-bold block">Studiul Gramaticii Brezovan / Dragon Book: S &rarr; C C, C &rarr; c C | d</span>
+            <p class="text-slate-300">
+              În LR(1) canonic, această gramatică are 10 stări (I<sub>0</sub> .. I<sub>9</sub>). Prin fuziunea nucleelor identice se obțin:
+            </p>
+            <ul class="list-disc list-inside space-y-1 text-slate-400 pl-2">
+              <li><code>I<sub>3</sub> &cup; I<sub>6</sub> &rArr; I<sub>36</sub></code> (lookahead reunit: <code>{c, d, $}</code>)</li>
+              <li><code>I<sub>4</sub> &cup; I<sub>7</sub> &rArr; I<sub>47</sub></code> (lookahead reunit: <code>{c, d, $}</code>)</li>
+              <li><code>I<sub>8</sub> &cup; I<sub>9</sub> &rArr; I<sub>89</sub></code> (lookahead reunit: <code>{c, d, $}</code>)</li>
+            </ul>
+            <p class="text-emerald-400 font-bold mt-1">Numărul de stări se reduce de la 10 la 7 fără niciun conflict!</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5: Ierarhia Gramaticilor & Bison -->
+      <section class="p-8 bg-slate-900/60 border border-slate-800 rounded-3xl backdrop-blur-xl space-y-6">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-mono text-sm border border-purple-500/30">5</span>
+          Ierarhia Claselor de Gramatici & GNU Bison
+        </h2>
+
+        <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+          <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 text-center font-mono text-xs">
+            <p class="text-indigo-400 font-bold text-sm">
+              LL(1) &cap; SLR(1) &ne; &empty; &nbsp;&sub; &nbsp; LALR(1) &nbsp;&sub; &nbsp; LR(1) &nbsp;&sub; &nbsp; CFG
+            </p>
+            <p class="text-slate-400 mt-2">
+              Bison și Yacc utilizează analizorul <strong>LALR(1)</strong> ca nucleu de generare a parserului.
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 font-mono text-xs">
+            <div class="p-4 bg-slate-950 rounded-2xl border border-purple-500/30">
+              <span class="text-purple-400 font-bold text-sm block mb-1">Rezolvarea Implicită în Bison</span>
+              <ul class="list-disc list-inside space-y-1 text-slate-300">
+                <li>La conflict <strong>Shift/Reduce</strong>: Bison alege <strong>SHIFT</strong> (rezolvă corect dangling-else).</li>
+                <li>La conflict <strong>Reduce/Reduce</strong>: Bison alege <strong>prima regulă listată</strong> în fișierul <code>.y</code>.</li>
+              </ul>
+            </div>
+
+            <div class="p-4 bg-slate-950 rounded-2xl border border-indigo-500/30">
+              <span class="text-indigo-400 font-bold text-sm block mb-1">Directive de Precedență</span>
+              <ul class="list-disc list-inside space-y-1 text-slate-300">
+                <li><code>%left '+' '-'</code> (asociativitate la stânga)</li>
+                <li><code>%right '^'</code> (asociativitate la dreapta)</li>
+                <li><code>%nonassoc '&lt;'</code> (interzice <code>a &lt; b &lt; c</code>)</li>
+                <li><code>%prec UMINUS</code> (schimbă precedența regulii la nivel unar)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 6: Capcane Mortale de Examen -->
+      <section class="p-8 bg-rose-950/20 border border-rose-500/30 rounded-3xl backdrop-blur-xl space-y-4">
+        <h2 class="text-xl font-bold text-rose-400 flex items-center gap-2">
+          <span>⚠️</span>
+          Capcane Mortale de Examen la Analiză Bottom-Up
+        </h2>
+
+        <ul class="space-y-2 text-xs text-slate-300 leading-relaxed">
+          <li class="flex items-start gap-2">
+            <span class="text-rose-400 font-bold">&bull;</span>
+            <span><strong>Tipul de conflict la fuziunea LALR(1):</strong> Răspunsul este STRICT <strong>Reduce/Reduce</strong>. Dacă varianta de răspuns menționează Shift/Reduce ca fiind introdus de fuziune, este falsă!</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-rose-400 font-bold">&bull;</span>
+            <span><strong>Rezolvarea implicită Shift/Reduce:</strong> Bison alege întotdeauna <strong>SHIFT</strong> (pentru a consuma cât mai mult text înainte de a reduce).</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-rose-400 font-bold">&bull;</span>
+            <span><strong>Acțiuni semantice intermediare (Mid-Rule Actions):</strong> Scrierea <code>E &rarr; E '+' { print("plus"); } T</code> introduce intern o producție vidă <code>$1 &rarr; &epsilon;</code>, transformând gramatica și putând cauza conflicte neașteptate.</span>
+          </li>
+        </ul>
+      </section>
+
+    </article>
+
+    <!-- Footer -->
+    <footer class="mt-12 py-6 border-t border-slate-900 text-center text-xs text-slate-600 font-semibold tracking-wide uppercase">
+      &copy; 2026 ExamTrainers. Modulul Bottom-Up LR & Bison — Universitatea din Craiova.
+    </footer>
+  </main>
+</body>
+</html>
