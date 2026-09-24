@@ -19,23 +19,41 @@ ExamTrainers/
 │   │   ├── timers/                          # Chapter 2 (index.html + theory.html)
 │   │   └── ...
 │   │
-│   └── an4-sem1/securitatea-datelor/        # Subject: Securitatea Datelor (SD)
+│   ├── an4-sem1/securitatea-datelor/        # Subject: Securitatea Datelor (SD)
+│   │   ├── index.html                       # Subject dashboard (breadcrumbs, stats, chapter cards)
+│   │   ├── delastelle/                      # Chapter 1: Bifid & Trifid
+│   │   │   ├── index.html                   # Interactive Simulator & Step-by-Step Solver
+│   │   │   └── theory.html                  # Deep-dive theory, proofs, partial block rules
+│   │   ├── classical/                       # Chapter 2: Caesar, ROT13, Vigenère, Kasiski, Ic
+│   │   │   ├── index.html
+│   │   │   └── theory.html
+│   │   ├── asymmetric/                      # Chapter 3: RSA & Diffie-Hellman MitM
+│   │   │   ├── index.html
+│   │   │   └── theory.html
+│   │   ├── websec/                          # Chapter 4: DVWA SQLi/XSS/CSRF & HTB Invites
+│   │   │   ├── index.html
+│   │   │   └── theory.html
+│   │   └── mock-exam/                       # Chapter 5: Timed Mock Exam (45 min, 10 questions)
+│   │       ├── index.html
+│   │       └── theory.html                  # Cheat sheet: "Cele 10 Porunci ale Examenului"
+│   │
+│   └── an4-sem1/proiectarea-translatoarelor/ # Subject: Proiectarea Translatoarelor (Compilatoare & M+-)
 │       ├── index.html                       # Subject dashboard (breadcrumbs, stats, chapter cards)
-│       ├── delastelle/                      # Chapter 1: Bifid & Trifid
-│       │   ├── index.html                   # Interactive Simulator & Step-by-Step Solver
-│       │   └── theory.html                  # Deep-dive theory, proofs, partial block rules
-│       ├── classical/                       # Chapter 2: Caesar, ROT13, Vigenère, Kasiski, Ic
-│       │   ├── index.html
-│       │   └── theory.html
-│       ├── asymmetric/                      # Chapter 3: RSA & Diffie-Hellman MitM
-│       │   ├── index.html
-│       │   └── theory.html
-│       ├── websec/                          # Chapter 4: DVWA SQLi/XSS/CSRF & HTB Invites
-│       │   ├── index.html
-│       │   └── theory.html
-│       └── mock-exam/                       # Chapter 5: Timed Mock Exam (45 min, 10 questions)
-│           ├── index.html
-│           └── theory.html                  # Cheat sheet: "Cele 10 Porunci ale Examenului"
+│       ├── lexer-automata/                  # Chapter 1: Lexical Analysis, Thompson, Hopcroft, Flex
+│       │   ├── index.html                   # Interactive Automata & Flex Workbench
+│       │   └── theory.html                  # Deep-dive theory, proofs, Maximal Munch rules
+│       ├── top-down-ll1/                    # Chapter 2: Top-Down LL(1) Parsing & Recursive Descent
+│       │   ├── index.html                   # FIRST/FOLLOW Calculator & LL(1) Stack Simulator
+│       │   └── theory.html                  # Formal derivations, left recursion/factoring proofs
+│       ├── bottom-up-lr/                    # Chapter 3: Bottom-Up LR/LALR & Bison
+│       │   ├── index.html                   # LALR(1) Core Merge Lab & Shift-Reduce Trace
+│       │   └── theory.html                  # Handles, LR(0), SLR, LR(1), LALR core merging, Bison %prec
+│       ├── semantics-mplusminus/            # Chapter 4: Static Semantics, Type Checking & M+-
+│       │   ├── index.html                   # Scoped Symbol Table, Type Checker & 3AC/Dataflow
+│       │   └── theory.html                  # SDD/SDT, Scope tables, M+- spec, 3AC quadruples
+│       └── mock-exam/                       # Chapter 5: Timed Mock Exam (60 min, 15 questions)
+│           ├── index.html                   # Exam simulator with randomized pool & diagnostics
+│           └── theory.html                  # Cheat sheet: "Cele 10 Porunci ale Examenului de PT"
 │
 ├── .github/workflows/pages.yml              # CI/CD: Deploys `trainers/` directly to GitHub Pages
 ├── README.md                                # Repository overview and catalog index
@@ -111,12 +129,20 @@ Simulators and solvers in this repository must **never be generic toys**. They m
      - Delastelle: Polybius coordinates $\to$ row/col concatenation $\to$ block re-grouping.
      - RSA: Extended Euclidean Algorithm Bezout table ($r_i, q_i, s_i, t_i$).
      - Caesar / Vigenère: Frequency histograms vs standard English baseline ($E, T, A, O...$).
+     - PT Lexer: Subset construction with $\epsilon$-closure, Hopcroft state partitioning, Flex Maximal Munch tracking `Last-Final`.
+     - PT LL(1): Step-by-step FIRST & FOLLOW computation with $\epsilon$ rule ($\epsilon \notin \text{FOLLOW}$), LL(1) stack matching.
+     - PT LALR(1): Dragon Book core merging proof with LR(1) lookahead unioning, showing that core merging CANNOT create Shift-Reduce conflicts, only Reduce-Reduce conflicts.
+     - PT Semantics: Scoped symbol table (shadowing vs duplicate trap), $M^{+-}$ type checking (`WHILE 1 DO` boolean error), 3AC quadruples, DEF/USE dataflow sets.
 3. **Explicitly Teach Exam Traps:**
    - Highlight common student pitfalls with styled alert boxes:
      - Partial blocks ($k < p$) in Delastelle do NOT pad with 'X'.
      - Modular subtractions in $\mathbb{Z}_{26}$ with negative values require adding $+26$.
      - RSA private exponent $d$ is calculated strictly $\pmod{\phi(n)}$, NEVER $\pmod{n}$.
      - DVWA Medium SQL injection receives numeric POST inputs without quotes (`id=1 OR 1=1`, not `' OR '1'='1`).
+     - PT Lexer: Keywords vs Identifiers ordering in Flex rules (first-rule-wins trap) and longest-match fallback when no match succeeds.
+     - PT LL(1): $\epsilon$ is NEVER placed in $\text{FOLLOW}(A)$. Left factoring does not eliminate left recursion.
+     - PT LALR(1): LALR(1) tables have the EXACT same number of states as SLR(1) and LR(0), only lookaheads differ.
+     - PT Semantics: $M^{+-}$ does NOT allow integer expressions in conditions (`WHILE 1 DO` is a fatal type error); local variables shadow globals without modifying outer scope.
 
 ---
 
@@ -124,12 +150,12 @@ Simulators and solvers in this repository must **never be generic toys**. They m
 
 Before completing any task or proposing a git commit, agents must execute the following checks:
 
-1. **JSX Syntax & Babel Compilation Check:**
-   - Run a headless check with `@babel/standalone` across all modified `<script type="text/babel">` blocks to ensure clean compilation without syntax errors or undefined variables.
+1. **Automated Verification Script:**
+   - Always run `node scripts/verify.js`. It runs headless compilation via `@babel/standalone` across every `<script type="text/babel">` in the repo, validates all relative `href` and `src` links, checks theory purity, and catches unclosed tags or JSX syntax traps before they reach the browser.
 2. **Link Verification Check:**
-   - Run an automated check on all `<a href="...">` attributes in modified HTML files to ensure 100% resolution with 0 dead links.
+   - Ensured via `node scripts/verify.js` (0 dead links allowed).
 3. **Theory Page Purity Check:**
-   - Verify that `theory.html` files contain no JSX syntax (`.map(`, `{variable}`, etc.).
+   - Ensured via `node scripts/verify.js` (`theory.html` must remain pure static HTML).
 4. **Hub & Catalog Registration:**
    - If a new trainer or chapter is created:
      - Register it in `trainers/index.html` (in the `TRAINERS` array and stats badges).
